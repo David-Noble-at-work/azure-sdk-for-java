@@ -1,517 +1,158 @@
-<!DOCTYPE html>
-<!-- saved from url=(0077)https://azuresdkartifacts.blob.core.windows.net/azure-sdk-for-java/index.html -->
-<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><style data-styles="">ion-icon{visibility:hidden}.hydrated{visibility:inherit}</style>
+﻿<!DOCTYPE html>
+<!--[if IE]><![endif]-->
+<html>
+  
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <title>Azure SDK for Java | Azure SDK for Java </title>
+    <meta name="viewport" content="width=device-width">
+    <meta name="title" content="Azure SDK for Java | Azure SDK for Java ">
+    <meta name="generator" content="docfx 2.43.2.0">
     
-    <meta name="HandheldFriendly" content="True">
-    <meta name="MobileOptimized" content="320">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0">
-
-    <title>Azure SDK For Java - Github.io Landing Page</title>
-
-    <link href="./template_files/css" rel="stylesheet" type="text/css">
-
-    <style type="text/css">
-        html {
-            font-family: sans-serif;
-            -ms-text-size-adjust: 100%
-        }
-        
-        a {
-            background-color: transparent
-        }
-        
-        h1 {
-            margin: .67em 0
-        }
-        
-        hr {
-            height: 0
-        }
-        
-        *,
-        :after,
-        :before,
-        body.status-page img,
-        input[type=checkbox],
-        input[type=radio],
-        input[type=search] {
-            box-sizing: border-box
-        }
-        
-        html {
-            font-size: 10px;
-            -webkit-tap-highlight-color: transparent
-        }
-        
-        body {
-            font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
-            font-size: 14px;
-            line-height: 1.428571429;
-            color: #333
-        }
-        
-        a {
-            color: #67808c;
-            text-decoration: none
-        }
-        
-        a:focus,
-        a:hover {
-            color: #465760;
-            text-decoration: underline
-        }
-        
-        a:focus {
-            outline: -webkit-focus-ring-color auto 5px;
-            outline-offset: -2px
-        }
-        
-        hr {
-            margin-top: 20px;
-            margin-bottom: 20px;
-            border-top: 1px solid #eee
-        }
-        
-        .h1,
-        .h2,
-        .h3,
-        .h4,
-        .h5,
-        .h6,
-        h1,
-        h2,
-        h3,
-        h4,
-        h5,
-        h6 {
-            font-family: inherit;
-            font-weight: 500;
-            line-height: 1.1;
-            color: inherit
-        }
-        
-        .h1 .small,
-        .h1 small,
-        .h2 .small,
-        .h2 small,
-        .h3 .small,
-        .h3 small,
-        .h4 .small,
-        .h4 small,
-        .h5 .small,
-        .h5 small,
-        .h6 .small,
-        .h6 small,
-        h1 .small,
-        h1 small,
-        h2 .small,
-        h2 small,
-        h3 .small,
-        h3 small,
-        h4 .small,
-        h4 small,
-        h5 .small,
-        h5 small,
-        h6 .small,
-        h6 small {
-            font-weight: 400;
-            line-height: 1;
-            color: #777
-        }
-        
-        .h1,
-        .h2,
-        .h3,
-        h1,
-        h2,
-        h3 {
-            margin-top: 20px;
-            margin-bottom: 10px
-        }
-        
-        .h1 .small,
-        .h1 small,
-        .h2 .small,
-        .h2 small,
-        .h3 .small,
-        .h3 small,
-        h1 .small,
-        h1 small,
-        h2 .small,
-        h2 small,
-        h3 .small,
-        h3 small {
-            font-size: 65%
-        }
-        
-        .h4,
-        .h5,
-        .h6,
-        h4,
-        h5,
-        h6 {
-            margin-top: 10px;
-            margin-bottom: 10px
-        }
-        
-        .h4 .small,
-        .h4 small,
-        .h5 .small,
-        .h5 small,
-        .h6 .small,
-        .h6 small,
-        h4 .small,
-        h4 small,
-        h5 .small,
-        h5 small,
-        h6 .small,
-        h6 small {
-            font-size: 75%
-        }
-        
-        .h1,
-        h1 {
-            font-size: 36px
-        }
-        
-        .h2,
-        h2 {
-            font-size: 30px
-        }
-        
-        .h3,
-        h3 {
-            font-size: 24px
-        }
-        
-        .h4,
-        h4 {
-            font-size: 18px
-        }
-        
-        .h5,
-        h5 {
-            font-size: 14px
-        }
-        
-        .h6,
-        h6 {
-            font-size: 12px
-        }
-        
-        p {
-            margin: 0 0 10px
-        }
-        
-        .container-fluid:after,
-        .container-fluid:before,
-        .container:after,
-        .container:before,
-        .row:after,
-        .row:before,
-        .setup-page .steps:after,
-        .setup-page .steps:before {
-            display: table;
-            content: " "
-        }
-        
-        .container,
-        .container-fluid {
-            margin-right: auto;
-            margin-left: auto;
-            padding-left: 15px;
-            padding-right: 15px
-        }
-        
-        @media (min-width:992px) {
-            .container {
-                width: 970px
-            }
-        }
-        
-        @media (min-width:1200px) {
-            .container {
-                width: 1170px
-            }
-        }
-        
-        .list-group {
-            margin-bottom: 20px;
-            padding-left: 0
-        }
-        
-        .list-group-item {
-            position: relative;
-            display: block;
-            padding: 10px 15px;
-            margin-bottom: -1px;
-            background-color: #fff;
-            border: 1px solid #ddd
-        }
-        
-        .list-group-item:first-child {
-            border-top-right-radius: 3px;
-            border-top-left-radius: 3px
-        }
-        
-        .list-group-item:last-child {
-            margin-bottom: 0;
-            border-bottom-right-radius: 3px;
-            border-bottom-left-radius: 3px
-        }
-        
-        a.list-group-item,
-        button.list-group-item {
-            color: #555
-        }
-        
-        a.list-group-item .list-group-item-heading,
-        button.list-group-item .list-group-item-heading {
-            color: #333
-        }
-        
-        a.list-group-item:focus,
-        a.list-group-item:hover,
-        button.list-group-item:focus,
-        button.list-group-item:hover {
-            text-decoration: none;
-            color: #555;
-            background-color: #f5f5f5
-        }
-        
-        html {
-            min-height: 100%;
-            overflow-y: scroll
-        }
-        
-        body {
-            margin-bottom: 60px;
-            padding-bottom: 60px;
-            -webkit-backface-visibility: hidden
-        }
-        
-        body.status-page {
-            padding-top: 40px;
-            font-family: "Open Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
-            background-color: #F0F3F4;
-            color: #333;
-            font-size: 1.4em;
-            font-weight: 400
-        }
-        
-        body.status-page.no-padding {
-            padding-top: 0!important
-        }
-        
-        body.status-page hr {
-            margin-top: 10px;
-            margin-bottom: 10px
-        }
-        
-        body.status-page h1,
-        body.status-page h2,
-        body.status-page h3,
-        body.status-page h4,
-        body.status-page h5 {
-            margin-bottom: 20px
-        }
-        
-        body.status-page img.emoji {
-            height: 20px;
-            width: 20px;
-            vertical-align: middle;
-            max-width: none
-        }
-        
-        body.status-page p,
-        body.status-page strong {
-            color: #333
-        }
-        
-        body.status-page .tooltip .tooltip-inner {
-            padding: 8px 12px;
-            font-size: 14px;
-            word-wrap: break-word
-        }
-        
-        body.status-page .container {
-            max-width: 960px
-        }
-        
-        body.status-page .page-header {
-            margin-top: 10px
-        }
-        
-        body.status-page .list-group {
-            padding-left: 0
-        }
-        
-        body.status-page .list-group .list-group-item {
-            border-radius: 0;
-            background-color: #fff;
-            border: 1px solid #e8e8e8;
-            font-size: 1.1em;
-            padding: 15px;
-            overflow: hidden;
-        }
-        
-        body.status-page .list-group .list-group-item a {
-            font-weight: 400
-        }
-        
-        body.status-page .list-group .list-group-item h4 {
-            margin: 0;
-            font-weight: 400;
-            max-width: 90%
-        }
-        
-        body.status-page .list-group .list-group-item p,
-        body.status-page .list-group .list-group-item time {
-            margin-bottom: 0;
-            line-height: 1.3em
-        }
-        
-        body.status-page .list-group .list-group-item.group-name {
-            background-color: #e8e8e8;
-            padding-top: .6em;
-            padding-bottom: .6em;
-            cursor: pointer;
-            -webkit-touch-callout: none;
-            -webkit-user-select: none;
-            -moz-user-select: none;
-            -ms-user-select: none;
-            user-select: none
-        }
-        
-        body.status-page .list-group .list-group-item.break {
-            padding: 1px;
-            background-color: #f0f3f4
-        }
-        
-        body.status-page .list-group.components {
-            border-color: #e8e8e8
-        }
-        
-        body.status-page .list-group.components:last-child {
-            margin-bottom: 30px
-        }
-        
-        body.status-page .list-group.components+.components {
-            margin-top: 5px
-        }
-        
-        body.status-page .list-group.components p {
-            margin-bottom: 10px
-        }
-        
-        body.status-page .list-group.components .badge {
-            color: transparent
-        }
-        
-        body.status-page .list-group.components a {
-            color: #333!important
-        }
-        
-        body.status-page footer {
-            width: 100%;
-            bottom: 0;
-            height: 60px;
-            padding: 30px 0 60px;
-            border-top: 1px solid #e8e8e8;
-            color: #666;
-            font-size: 13px;
-            line-height: 30px;
-            text-align: center;
-            text-shadow: 0 1px 0 rgba(255, 255, 255, .5)
-        }
-        
-        body.status-page .section-components,
-        body.status-page .section-metrics,
-        body.status-page .section-scheduled,
-        body.status-page .section-timeline {
-            margin-top: 40px
-        }
-        
-        body.status-page {
-            background-color: #F0F3F4;
-            color: #333333;
-        }
-
-        body.status-page .about-app p {
-           font-size: 1.2em;
-        }
-        
-        p,
-        strong {
-            color: #333333 !important;
-        }
-        
-        .links {
-            color: #3498db !important;
-        }
-        
-        .footer a {
-            color: #333333;
-        }
-
-        .pull-right {
-            float: right!important;
-        }
-    </style>
-<script src="./template_files/ionicons.eyhlcpv8.js.download" type="module" crossorigin="true" data-resources-url="https://unpkg.com/ionicons@4.2.2/dist/ionicons/" data-namespace="ionicons"></script><template data-tmpl-style-tag="ion-icon"></template></head>
-
-<body class="status-page ">
-
-    <div class="container">
-        <div class="section-messages">
-        </div>
-
-        <div class="about-app">
-            <h2>Azure Java SDK</h2>
-            <p>Refer to the links below for reference documentation generated from the Azure SDK for Java source code.</p>
-        </div>
-
-        <div class="section-components">
-            <ul class="list-group components">
-                <li class="list-group-item group-name">
-                    <strong>Latest Client Libraries</strong>
-                </li>
-
-                <div class="group-items ">
-                    <li class="list-group-item sub-component">
-                        <ion-icon name="copy" role="img" class="hydrated" aria-label="logo github"></ion-icon>
-                        <a href="./track2reports/index.html" target="_blank" class="links">JavaDocs</a>
-                    </li>
-                </div>
-            </ul>
-        </div>
-
-        <div class="section-components">
-            <ul class="list-group components">
-                <li class="list-group-item group-name">
-                    <strong>Previous Client Libraries</strong>
-                </li>
-
-                <div class="group-items ">
-                    <li class="list-group-item sub-component">
-                        <ion-icon name="copy" role="img" class="hydrated" aria-label="logo github"></ion-icon>
-                        <a href="./track1reports/index.html" target="_blank" class="links">JavaDocs</a>
-                    </li>
-                </div>
-            </ul>
-        </div>
-    </div>
-
-    <footer class="footer">
-        <div class="container">
-            <div class="row">
-                <div class="col-sm-5">
-                    <p>Powered by <a href="https://azure.com/" class="links">Azure</a>.</p>
-                </div>
+    <link rel="shortcut icon" href="https://c.s-microsoft.com/favicon.ico?v2">
+    <link rel="stylesheet" href="styles/docfx.vendor.css">
+    <link rel="stylesheet" href="styles/docfx.css">
+    <link rel="stylesheet" href="styles/main.css">
+    <meta property="docfx:navrel" content="navtoc.html">
+    <meta property="docfx:tocrel" content="toc.html">
+    
+    
+    <meta property="docfx:newtab" content="true">
+  </head>
+  <body data-spy="scroll" data-target="#affix" data-offset="120">
+    <div id="wrapper">
+      <header>
+        
+        <nav id="autocollapse" class="navbar navbar-inverse ng-scope" role="navigation">
+          <div class="container">
+            <div class="navbar-header">
+              <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbar">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+              </button>
+              
+              <a class="navbar-brand" href="index.html">
+                <img id="logo" class="svg" src="logo.svg" alt="">
+              </a>
             </div>
+            <div class="collapse navbar-collapse" id="navbar">
+              <form class="navbar-form navbar-right" role="search" id="search">
+                <div class="form-group">
+                  <input type="text" class="form-control" id="search-query" placeholder="Search" autocomplete="off">
+                </div>
+              </form>
+            </div>
+          </div>
+        </nav>
+        
+        <div class="subnav navbar navbar-default">
+          <div class="container hide-when-search" id="breadcrumb">
+            <ul class="breadcrumb">
+              <li></li>
+            </ul>
+          </div>
         </div>
-    </footer>
+      </header>
+      <div role="main" class="container body-content hide-when-search">
+        
+        <div class="sidenav hide-when-search">
+          <a class="btn toc-toggle collapse" data-toggle="collapse" href="#sidetoggle" aria-expanded="false" aria-controls="sidetoggle">Show / Hide Table of Contents</a>
+          <div class="sidetoggle collapse" id="sidetoggle">
+            <div id="sidetoc"></div>
+          </div>
+        </div>
+        <div class="article row grid-right">
+          <div class="col-md-10">
+            <article class="content wrap" id="_content" data-uid="">
+<h1 id="azure-sdk-for-java">Azure SDK for Java</h1>
 
-
-<script src="https://unpkg.com/ionicons@4.2.2/dist/ionicons.js"></script>
-</body></html>
+<p><a href="https://dev.azure.com/azure-sdk/public/_build/latest?definitionId=17"><img src="https://dev.azure.com/azure-sdk/public/_apis/build/status/17?branchName=master" alt="Build Status"></a> <a href="https://azuresdkartifacts.blob.core.windows.net/azure-sdk-for-java/index.html"><img src="https://img.shields.io/badge/documentation-published-blue.svg" alt="Build Documentation"></a> <a href="https://azuresdkartifacts.blob.core.windows.net/azure-sdk-for-java/staging/dependencies.html"><img src="https://img.shields.io/badge/dependencies-analyzed-blue.svg" alt="Dependencies"></a> <a href="https://azuresdkartifacts.blob.core.windows.net/azure-sdk-for-java/staging/spotbugsXml.html"><img src="https://img.shields.io/badge/SpotBugs-Clean-success.svg" alt="SpotBugs"></a> <a href="https://azuresdkartifacts.blob.core.windows.net/azure-sdk-for-java/staging/checkstyle-aggregate.html"><img src="https://img.shields.io/badge/CheckStyle-Clean-success.svg" alt="CheckStyle"></a></p>
+<p>This repository contains official Java libraries for Azure services. For reference documentation go to <a href="http://aka.ms/java-docs">Azure SDK for Java documentation</a>, and tutorials, samples, quick starts and other documentation, go to <a href="https://docs.microsoft.com/java/azure/">Azure for Java Developers</a>.</p>
+<p>You can find a complete list of all the packages for these libraries <a href="packages.md">here</a>.</p>
+<h2 id="getting-started">Getting started</h2>
+<p>To get started with a specific library, see the <strong>README.md</strong> file located in the library's project folder. You can find service libraries in the <code>/sdk</code> directory.</p>
+<p>For tutorials, samples, quick starts and other documentation, visit <a href="https://docs.microsoft.com/java/azure/">Azure for Java Developers</a>.</p>
+<h3 id="prerequisites">Prerequisites</h3>
+<p>Java 8 or later is required to use the November 2019 client libraries, otherwise Java 7 or later is required.</p>
+<h2 id="packages-available">Packages available</h2>
+<p>Each service might have a number of libraries available from each of the following categories:</p>
+<ul>
+<li><a href="#Client-November-2019-Release">Client - November 2019 Release</a></li>
+<li><a href="#Client-Stable">Client - Stable</a></li>
+<li><a href="#Management">Management</a></li>
+</ul>
+<h3 id="client-november-2019-ga-release">Client: November 2019 GA Release</h3>
+<p>Following packages that we are currently releasing in <strong>GA</strong>. These libraries follow the <a href="https://azure.github.io/azure-sdk/java/guidelines/">Azure SDK Design Guidelines for Java</a> and share a number of core features such as HTTP retries, logging, transport protocols, authentication protocols, etc., so that once you learn how to use these features in one client library, you will know how to use them in other client libraries. You can learn about these shared features <a href="core">here</a>.</p>
+<p>These libraries can be easily identified by their folder, package, and namespaces names starting with <code>azure-</code>, e.g. <code>azure-keyvault</code>.</p>
+<p>The libraries released in the November 2019 GA release:</p>
+<ul>
+<li><a href="sdk/identity/azure-identity/README.md">Identity</a></li>
+<li><a href="sdk/keyvault/azure-security-keyvault-keys/README.md">Key Vault Keys</a></li>
+<li><a href="sdk/keyvault/azure-security-keyvault-secrets/README.md">Key Vault Secrets</a></li>
+<li><a href="sdk/storage/azure-storage-blob/README.md">Storage Blobs</a></li>
+<li><a href="sdk/storage/azure-storage-blob-batch/README.md">Storage Blobs Batch</a></li>
+<li><a href="sdk/storage/azure-storage-blob-cryptography/README.md">Storage Blobs Cryptography</a></li>
+<li><a href="sdk/storage/azure-storage-queue/README.md">Storage Queues</a></li>
+</ul>
+<h3 id="client-november-2019-preview-release">Client: November 2019 Preview Release</h3>
+<p>The libraries released in the November GA November 2019 preview:</p>
+<ul>
+<li><a href="sdk/appconfiguration/azure-data-appconfiguration/README.md">App Configuration</a></li>
+<li><a href="sdk/eventhubs/azure-messaging-eventhubs/README.md">Event Hubs</a></li>
+<li><a href="sdk/eventhubs/azure-messaging-eventhubs-checkpointstore-blob/README.md">Event Hubs Checkpoint Store</a></li>
+<li><a href="sdk/storage/azure-storage-file-share/README.md">Storage File Shares</a></li>
+<li><a href="sdk/keyvault/azure-security-keyvault-certificates/README.md">Key Vault Certificates</a></li>
+<li><a href="sdk/core/azure-core-tracing-opencensus/README.md">azure-core-tracing-opencensus</a></li>
+</ul>
+<blockquote>
+<p>NOTE: If you need to ensure your code is ready for production, use one of the stable libraries.</p>
+</blockquote>
+<h3 id="client-stable">Client: Stable</h3>
+<p>Last stable versions of packages that have been provided for usage with Azure and are production-ready. These libraries provide similar functionalities to the preview libraries, as they allow you to use and consume existing resources and interact with them, for example: upload a blob. Stable library directories start with <code>microsoft-azure-</code>, e.g. <code>microsoft-azure-keyvault</code>.</p>
+<h3 id="management">Management</h3>
+<p>Libraries which enable you to provision specific resources. They are responsible for directly mirroring and consuming Azure service's REST endpoints. Management library directories contain <code>-mgmt-</code>, e.g. <code>azure-mgmt-keyvault</code>.</p>
+<h2 id="need-help">Need help?</h2>
+<ul>
+<li>For reference documentation visit the <a href="http://aka.ms/java-docs">Azure SDK for Java documentation</a>.</li>
+<li>For tutorials, samples, quick starts and other documentation, visit <a href="https://docs.microsoft.com/java/azure/">Azure for Java Developers</a>.</li>
+<li>For build reports on code quality, test coverage, etc, visit <a href="https://azuresdkartifacts.blob.core.windows.net/azure-sdk-for-java/index.html">Azure Java SDK</a>.</li>
+<li>File an issue via <a href="https://github.com/Azure/azure-sdk-for-java/issues/new/choose">Github Issues</a>.</li>
+<li>Check <a href="https://stackoverflow.com/questions/tagged/azure-java-sdk">previous questions</a> or ask new ones on StackOverflow using <code>azure-java-sdk</code> tag.</li>
+</ul>
+<h2 id="contributing">Contributing</h2>
+<p>For details on contributing to this repository, see the <a href="CONTRIBUTING.md">contributing guide</a>.</p>
+<p><img src="https://azure-sdk-impressions.azurewebsites.net/api/impressions/azure-sdk-for-java%2FREADME.png" alt="Impressions"></p>
+</article>
+          </div>
+          
+          <div class="hidden-sm col-md-2" role="complementary">
+            <div class="sideaffix">
+              <nav class="bs-docs-sidebar hidden-print hidden-xs hidden-sm affix" id="affix">
+              </nav>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <footer>
+        <div class="grad-bottom"></div>
+        <div class="footer">
+          <div class="container">
+            <span class="pull-right">
+              <a href="#top">Back to top</a>
+            </span>
+            Azure SDK for Java
+            
+          </div>
+        </div>
+      </footer>
+    </div>
+    
+    <script type="text/javascript" src="styles/docfx.vendor.js"></script>
+    <script type="text/javascript" src="styles/docfx.js"></script>
+    <script type="text/javascript" src="styles/main.js"></script>
+  </body>
+</html>
