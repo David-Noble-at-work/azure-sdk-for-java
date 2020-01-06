@@ -326,22 +326,18 @@ public final class RntbdTransportClient extends TransportClient {
          * instance is created from:
          * <ol>
          * <li>The JSON value of system property {@code azure.cosmos.directTcp.defaultOptions}.
-         * <br>Example:<br>
-         * {@code -Dazure.cosmos.directTcp.defaultOptions={\"maxChannelsPerEndpoint\":5,\"maxRequestsPerChannel\":30}}
+         * <p>Example:
+         * <pre>{@code -Dazure.cosmos.directTcp.defaultOptions={\"maxChannelsPerEndpoint\":5,\"maxRequestsPerChannel\":30}}</pre>
          * </li>
          * <li>The contents of the JSON file located by system property {@code azure.cosmos.directTcp
          * .defaultOptionsFile}.
-         * <br>Example:
-         * <br>{@code -Dazure.cosmos.directTcp.defaultOptionsFile=/path/to/default/options/file}
+         * <p>Example:
+         * <pre>{@code -Dazure.cosmos.directTcp.defaultOptionsFile=/path/to/default/options/file}</pre>
          * </li>
          * <li>The contents of JSON resource file {@code azure.cosmos.directTcp.defaultOptions.json}.
-         * <p>
-         * Specifically, the resource file is read from this stream:
-         * <br>{@code RntbdTransportClient.class.getClassLoader().getResourceAsStream("azure.cosmos.directTcp
-         * .defaultOptions.json")}
-         * <br>Example:
-         * <br><pre>{@code
-         * {
+         * <p>Specifically, the resource file is read from this stream:
+         * <pre>{@code RntbdTransportClient.class.getClassLoader().getResourceAsStream("azure.cosmos.directTcp.defaultOptions.json")}</pre>
+         * <p>Example: <pre>{@code {
          *   "bufferPageSize": 8192,
          *   "connectionTimeout": "PT1M",
          *   "idleChannelTimeout": "PT0S",
@@ -355,11 +351,12 @@ public final class RntbdTransportClient extends TransportClient {
          *   "requestTimerResolution": "PT0.5S",
          *   "sendHangDetectionTime": "PT10S",
          *   "shutdownTimeout": "PT15S"
-         * }</pre>
+         * }}</pre>
          * </li>
          * </ol>
-         * If none of the above values are available or all available values are in error, the default options instance
-         * is created from the private parameterless constructor for {@link RntbdTransportClient.Options}.
+         * <p>JSON value errors are logged and then ignored. If none of the above values are available or all available
+         * values are in error, the default options instance is created from the private parameterless constructor for
+         * {@link RntbdTransportClient.Options}.
          */
         @SuppressWarnings("UnusedReturnValue")
         public static class Builder {
