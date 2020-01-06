@@ -320,10 +320,13 @@ public final class RntbdTransportClient extends TransportClient {
         // region Types
 
         /**
-         * A builder for constructing {@link RntbdTransportClient.Options} instances.
+         * A builder for constructing {@link Options} instances.
+         *
+         * <h3>Using system properties to set the default {@link Options} used by an {@link Builder}</h3>
          * <p>
-         * A default options instance is created when this class is initialized. In priority order the default options
-         * instance is created from:
+         * A default options instance is created when the {@link Builder} class is initialized. This instance specifies
+         * the default options used by every {@link Builder} instance. In priority order the default options instance
+         * is created from:
          * <ol>
          * <li>The JSON value of system property {@code azure.cosmos.directTcp.defaultOptions}.
          * <p>Example:
@@ -356,7 +359,7 @@ public final class RntbdTransportClient extends TransportClient {
          * </ol>
          * <p>JSON value errors are logged and then ignored. If none of the above values are available or all available
          * values are in error, the default options instance is created from the private parameterless constructor for
-         * {@link RntbdTransportClient.Options}.
+         * {@link Options}.
          */
         @SuppressWarnings("UnusedReturnValue")
         public static class Builder {
