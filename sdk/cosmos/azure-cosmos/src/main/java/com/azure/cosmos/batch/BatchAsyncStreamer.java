@@ -5,6 +5,9 @@ package com.azure.cosmos.batch;
 
 import java.io.IOException;
 
+import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkNotNull;
+
 /**
  * Handles operation queueing and dispatching.
  * <p>
@@ -18,17 +21,16 @@ import java.io.IOException;
  */
 public class BatchAsyncStreamer implements AutoCloseable {
 
-    private final CancellationTokenSource cancellationTokenSource = new CancellationTokenSource();
     private final Object dispatchLimiter = new Object();
+    private final int dispatchTimerInSeconds;
+    private final BatchAsyncBatcherExecuteDelegate executor;
+    private final int maxBatchByteSize;
+    private final int maxBatchOperationCount;
+    private final BatchAsyncBatcherRetryDelegate retrier;
+    private final CosmosSerializerCore serializerCore;
+    private final TimerPool timerPool;
     private volatile BatchAsyncBatcher currentBatcher;
     private PooledTimer currentTimer;
-    private int dispatchTimerInSeconds;
-    private BatchAsyncBatcherExecuteDelegate executor;
-    private int maxBatchByteSize;
-    private int maxBatchOperationCount;
-    private BatchAsyncBatcherRetryDelegate retrier;
-    private CosmosSerializerCore serializerCore;
-    private TimerPool timerPool;
     private Task timerTask;
 
     public BatchAsyncStreamer(
@@ -40,37 +42,26 @@ public class BatchAsyncStreamer implements AutoCloseable {
         BatchAsyncBatcherExecuteDelegate executor,
         BatchAsyncBatcherRetryDelegate retrier) {
 
-        if (maxBatchOperationCount < 1) {
-            throw new IndexOutOfBoundsException("maxBatchOperationCount");
-        }
+        checkArgument(maxBatchOperationCount > 0,
+            "expected maxBatchOperationCount > 0, not %s",
+            maxBatchOperationCount);
 
-        if (maxBatchByteSize < 1) {
-            throw new IndexOutOfBoundsException("maxBatchByteSize");
-        }
+        checkArgument(maxBatchByteSize > 0,
+            "expected maxBatchByteSize > 0, not %s",
+            maxBatchByteSize);
 
-        if (dispatchTimerInSeconds < 1) {
-            throw new IndexOutOfBoundsException("dispatchTimerInSeconds");
-        }
+        checkArgument(dispatchTimerInSeconds > 0,
+            "expected dispatchTimerInSeconds > 0, not %s",
+            dispatchTimerInSeconds);
 
-        if (executor == null) {
-            throw new NullPointerException("executor");
-        }
-
-        if (retrier == null) {
-            throw new NullPointerException("retrier");
-        }
-
-        if (serializerCore == null) {
-            throw new NullPointerException("serializerCore");
-        }
+        checkNotNull(executor, "expected non-null executor");
+        checkNotNull(retrier, "expected non-null retrier");
+        checkNotNull(serializerCore, "expected non-null serializerCore");
 
         this.maxBatchOperationCount = maxBatchOperationCount;
         this.maxBatchByteSize = maxBatchByteSize;
-        this.executor =
-            (PartitionKeyRangeServerBatchRequest request, CancellationToken cancellationToken) -> executor.invoke(request, cancellationToken);
-        this.retrier =
-            (ItemBatchOperation operation, CancellationToken cancellationToken) -> retrier.invoke(operation,
-                cancellationToken);
+        this.executor = (PartitionKeyRangeServerBatchRequest request) -> executor.invoke(request);
+        this.retrier = (ItemBatchOperation operation) -> retrier.invoke(operation);
         this.dispatchTimerInSeconds = dispatchTimerInSeconds;
         this.timerPool = timerPool;
         this.serializerCore = serializerCore;
@@ -89,14 +80,11 @@ public class BatchAsyncStreamer implements AutoCloseable {
         }
 
         if (toDispatch != null) {
-            // Discarded for Fire & Forget
-            _ = toDispatch.DispatchAsync(this.cancellationTokenSource.Token);
+            toDispatch.DispatchAsync();  // result discarded for fire and forget
         }
     }
 
     public final void close() throws IOException {
-        this.cancellationTokenSource.Cancel();
-        this.cancellationTokenSource.Dispose();
         this.currentTimer.CancelTimer();
         this.currentTimer = null;
         this.timerTask = null;
@@ -108,25 +96,23 @@ public class BatchAsyncStreamer implements AutoCloseable {
     }
 
     private void DispatchTimer() {
-        if (this.cancellationTokenSource.IsCancellationRequested) {
-            return;
-        }
 
         BatchAsyncBatcher toDispatch;
+
         synchronized (this.dispatchLimiter) {
             toDispatch = this.GetBatchToDispatchAndCreate();
         }
 
         if (toDispatch != null) {
-            // Discarded for Fire & Forget
-            _ = toDispatch.DispatchAsync(this.cancellationTokenSource.Token);
+            toDispatch.DispatchAsync();  // discarded for fire and forget
         }
 
         this.ResetTimer();
     }
 
     private BatchAsyncBatcher GetBatchToDispatchAndCreate() {
-        if (this.currentBatcher.getIsEmpty()) {
+
+        if (this.currentBatcher.isEmpty()) {
             return null;
         }
 
@@ -140,6 +126,6 @@ public class BatchAsyncStreamer implements AutoCloseable {
         this.timerTask = this.currentTimer.StartTimerAsync().ContinueWith((task) ->
         {
             this.DispatchTimer();
-        }, this.cancellationTokenSource.Token);
+        });
     }
 }

@@ -111,7 +111,7 @@ final class RntbdRequestHeaders extends RntbdTokenStream<RntbdRequestHeader> {
         this.addSupportSpatialLegacyCoordinates(headers);
         this.addUsePolygonsSmallerThanAHemisphere(headers);
 
-        // Normal headers (Strings, Ints, Longs, etc.)
+        // Normal headers (Strings, Integers, Longs, Shorts etc.)
 
         this.fillTokenFromHeader(headers, this::getAllowTentativeWrites, BackendHeaders.ALLOW_TENTATIVE_WRITES);
         this.fillTokenFromHeader(headers, this::getAuthorizationToken, HttpHeaders.AUTHORIZATION);

@@ -8,6 +8,11 @@ package com.azure.cosmos.implementation;
  */
 public final class Constants {
 
+    public static final int MAX_DIRECT_MODE_BATCH_REQUEST_BODY_SIZE_IN_BYTES = 2202010;
+    public static final int MAX_OPERATIONS_IN_DIRECT_MODE_BATCH_REQUEST = 100;
+    public static final int MAX_GATEWAY_MODE_BATCH_REQUEST_BODY_SIZE_IN_BYTES = 16777216;
+    public static final int MAX_OPERATIONS_IN_GATEWAY_MODE_BATCH_REQUEST = 1000;
+
     public static final class Quota {
         // Quota Strings
         public static final String DATABASE = "databases";
@@ -193,7 +198,7 @@ public final class Constants {
         public static final String SINGLE_SPACE_URI_ENCODING = "%20";
         public static final String UTF_8 = "UTF-8";
     }
-    
+
     public static final class PartitionedQueryExecutionInfo {
         public static final int VERSION_1 = 1;
     }

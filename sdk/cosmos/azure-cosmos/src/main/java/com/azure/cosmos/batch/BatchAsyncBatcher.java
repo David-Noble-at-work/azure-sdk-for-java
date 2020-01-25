@@ -10,6 +10,7 @@ import javax.annotation.Nonnull;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -19,30 +20,29 @@ import static com.google.common.base.Preconditions.checkNotNull;
  * <p>
  * The dispatch process involves:
  * <ol>
- * <li>Creating a {@link PartitionKeyRangeServerBatchRequest"}.</li>
+ * <li>Creating a {@link PartitionKeyRangeServerBatchRequest}.
  * <li>Verifying overflow that might happen due to HybridRow serialization. Any operations that did not fit, get sent
- * to the {@link BatchAsyncBatcherRetryDelegate}.</li>
- * <li>Delegating to {@link BatchAsyncBatcherExecuteDelegate} to execute a request.</li>
+ * to the {@link BatchAsyncBatcherRetryDelegate}.
+ * <li>Delegating to {@link BatchAsyncBatcherExecuteDelegate} to execute a request.
  * <li>Delegating to {@link BatchAsyncBatcherRetryDelegate} to retry a request, if a split is detected. In this case
- * all operations in the request are sent to the {@link BatchAsyncBatcherRetryDelegate} for re-queueing.</li>
- * <li>The result of the request is used to wire up all responses with the original tasks for each operation.</li>
+ * all operations in the request are sent to the {@link BatchAsyncBatcherRetryDelegate} for re-queueing.
  * </ol>
- * <p>
- * {@link ItemBatchOperation}
+ * The result of the request is used to wire up all responses with the original tasks for each operation.
+ * @see ItemBatchOperation
  */
 public class BatchAsyncBatcher {
 
-    private static Logger logger = LoggerFactory.getLogger(BatchAsyncBatcher.class);
+    private static final Logger logger = LoggerFactory.getLogger(BatchAsyncBatcher.class);
 
     private final InterlockIncrementCheck interlockIncrementCheck = new InterlockIncrementCheck();
-    private ArrayList<ItemBatchOperation> batchOperations;
+    private final ArrayList<ItemBatchOperation> batchOperations;
     private long currentSize = 0;
-    private boolean dispached = false;
-    private BatchAsyncBatcherExecuteDelegate executor;
-    private int maxBatchByteSize;
-    private int maxBatchOperationCount;
-    private BatchAsyncBatcherRetryDelegate retrier;
-    private CosmosSerializerCore serializerCore;
+    private boolean dispatched = false;
+    private final BatchAsyncBatcherExecuteDelegate executor;
+    private final int maxBatchByteSize;
+    private final int maxBatchOperationCount;
+    private final BatchAsyncBatcherRetryDelegate retrier;
+    private final CosmosSerializerCore serializerCore;
 
     public BatchAsyncBatcher(
         final int maxBatchOperationCount,
@@ -63,21 +63,15 @@ public class BatchAsyncBatcher {
         checkNotNull(retrier, "expected non-null retrier");
         checkNotNull(serializerCore, "expected non-null serializerCore");
 
+        this.executor = (PartitionKeyRangeServerBatchRequest request) -> executor.invoke(request);
+        this.retrier = (ItemBatchOperation operation) -> retrier.invoke(operation);
         this.batchOperations = new ArrayList<>(maxBatchOperationCount);
-
-        this.executor =
-            (PartitionKeyRangeServerBatchRequest request, CancellationToken cancellationToken) -> executor.invoke(request, cancellationToken);
-
-        this.retrier =
-            (ItemBatchOperation operation, CancellationToken cancellationToken) -> retrier.invoke(operation,
-                cancellationToken);
-
-        this.maxBatchByteSize = maxBatchByteSize;
         this.maxBatchOperationCount = maxBatchOperationCount;
+        this.maxBatchByteSize = maxBatchByteSize;
         this.serializerCore = serializerCore;
     }
 
-    public final boolean getIsEmpty() {
+    public final boolean isEmpty() {
         return this.batchOperations.isEmpty();
     }
 
@@ -88,7 +82,7 @@ public class BatchAsyncBatcher {
 
         // All operations must be for the same partition key range
 
-        @SuppressWarnings("unchecked") final List<ItemBatchOperation> operationsArraySegment = Collections.unmodifiableList((List<ItemBatchOperation>) this.batchOperations.clone());
+        @SuppressWarnings("unchecked") final List<ItemBatchOperation> operationsArraySegment = Collections.unmodifiableList(new ArrayList<>(this.batchOperations));
         final String partitionKeyRangeId = this.batchOperations.get(0).getContext().getPartitionKeyRangeId();
 
         //C# TO JAVA CONVERTER TODO TASK: There is no equivalent to 'await' in Java:
@@ -102,7 +96,7 @@ public class BatchAsyncBatcher {
             this.serializerCore);
     }
 
-    public Task DispatchAsync() {
+    public CompletableFuture<Void> DispatchAsync() {
 
         this.interlockIncrementCheck.EnterLockCheck();
 
@@ -114,14 +108,14 @@ public class BatchAsyncBatcher {
                 // HybridRow serialization might leave some pending operations out of the batch
                 //C# TO JAVA CONVERTER TODO TASK: There is no equivalent to 'await' in Java:
                 Tuple<PartitionKeyRangeServerBatchRequest, List<ItemBatchOperation>> createRequestResponse =
-                    await
+                    /*await*/
                 this.CreateServerRequestAsync();
                 serverRequest = createRequestResponse.Item1;
                 pendingOperations = createRequestResponse.Item2;
                 // Any overflow goes to a new batch
                 for (ItemBatchOperation operation : pendingOperations) {
                     //C# TO JAVA CONVERTER TODO TASK: There is no equivalent to 'await' in Java:
-                    await this.retrier.invoke(operation);
+                    /*await*/ this.retrier.invoke(operation);
                 }
             } catch (RuntimeException ex) {
                 // Exceptions happening during request creation, fail the entire list
@@ -133,8 +127,7 @@ public class BatchAsyncBatcher {
             }
 
             try {
-                //C# TO JAVA CONVERTER TODO TASK: There is no equivalent to 'await' in Java:
-                PartitionKeyRangeBatchExecutionResult result = await
+                PartitionKeyRangeBatchExecutionResult result = /*await*/
                 this.executor.invoke(serverRequest);
                 try (PartitionKeyRangeBatchResponse batchResponse =
                          new PartitionKeyRangeBatchResponse(serverRequest.getOperations().Count,
@@ -154,11 +147,11 @@ public class BatchAsyncBatcher {
 
                         if (!response.getIsSuccessStatusCode()) {
                             //C# TO JAVA CONVERTER TODO TASK: There is no equivalent to 'await' in Java:
-                            Documents.ShouldRetryResult shouldRetry = await
+                            Documents.ShouldRetryResult shouldRetry = /*await*/
                             itemBatchOperation.getContext().ShouldRetryAsync(response);
                             if (shouldRetry.ShouldRetry) {
                                 //C# TO JAVA CONVERTER TODO TASK: There is no equivalent to 'await' in Java:
-                                await this.retrier.invoke(itemBatchOperation);
+                                /*await*/ this.retrier.invoke(itemBatchOperation);
                                 continue;
                             }
                         }
@@ -179,7 +172,7 @@ public class BatchAsyncBatcher {
             logger.error("Exception during BatchAsyncBatcher: ", error);
         } finally {
             this.batchOperations.clear();
-            this.dispached = true;
+            this.dispatched = true;
         }
     }
 
@@ -188,7 +181,7 @@ public class BatchAsyncBatcher {
         checkNotNull(operation, "expected non-null operation");
         checkNotNull(operation.getContext(), "expected non-null operation context");
 
-        if (this.dispached) {
+        if (this.dispatched) {
             logger.error("Add operation attempted on dispatched batch.");
             return false;
         }

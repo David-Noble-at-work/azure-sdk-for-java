@@ -63,7 +63,7 @@ public class ItemBatchOperation<T> extends ItemBatchOperation
      * @param cancellationToken {@link CancellationToken} for cancellation.
      */
     @Override
-    public Task MaterializeResourceAsync(CosmosSerializerCore serializerCore, CancellationToken cancellationToken) {
+    public CompletableFuture<Void>MaterializeResourceAsync(CosmosSerializerCore serializerCore, CancellationToken cancellationToken) {
         if (this.body.IsEmpty && this.getResource() != null) {
             this.setResourceStream(serializerCore.ToStream(this.getResource()));
             return super.MaterializeResourceAsync(serializerCore, cancellationToken);

@@ -3,10 +3,12 @@
 
 package com.azure.cosmos.batch;
 
+import java.util.concurrent.CompletableFuture;
+
 /**
  * Executor implementation that processes a list of operations.
  */
 @FunctionalInterface
 public interface BatchAsyncBatcherExecuteDelegate {
-    Task<PartitionKeyRangeBatchExecutionResult> invoke(PartitionKeyRangeServerBatchRequest request);
+    CompletableFuture<PartitionKeyRangeBatchExecutionResult> invoke(PartitionKeyRangeServerBatchRequest request);
 }

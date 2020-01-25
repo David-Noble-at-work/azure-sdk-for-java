@@ -7,6 +7,9 @@ import java.io.IOException;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+import static com.azure.cosmos.implementation.Constants.MAX_DIRECT_MODE_BATCH_REQUEST_BODY_SIZE_IN_BYTES;
+import static com.azure.cosmos.implementation.Constants.MAX_OPERATIONS_IN_DIRECT_MODE_BATCH_REQUEST;
+
 /**
  * Cache to create and share Executor instances across the client's lifetime.
  */
@@ -16,9 +19,9 @@ public class BatchAsyncContainerExecutorCache implements AutoCloseable {
 
     public final BatchAsyncContainerExecutor GetExecutorForContainer(
         ContainerCore container,
-        CosmosClientContext cosmosClientContext) {
+        CosmosClientContext clientContext) {
 
-        if (!cosmosClientContext.ClientOptions.AllowBulkExecution) {
+        if (!clientContext.ClientOptions.AllowBulkExecution) {
             throw new IllegalStateException("AllowBulkExecution is not currently enabled.");
         }
 
@@ -32,10 +35,13 @@ public class BatchAsyncContainerExecutorCache implements AutoCloseable {
             return executor;
         }
 
-        BatchAsyncContainerExecutor newExecutor = new BatchAsyncContainerExecutor(container, cosmosClientContext,
-            Constants.MaxOperationsInDirectModeBatchRequest, Constants.MaxDirectModeBatchRequestBodySizeInBytes);
+        BatchAsyncContainerExecutor newExecutor = new BatchAsyncContainerExecutor(
+            container, clientContext, MAX_OPERATIONS_IN_DIRECT_MODE_BATCH_REQUEST,
+            MAX_DIRECT_MODE_BATCH_REQUEST_BODY_SIZE_IN_BYTES);
+
         //C# TO JAVA CONVERTER TODO TASK: There is no Java ConcurrentHashMap equivalent to this .NET
         // ConcurrentDictionary method:
+
         if (!this.executorsPerContainer.TryAdd(containerLink, newExecutor)) {
             newExecutor.close();
         }

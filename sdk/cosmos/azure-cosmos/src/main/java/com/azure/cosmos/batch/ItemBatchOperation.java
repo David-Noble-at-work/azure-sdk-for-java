@@ -6,8 +6,12 @@ package com.azure.cosmos.batch;
 import com.azure.cosmos.PartitionKey;
 import com.azure.cosmos.implementation.OperationType;
 
+import javax.annotation.Nonnull;
 import java.io.IOException;
+import java.util.concurrent.CompletableFuture;
 import java.util.stream.Stream;
+
+import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
  * Represents an operation on an item which will be executed as part of a batch request on a container.
@@ -27,9 +31,7 @@ public class ItemBatchOperation implements AutoCloseable {
     private PartitionKey PartitionKey = null;
     private String PartitionKeyJson;
     private TransactionalBatchItemRequestOptions RequestOptions;
-    //C# TO JAVA CONVERTER TODO TASK: C# to Java Converter cannot determine whether this System.IO.Stream is input or
-    // output:
-    private Stream ResourceStream;
+    private Stream resourceStream;
     private Memory<Byte> body;
     private boolean isDisposed;
 
@@ -201,25 +203,20 @@ public class ItemBatchOperation implements AutoCloseable {
     //C# TO JAVA CONVERTER TODO TASK: C# to Java Converter cannot determine whether this System.IO.Stream is input or
     // output:
     public final Stream getResourceStream() {
-        return ResourceStream;
+        return resourceStream;
     }
 
     //C# TO JAVA CONVERTER TODO TASK: C# to Java Converter cannot determine whether this System.IO.Stream is input or
     // output:
     protected final void setResourceStream(Stream value) {
-        ResourceStream = value;
+        resourceStream = value;
     }
 
     /**
-     * Attached a context to the current operation to track resolution.
-     *
-     * @throws InvalidOperationException If the operation already had an attached context.
+     * Attaches a context to the current operation to track resolution.
      */
-    public final void AttachContext(ItemBatchOperationContext context) {
-        if (this.getContext() != null) {
-            throw new IllegalStateException("Cannot modify the current context of an operation.");
-        }
-
+    public final void AttachContext(@Nonnull final ItemBatchOperationContext context) {
+        checkNotNull(context, "expected non-null context");
         this.setContext(context);
     }
 
@@ -292,15 +289,10 @@ public class ItemBatchOperation implements AutoCloseable {
      * Materializes the operation's resource into a Memory{byte} wrapping a byte array.
      *
      * @param serializerCore Serializer to serialize user provided objects to JSON.
-     * @param cancellationToken {@link CancellationToken} for cancellation.
      */
-    //C# TO JAVA CONVERTER TODO TASK: There is no equivalent in Java to the 'async' keyword:
-    //ORIGINAL LINE: internal virtual async Task MaterializeResourceAsync(CosmosSerializerCore serializerCore,
-    // CancellationToken cancellationToken)
-    public Task MaterializeResourceAsync(CosmosSerializerCore serializerCore, CancellationToken cancellationToken) {
+    public CompletableFuture<Void> MaterializeResourceAsync(CosmosSerializerCore serializerCore) {
         if (this.body.IsEmpty && this.getResourceStream() != null) {
-            //C# TO JAVA CONVERTER TODO TASK: There is no equivalent to 'await' in Java:
-            this.body = await BatchExecUtils.StreamToMemoryAsync(this.getResourceStream(), cancellationToken);
+            this.body = /*await*/ BatchExecUtils.StreamToMemoryAsync(this.getResourceStream());
         }
     }
 

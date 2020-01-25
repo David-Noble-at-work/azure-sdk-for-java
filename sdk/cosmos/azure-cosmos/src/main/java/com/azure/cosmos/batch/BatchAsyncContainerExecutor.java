@@ -4,12 +4,21 @@
 package com.azure.cosmos.batch;
 
 import com.azure.cosmos.RetryOptions;
-import com.azure.cosmos.implementation.HttpConstants;
 import com.azure.cosmos.implementation.HttpConstants.HttpHeaders;
+import com.azure.cosmos.implementation.IDocumentClientRetryPolicy;
+import com.azure.cosmos.implementation.OperationType;
+import com.azure.cosmos.implementation.RequestOptions;
+import com.azure.cosmos.implementation.ResourceThrottleRetryPolicy;
+import com.azure.cosmos.implementation.ResourceType;
+import com.azure.cosmos.implementation.directconnectivity.WFConstants.BackendHeaders;
+import com.azure.cosmos.implementation.routing.CollectionRoutingMap;
 
 import javax.annotation.Nonnull;
 import java.io.IOException;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Stream;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -29,10 +38,8 @@ import static com.google.common.base.Preconditions.checkNotNull;
 public class BatchAsyncContainerExecutor implements AutoCloseable {
     private static final int DefaultDispatchTimerInSeconds = 1;
     private static final int MinimumDispatchTimerInSeconds = 1;
-    private final java.util.concurrent.ConcurrentHashMap<String, SemaphoreSlim> limitersByPartitionkeyRange =
-        new java.util.concurrent.ConcurrentHashMap<String, SemaphoreSlim>();
-    private final java.util.concurrent.ConcurrentHashMap<String, BatchAsyncStreamer> streamersByPartitionKeyRange =
-        new java.util.concurrent.ConcurrentHashMap<String, BatchAsyncStreamer>();
+    private final ConcurrentHashMap<String, SemaphoreSlim> limitersByPartitionkeyRange = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<String, BatchAsyncStreamer> streamersByPartitionKeyRange = new ConcurrentHashMap<>();
     private CosmosClientContext cosmosClientContext;
     private ContainerCore cosmosContainer;
     private int dispatchTimerInSeconds;
@@ -97,46 +104,38 @@ public class BatchAsyncContainerExecutor implements AutoCloseable {
     }
 
 
-    public Task<TransactionalBatchOperationResult> AddAsync(
+    public CompletableFuture<TransactionalBatchOperationResult> AddAsync(
         ItemBatchOperation operation,
         ItemRequestOptions itemRequestOptions) {
         return AddAsync(operation, itemRequestOptions, null);
     }
 
-    public Task<TransactionalBatchOperationResult> AddAsync(ItemBatchOperation operation) {
+    public CompletableFuture<TransactionalBatchOperationResult> AddAsync(ItemBatchOperation operation) {
         return AddAsync(operation, null, null);
     }
 
-    public Task<TransactionalBatchOperationResult> AddAsync(
-        ItemBatchOperation operation,
-        ItemRequestOptions itemRequestOptions) {
+    public CompletableFuture<TransactionalBatchOperationResult> AddAsync(
+        @Nonnull final ItemBatchOperation operation, final ItemRequestOptions itemRequestOptions) {
 
         checkNotNull(operation, "expected non-null operation");
 
-        //C# TO JAVA CONVERTER TODO TASK: There is no equivalent to 'await' in Java:
-        await this.ValidateOperationAsync(operation, itemRequestOptions);
+        /*await*/ this.ValidateOperationAsync(operation, itemRequestOptions);
 
-        //C# TO JAVA CONVERTER TODO TASK: There is no equivalent to 'await' in Java:
-        String resolvedPartitionKeyRangeId = await
-        this.ResolvePartitionKeyRangeIdAsync(operation).ConfigureAwait(false);
+        String resolvedPartitionKeyRangeId = /*await*/
+        this.ResolvePartitionKeyRangeIdAsync(operation);
         BatchAsyncStreamer streamer = this.GetOrAddStreamerForPartitionKeyRange(resolvedPartitionKeyRangeId);
         ItemBatchOperationContext context = new ItemBatchOperationContext(resolvedPartitionKeyRangeId,
             BatchAsyncContainerExecutor.GetRetryPolicy(this.retryOptions));
         operation.AttachContext(context);
         streamer.Add(operation);
-        //C# TO JAVA CONVERTER TODO TASK: There is no equivalent to 'await' in Java:
-        return await context.getOperationTask();
+        return /*await*/ context.getOperationTask();
     }
 
-    public Task ValidateOperationAsync(ItemBatchOperation operation) {
+    public CompletableFuture<Void> ValidateOperationAsync(ItemBatchOperation operation) {
         return ValidateOperationAsync(operation, null);
     }
 
-    //C# TO JAVA CONVERTER TODO TASK: There is no equivalent in Java to the 'async' keyword:
-    //ORIGINAL LINE: internal virtual async Task ValidateOperationAsync(ItemBatchOperation operation,
-    // ItemRequestOptions itemRequestOptions = null, CancellationToken cancellationToken = default(CancellationToken))
-    //C# TO JAVA CONVERTER NOTE: Java does not support optional parameters. Overloaded method(s) are created above:
-    public Task ValidateOperationAsync(ItemBatchOperation operation, ItemRequestOptions itemRequestOptions) {
+    public CompletableFuture<Void> ValidateOperationAsync(ItemBatchOperation operation, ItemRequestOptions itemRequestOptions) {
 
         if (itemRequestOptions != null) {
             if (itemRequestOptions.BaseConsistencyLevel.HasValue || itemRequestOptions.PreTriggers != null || itemRequestOptions.PostTriggers != null || itemRequestOptions.SessionToken != null) {
@@ -145,8 +144,7 @@ public class BatchAsyncContainerExecutor implements AutoCloseable {
             assert BatchAsyncContainerExecutor.ValidateOperationEPK(operation, itemRequestOptions);
         }
 
-        //C# TO JAVA CONVERTER TODO TASK: There is no equivalent to 'await' in Java:
-        await operation.MaterializeResourceAsync(this.cosmosClientContext.SerializerCore);
+        /*await*/ operation.MaterializeResourceAsync(this.cosmosClientContext.SerializerCore);
     }
 
     public final void close() throws IOException {
@@ -171,34 +169,36 @@ public class BatchAsyncContainerExecutor implements AutoCloseable {
     //C# TO JAVA CONVERTER TODO TASK: There is no equivalent in Java to the 'async' keyword:
     //ORIGINAL LINE: private async Task<PartitionKeyRangeBatchExecutionResult> ExecuteAsync
     // (PartitionKeyRangeServerBatchRequest serverRequest, CancellationToken cancellationToken)
-    private Task<PartitionKeyRangeBatchExecutionResult> ExecuteAsync(PartitionKeyRangeServerBatchRequest serverRequest) {
+    private CompletableFuture<PartitionKeyRangeBatchExecutionResult> ExecuteAsync(
+        PartitionKeyRangeServerBatchRequest serverRequest) {
 
         CosmosDiagnosticsContext diagnosticsContext = new CosmosDiagnosticsContext();
         CosmosDiagnosticScope limiterScope = diagnosticsContext.CreateScope("BatchAsyncContainerExecutor.Limiter");
         SemaphoreSlim limiter = this.GetOrAddLimiterForPartitionKeyRange(serverRequest.getPartitionKeyRangeId());
 
-        try (await limiter.UsingWaitAsync(cancellationToken))
-        {
+        try (/*await*/ limiter.UsingWaitAsync()) {
+
             limiterScope.Dispose();
+
             try (Stream serverRequestPayload = serverRequest.TransferBodyStream()) {
-                Debug.Assert(serverRequestPayload != null, "Server request payload expected to be non-null");
-                //C# TO JAVA CONVERTER TODO TASK: There is no equivalent to 'await' in Java:
-                ResponseMessage responseMessage = await
-                this.cosmosClientContext.ProcessResourceOperationStreamAsync(this.cosmosContainer.LinkUri,
-                    ResourceType.Document, OperationType.Batch, new RequestOptions(), cosmosContainerCore:
-                this.cosmosContainer, partitionKey:null, streamPayload:serverRequestPayload, requestEnricher:
-                requestMessage -> BatchAsyncContainerExecutor.AddHeadersToRequestMessage(requestMessage,
-                    serverRequest.getPartitionKeyRangeId()), diagnosticsScope:
-                diagnosticsContext, cancellationToken:cancellationToken).ConfigureAwait(false);
+
+                assert serverRequestPayload != null : "expected non-null serverRequestPayload";
+
+                ResponseMessage responseMessage = /*await*/this.cosmosClientContext.ProcessResourceOperationStreamAsync(
+                    this.cosmosContainer.LinkUri, ResourceType.Document, OperationType.Batch, new RequestOptions(),
+                    this.cosmosContainer, null, serverRequestPayload, requestMessage ->
+                        BatchAsyncContainerExecutor.AddHeadersToRequestMessage(
+                            requestMessage,
+                            serverRequest.getPartitionKeyRangeId()), diagnosticsContext);
 
                 try (diagnosticsContext.CreateScope("BatchAsyncContainerExecutor.ToResponse")) {
                     //C# TO JAVA CONVERTER TODO TASK: There is no equivalent to 'await' in Java:
-                    TransactionalBatchResponse serverResponse = await
+                    TransactionalBatchResponse serverResponse = /*await*/
                     TransactionalBatchResponse.FromResponseMessageAsync(responseMessage, serverRequest,
                         this.cosmosClientContext.SerializerCore).ConfigureAwait(false);
 
-                    return new PartitionKeyRangeBatchExecutionResult(serverRequest.getPartitionKeyRangeId(),
-                        serverRequest.getOperations(), serverResponse);
+                    return new PartitionKeyRangeBatchExecutionResult(
+                        serverRequest.getPartitionKeyRangeId(), serverRequest.getOperations(), serverResponse);
                 }
             }
         }
@@ -238,10 +238,8 @@ public class BatchAsyncContainerExecutor implements AutoCloseable {
 
         BatchAsyncStreamer newStreamer = new BatchAsyncStreamer(this.maxServerRequestOperationCount,
             this.maxServerRequestBodyLength, this.dispatchTimerInSeconds, this.timerPool,
-            this.cosmosClientContext.SerializerCore, (PartitionKeyRangeServerBatchRequest request,
-                                                      CancellationToken cancellationToken) -> ExecuteAsync(request),
-            (ItemBatchOperation operation) -> ReBatchAsync(operation,
-                cancellationToken));
+            this.cosmosClientContext.SerializerCore, (PartitionKeyRangeServerBatchRequest request) -> ExecuteAsync(request),
+            (ItemBatchOperation operation) -> ReBatchAsync(operation));
 
         //C# TO JAVA CONVERTER TODO TASK: There is no Java ConcurrentHashMap equivalent to this .NET
         // ConcurrentDictionary method:
@@ -255,27 +253,27 @@ public class BatchAsyncContainerExecutor implements AutoCloseable {
     //C# TO JAVA CONVERTER TODO TASK: There is no equivalent in Java to the 'async' keyword:
     //ORIGINAL LINE: private async Task<Documents.Routing.PartitionKeyInternal> GetPartitionKeyInternalAsync
     // (ItemBatchOperation operation, CancellationToken cancellationToken)
-    private Task<Documents.Routing.PartitionKeyInternal> GetPartitionKeyInternalAsync(ItemBatchOperation operation,
-                                                                                      CancellationToken cancellationToken) {
-        Debug.Assert(operation.getPartitionKey() != null, "PartitionKey should be set on the operation");
+    private CompletableFuture<Documents.Routing.PartitionKeyInternal> GetPartitionKeyInternalAsync(ItemBatchOperation operation) {
+        assert operation.getPartitionKey() != null : "expected non-null operation.partitionKey";
         if (operation.getPartitionKey().getValue().IsNone) {
             //C# TO JAVA CONVERTER TODO TASK: There is no equivalent to 'await' in Java:
-            return await this.cosmosContainer.GetNonePartitionKeyValueAsync(cancellationToken).ConfigureAwait(false);
+            return /*await*/ this.cosmosContainer.GetNonePartitionKeyValueAsync().ConfigureAwait(false);
         }
 
         return operation.getPartitionKey().getValue().InternalKey;
     }
 
     private static IDocumentClientRetryPolicy GetRetryPolicy(RetryOptions retryOptions) {
-        return new BulkPartitionKeyRangeGoneRetryPolicy(new ResourceThrottleRetryPolicy(retryOptions.MaxRetryAttemptsOnThrottledRequests, retryOptions.MaxRetryWaitTimeInSeconds));
+        return new BulkPartitionKeyRangeGoneRetryPolicy(
+            new ResourceThrottleRetryPolicy(
+                retryOptions.getMaxRetryAttemptsOnThrottledRequests(),
+                retryOptions.getMaxRetryWaitTimeInSeconds()));
     }
 
-    //C# TO JAVA CONVERTER TODO TASK: There is no equivalent in Java to the 'async' keyword:
-    //ORIGINAL LINE: private async Task ReBatchAsync(ItemBatchOperation operation, CancellationToken cancellationToken)
-    private Task ReBatchAsync(ItemBatchOperation operation, CancellationToken cancellationToken) {
-        //C# TO JAVA CONVERTER TODO TASK: There is no equivalent to 'await' in Java:
-        String resolvedPartitionKeyRangeId = await
-        this.ResolvePartitionKeyRangeIdAsync(operation, cancellationToken).ConfigureAwait(false);
+
+    private CompletableFuture<Void> ReBatchAsync(ItemBatchOperation operation) {
+        String resolvedPartitionKeyRangeId = /*await*/
+        this.ResolvePartitionKeyRangeIdAsync(operation);
         BatchAsyncStreamer streamer = this.GetOrAddStreamerForPartitionKeyRange(resolvedPartitionKeyRangeId);
         streamer.Add(operation);
     }
@@ -283,27 +281,28 @@ public class BatchAsyncContainerExecutor implements AutoCloseable {
     //C# TO JAVA CONVERTER TODO TASK: There is no equivalent in Java to the 'async' keyword:
     //ORIGINAL LINE: private async Task<string> ResolvePartitionKeyRangeIdAsync(ItemBatchOperation operation,
     // CancellationToken cancellationToken)
-    private Task<String> ResolvePartitionKeyRangeIdAsync(ItemBatchOperation operation,
-                                                         CancellationToken cancellationToken) {
+    private CompletableFuture<String> ResolvePartitionKeyRangeIdAsync(ItemBatchOperation operation) {
+
         cancellationToken.ThrowIfCancellationRequested();
-        //C# TO JAVA CONVERTER TODO TASK: There is no equivalent to 'await' in Java:
-        PartitionKeyDefinition partitionKeyDefinition = await
+
+        PartitionKeøyDefinition partitionKeyDefinition =/*await*/
         this.cosmosContainer.GetPartitionKeyDefinitionAsync(cancellationToken);
-        //C# TO JAVA CONVERTER TODO TASK: There is no equivalent to 'await' in Java:
-        CollectionRoutingMap collectionRoutingMap = await this.cosmosContainer.GetRoutingMapAsync(cancellationToken);
+        CollectionRoutingMap collectionRoutingMap = /*await*/ this.cosmosContainer.GetRoutingMapAsync();
 
         Object epkObj;
         //C# TO JAVA CONVERTER TODO TASK: The following method call contained an unresolved 'out' keyword - these
         // cannot be converted using the 'OutObject' helper class unless the method is within the code being modified:
-        Debug.Assert(operation.getRequestOptions() == null ? null :
-            (operation.getRequestOptions().Properties == null ? null :
-                operation.getRequestOptions().Properties.TryGetValue(WFConstants.BackendHeaders.EffectivePartitionKeyString, out epkObj)) == null, "EPK is not supported");
-        //C# TO JAVA CONVERTER TODO TASK: There is no equivalent to 'await' in Java:
-        Documents.Routing.PartitionKeyInternal partitionKeyInternal = await
-        this.GetPartitionKeyInternalAsync(operation, cancellationToken);
+        assert operation.getRequestOptions() == null ? null
+            : (operation.getRequestOptions().Properties == null
+                ? null
+                : operation.getRequestOptions().Properties.TryGetValue(BackendHeaders.EFFECTIVE_PARTITION_KEY_STRING, out epkObj)) == null
+            : "EPK is not supported";
+
+        Documents.Routing.PartitionKeyInternal partitionKeyInternal = /*await*/
+        this.GetPartitionKeyInternalAsync(operation);
         operation.setPartitionKeyJson(partitionKeyInternal.ToJsonString());
-        String effectivePartitionKeyString =
-            partitionKeyInternal.GetEffectivePartitionKeyString(partitionKeyDefinition);
+        String effectivePartitionKeyString = partitionKeyInternal.GetEffectivePartitionKeyString(partitionKeyDefinition);
+
         return collectionRoutingMap.GetRangeByEffectivePartitionKey(effectivePartitionKeyString).Id;
     }
 
@@ -313,7 +312,7 @@ public class BatchAsyncContainerExecutor implements AutoCloseable {
         Object pkStringObj;
         //C# TO JAVA CONVERTER TODO TASK: The following method call contained an unresolved 'out' keyword - these
         // cannot be converted using the 'OutObject' helper class unless the method is within the code being modified:
-        if (itemRequestOptions.Properties != null && (itemRequestOptions.Properties.TryGetValue(WFConstants.BackendHeaders.EffectivePartitionKey, out epkObj) | itemRequestOptions.Properties.TryGetValue(WFConstants.BackendHeaders.EffectivePartitionKeyString, out epkStrObj) | itemRequestOptions.Properties.TryGetValue(HttpHeaders.PartitionKey, out pkStringObj))) {
+        if (itemRequestOptions.Properties != null && (itemRequestOptions.Properties.TryGetValue(BackendHeaders.EFFECTIVE_PARTITION_KEY, out epkObj) | itemRequestOptions.Properties.TryGetValue(BackendHeaders.EffectivePartitionKeyString, out epkStrObj) | itemRequestOptions.Properties.TryGetValue(HttpHeaders.PartitionKey, out pkStringObj))) {
             //C# TO JAVA CONVERTER WARNING: Unsigned integer types have no direct equivalent in Java:
             //ORIGINAL LINE: byte[] epk = epkObj instanceof byte[] ? (byte[])epkObj : null;
             byte[] epk = epkObj instanceof byte[] ? (byte[]) epkObj : null;
@@ -321,8 +320,8 @@ public class BatchAsyncContainerExecutor implements AutoCloseable {
             String pkString = pkStringObj instanceof String ? (String) pkStringObj : null;
             if ((epk == null && pkString == null) || epkStr == null) {
                 throw new IllegalStateException(String.format(ClientResources.EpkPropertiesPairingExpected,
-                    WFConstants.BackendHeaders.EffectivePartitionKey,
-                    WFConstants.BackendHeaders.EffectivePartitionKeyString));
+                    BackendHeaders.EFFECTIVE_PARTITION_KEY,
+                    BackendHeaders.EFFECTIVE_PARTITION_KEY_STRING));
             }
 
             if (operation.getPartitionKey() != null) {

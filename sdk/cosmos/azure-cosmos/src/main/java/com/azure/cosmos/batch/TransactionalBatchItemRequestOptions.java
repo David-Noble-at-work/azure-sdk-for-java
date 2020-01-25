@@ -29,13 +29,17 @@ public class TransactionalBatchItemRequestOptions extends RequestOptions {
     }
 
     public static TransactionalBatchItemRequestOptions FromItemRequestOptions(ItemRequestOptions itemRequestOptions) {
+
         if (itemRequestOptions == null) {
             return null;
         }
 
-        RequestOptions requestOptions = itemRequestOptions instanceof RequestOptions ?
-            (RequestOptions) itemRequestOptions : null;
+        RequestOptions requestOptions = itemRequestOptions instanceof RequestOptions
+            ? (RequestOptions) itemRequestOptions
+            : null;
+
         TransactionalBatchItemRequestOptions batchItemRequestOptions = new TransactionalBatchItemRequestOptions();
+
         batchItemRequestOptions.setIndexingDirective(itemRequestOptions.IndexingDirective);
         batchItemRequestOptions.IfMatchEtag = requestOptions.IfMatchEtag;
         batchItemRequestOptions.IfNoneMatchEtag = requestOptions.IfNoneMatchEtag;
