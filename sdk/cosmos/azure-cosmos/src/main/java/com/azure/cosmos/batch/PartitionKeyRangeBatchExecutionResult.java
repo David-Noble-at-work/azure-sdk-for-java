@@ -35,7 +35,7 @@ public final class PartitionKeyRangeBatchExecutionResult {
     }
 
     public boolean isSplit() {
-        return this.getServerResponse() != null && this.getServerResponse().getStatusCode() == StatusCodes.GONE && (
+        return this.getServerResponse() != null && this.getServerResponse().getResponseStatus() == StatusCodes.GONE && (
             this.getServerResponse().getSubStatusCode() == SubStatusCodes.COMPLETING_SPLIT
                 || this.getServerResponse().getSubStatusCode() == SubStatusCodes.COMPLETING_PARTITION_MIGRATION
                 || this.getServerResponse().getSubStatusCode() == SubStatusCodes.PARTITION_KEY_RANGE_GONE);

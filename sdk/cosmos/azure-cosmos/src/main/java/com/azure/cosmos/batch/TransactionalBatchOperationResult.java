@@ -18,67 +18,49 @@ import javax.annotation.Nonnull;
 import java.io.InputStream;
 import java.time.Duration;
 
+import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 
 /**
  * Represents a result for a specific operation that was part of a {@link TransactionalBatch} request.
  */
-public class TransactionalBatchOperationResult {
+public class TransactionalBatchOperationResult<TResource> {
 
-    private static Logger logger = LoggerFactory.getLogger(TransactionalBatchOperationResult.class);
+    private static final Logger logger = LoggerFactory.getLogger(TransactionalBatchOperationResult.class);
 
-    /**
-     * Gets the cosmos diagnostic information for the current request to Azure Cosmos DB service
-     */
-    private CosmosDiagnosticsContext DiagnosticsContext;
-    /**
-     * Gets the entity tag associated with the resource.
-     *
-     * <value>
-     * The entity tag associated with the resource.
-     * </value>
-     * <p>
-     * ETags are used for concurrency checking when updating resources.
-     */
-    private String ETag;
-    /**
-     * Request charge in request units for the operation.
-     */
-    private double RequestCharge;
-    /**
-     * Gets the content of the resource.
-     *
-     * <value>
-     * The content of the resource as a Stream.
-     * </value>
-     */
-    //C# TO JAVA CONVERTER TODO TASK: C# to Java Converter cannot determine whether this System.IO.Stream is input or
-    // output:
+    private CosmosDiagnosticsContext diagnosticsContext;
+    private String eTag;
+    private double requestCharge;
+    private TResource resource;
     private InputStream resourceStream;
-    /**
-     * In case the operation is rate limited, indicates the time post which a retry can be attempted.
-     */
-    private Duration RetryAfter;
+
     /**
      * Gets the completion status of the operation.
      */
     private HttpResponseStatus responseStatus;
     /**
+     * In case the operation is rate limited, indicates the time post which a retry can be attempted.
+     */
+    private Duration retryAfter;
+    /**
      * Gets detail on the completion status of the operation.
      */
-    private int SubStatusCode;
+    private int subStatusCode;
 
-    public TransactionalBatchOperationResult(HttpResponseStatus responseStatus) {
-        this.setResponseStatus(responseStatus);
+    public TransactionalBatchOperationResult(final HttpResponseStatus responseStatus) {
+        this.responseStatus = responseStatus;
     }
 
-    public TransactionalBatchOperationResult(TransactionalBatchOperationResult other) {
-        this.setResponseStatus(other.getResponseStatus());
-        this.setSubStatusCode(other.getSubStatusCode());
-        this.setETag(other.getETag());
-        this.setResourceStream(other.getResourceStream());
-        this.setRequestCharge(other.getRequestCharge());
-        this.setRetryAfter(other.getRetryAfter());
+    public TransactionalBatchOperationResult(@Nonnull final TransactionalBatchOperationResult<TResource> other) {
+
+        checkNotNull(other, "expected non-null other");
+
+        this.responseStatus = other.responseStatus;
+        this.subStatusCode = other.subStatusCode;
+        this.eTag = other.eTag;
+        this.resourceStream = other.resourceStream;
+        this.requestCharge = other.requestCharge;
+        this.retryAfter = other.retryAfter;
     }
 
     /**
@@ -87,85 +69,124 @@ public class TransactionalBatchOperationResult {
     protected TransactionalBatchOperationResult() {
     }
 
+    /**
+     * Gets the Cosmos diagnostic information for the current request to the Azure Cosmos DB service.
+     *
+     * @return Cosmos diagnostic information for the current request to the Azure Cosmos DB service.
+     */
     public CosmosDiagnosticsContext getDiagnosticsContext() {
-        return DiagnosticsContext;
+        return this.diagnosticsContext;
     }
 
-    public void setDiagnosticsContext(CosmosDiagnosticsContext value) {
-        DiagnosticsContext = value;
-    }
-
-    public String getETag() {
-        return ETag;
-    }
-
-    public void setETag(String value) {
-        ETag = value;
+    public TransactionalBatchOperationResult<TResource> setDiagnosticsContext(final CosmosDiagnosticsContext value) {
+        this.diagnosticsContext = value;
+        return this;
     }
 
     /**
-     * Gets a value indicating whether the current operation completed successfully.
+     * Gets the entity tag associated with the current resource.
+     * <p>
+     * ETags are used for concurrency checking when updating resources.
+     *
+     * @return Entity tag associated with the current resource.
      */
-    public boolean isSuccessStatusCode() {
-        int statusCode = (int) this.getResponseStatus().code();
-        return statusCode >= 200 && statusCode <= 299;
+    public String getETag() {
+        return this.eTag;
     }
 
+    public TransactionalBatchOperationResult<TResource> setETag(final String value) {
+        this.eTag = value;
+        return this;
+    }
+
+    /**
+     * Gets the request charge in request units for the current operation.
+     *
+     * @return Request charge in request units for the current operation.
+     */
     public double getRequestCharge() {
-        return RequestCharge;
+        return requestCharge;
     }
 
-    public void setRequestCharge(double value) {
-        RequestCharge = value;
+    public TransactionalBatchOperationResult<TResource> setRequestCharge(final double value) {
+        this.requestCharge = value;
+        return this;
     }
 
-    //C# TO JAVA CONVERTER TODO TASK: C# to Java Converter cannot determine whether this System.IO.Stream is input or
-    // output:
+    /**
+     * Gets the resource associated with the current result.
+     *
+     * @return Resource associated with the current result.
+     */
+    public TResource getResource() {
+        return this.resource;
+    }
+
+    public TransactionalBatchOperationResult<TResource> setResource(final TResource value) {
+        this.resource = value;
+        return this;
+    }
+
+    /**
+     * Gets the content of the resource associated with the current result as an {@link InputStream}.
+     *
+     * @return Content of the resource associated with the current result as an {@link InputStream}.
+     */
     public InputStream getResourceStream() {
         return this.resourceStream;
     }
 
-    //C# TO JAVA CONVERTER TODO TASK: C# to Java Converter cannot determine whether this System.IO.Stream is input or
-    // output:
-    public void setResourceStream(InputStream value) {
+    public TransactionalBatchOperationResult<TResource> setResourceStream(final InputStream value) {
         this.resourceStream = value;
+        return this;
     }
 
     public Duration getRetryAfter() {
-        return RetryAfter;
+        return this.retryAfter;
     }
 
-    public void setRetryAfter(Duration value) {
-        RetryAfter = value;
+    public TransactionalBatchOperationResult<TResource> setRetryAfter(final Duration value) {
+        this.retryAfter = value;
+        return this;
     }
 
-    public HttpResponseStatus getResponseStatus() {
-        return this.responseStatus;
-    }
-
-    private void setResponseStatus(HttpResponseStatus value) {
-        this.responseStatus = value;
+    public int getStatusCode() {
+        return this.responseStatus.code();
     }
 
     public int getSubStatusCode() {
-        return SubStatusCode;
+        return this.subStatusCode;
     }
 
-    public void setSubStatusCode(int value) {
-        SubStatusCode = value;
+    public TransactionalBatchOperationResult<TResource> setSubStatusCode(final int value) {
+        this.subStatusCode = value;
+        return this;
+    }
+
+    /**
+     * Gets a value indicating whether the current operation completed successfully.
+     *
+     * @return {@code true} if the current operation completed successfully; {@code false} otherwise.
+     */
+    public boolean isSuccessStatusCode() {
+        final int statusCode = this.responseStatus.code();
+        return 200 <= statusCode && statusCode <= 299;
     }
 
     public static Result ReadOperationResult(
-        @Nonnull Memory<Byte> input, @Nonnull Out<TransactionalBatchOperationResult> batchOperationResult) {
+        @Nonnull Memory<Byte> input, @Nonnull Out<TransactionalBatchOperationResult<?>> batchOperationResult) {
 
         RowBuffer rowBuffer = new RowBuffer(input.Length);
 
-        if (!rowBuffer.readFrom(input.Span, HybridRowVersion.V1, BatchSchemaProvider.getBatchLayoutResolverNamespace())) {
+        if (!rowBuffer.readFrom(input.Span, HybridRowVersion.V1,
+            BatchSchemaProvider.getBatchLayoutResolverNamespace())) {
             batchOperationResult.set(null);
             return Result.FAILURE;
         }
 
-        Result result = TransactionalBatchOperationResult.ReadOperationResult(new RowReader(rowBuffer), batchOperationResult);
+        Result result = TransactionalBatchOperationResult.ReadOperationResult(
+            new RowReader(rowBuffer),
+            batchOperationResult);
 
         if (result != Result.SUCCESS) {
             return result;
@@ -194,10 +215,19 @@ public class TransactionalBatchOperationResult {
             : new CosmosDiagnosticsContext()).setContent(this.getResourceStream());
     }
 
+    protected HttpResponseStatus getResponseStatus() {
+        return this.responseStatus;
+    }
+
+    private TransactionalBatchOperationResult<TResource> setResponseStatus(HttpResponseStatus value) {
+        this.responseStatus = value;
+        return this;
+    }
+
     @SuppressWarnings("unchecked")
     private static Result ReadOperationResult(
         @Nonnull final RowReader reader,
-        @Nonnull final Out<TransactionalBatchOperationResult> batchOperationResult) {
+        @Nonnull final Out<TransactionalBatchOperationResult<?>> batchOperationResult) {
 
         batchOperationResult.set(new TransactionalBatchOperationResult());
         @SuppressWarnings("rawtypes") Out out = new Out();

@@ -15,34 +15,39 @@ import java.util.Iterator;
  */
 public class PartitionKeyRangeBatchResponse extends TransactionalBatchResponse {
 
-    private CosmosSerializerCore serializerCore;
-    private boolean isDisposed;
-
     // Results sorted in the order operations had been added.
 
-    private TransactionalBatchOperationResult[] resultsByOperationIndex;
-    private TransactionalBatchResponse serverResponse;
+    private final TransactionalBatchOperationResult[] resultsByOperationIndex;
+    private final TransactionalBatchResponse serverResponse;
 
     /**
      * Initializes a new instance of the {@link PartitionKeyRangeBatchResponse} class.
      *
      * @param originalOperationsCount Original operations that generated the server responses.
      * @param serverResponse Response from the server.
-     * @param serializerCore Serializer to deserialize response resource body streams.
+     * @param serializer Serializer to deserialize response resource body streams.
      */
     public PartitionKeyRangeBatchResponse(
         final int originalOperationsCount,
         @Nonnull final TransactionalBatchResponse serverResponse,
-        @Nonnull final CosmosSerializerCore serializerCore) {
+        @Nonnull final CosmosSerializerCore serializer) {
 
-        this.setStatusCode(serverResponse.getStatusCode());
+        super(
+            serverResponse.getResponseStatus(),
+            serverResponse.getSubStatusCode(),
+            serverResponse.getErrorMessage(),
+            serverResponse.getRequestCharge(),
+            serverResponse.getRetryAfter(),
+            serverResponse.getActivityId(),
+            serverResponse.getDiagnosticsContext(),
+            new ArrayList<>(serverResponse.getOperations()),
+            serializer);
 
         this.serverResponse = serverResponse;
-        this.resultsByOperationIndex = new TransactionalBatchOperationResult[originalOperationsCount];
-
-        final StringBuilder errorMessageBuilder = new StringBuilder();
 
         // We expect number of results == number of operations here
+
+        this.resultsByOperationIndex = new TransactionalBatchOperationResult[originalOperationsCount];
 
         for (int index = 0; index < serverResponse.getOperations().size(); index++) {
 
@@ -53,17 +58,6 @@ public class PartitionKeyRangeBatchResponse extends TransactionalBatchResponse {
                 this.resultsByOperationIndex[operationIndex] = serverResponse.get(index);
             }
         }
-
-        final ArrayList<ItemBatchOperation> itemBatchOperations = new ArrayList<>(serverResponse.getOperations());
-        this.setRequestCharge(this.getRequestCharge() + serverResponse.getRequestCharge());
-
-        if (!Strings.isNullOrEmpty(serverResponse.getErrorMessage())) {
-            errorMessageBuilder.append(serverResponse.getErrorMessage());
-        }
-
-        this.setErrorMessage(errorMessageBuilder.length() > 0 ? errorMessageBuilder.toString() : null);
-        this.setOperations(itemBatchOperations);
-        this.serializerCore = serializerCore;
     }
 
     /**
@@ -96,7 +90,7 @@ public class PartitionKeyRangeBatchResponse extends TransactionalBatchResponse {
     }
 
     @Override
-    public CosmosSerializerCore getSerializerCore() {
+    public CosmosSerializerCore getSerializer() {
         return serializerCore;
     }
 
@@ -135,7 +129,7 @@ public class PartitionKeyRangeBatchResponse extends TransactionalBatchResponse {
 
         T resource = null;
         if (result.getResourceStream() != null) {
-            resource = this.getSerializerCore().<T>FromStream(result.getResourceStream());
+            resource = this.getSerializer().<T>FromStream(result.getResourceStream());
         }
 
         return new TransactionalBatchOperationResult<T>(result, resource);
