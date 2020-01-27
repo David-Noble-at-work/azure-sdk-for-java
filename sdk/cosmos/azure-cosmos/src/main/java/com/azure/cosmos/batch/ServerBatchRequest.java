@@ -3,9 +3,14 @@
 
 package com.azure.cosmos.batch;
 
+import com.azure.cosmos.serialization.hybridrow.HybridRowVersion;
+import com.azure.cosmos.serialization.hybridrow.Result;
+import com.azure.cosmos.serialization.hybridrow.RowBuffer;
+import com.azure.cosmos.serialization.hybridrow.io.RowWriter;
+
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 
 //C# TO JAVA CONVERTER TODO TASK: There is no preprocessor in Java:
 ///#pragma warning disable CA1001 // Types that own disposable fields should be disposable
@@ -18,13 +23,13 @@ public abstract class ServerBatchRequest
     private MemoryStream bodyStream;
     private long bodyStreamPositionBeforeWritingCurrentRecord;
     private int lastWrittenOperationIndex;
-    private int maxBodyLength;
-    private int maxOperationCount;
+    private final int maxBodyLength;
+    private final int maxOperationCount;
     //C# TO JAVA CONVERTER WARNING: Unsigned integer types have no direct equivalent in Java:
     //ORIGINAL LINE: private MemorySpanResizer<byte> operationResizableWriteBuffer;
     private MemorySpanResizer<Byte> operationResizableWriteBuffer;
     private ArrayList<ItemBatchOperation> operations = new ArrayList<ItemBatchOperation>();
-    private CosmosSerializerCore serializerCore;
+    private final CosmosSerializerCore serializerCore;
     private boolean shouldDeleteLastWrittenRecord;
 
     /**
@@ -70,11 +75,11 @@ public abstract class ServerBatchRequest
      * @return Any pending operations that were not included in the request.
      */
 
-    protected final Task<List<ItemBatchOperation>> CreateBodyStreamAsync(List<ItemBatchOperation> operations) {
+    protected final CompletableFuture<List<ItemBatchOperation>> CreateBodyStreamAsync(List<ItemBatchOperation> operations) {
         return CreateBodyStreamAsync(operations, false);
     }
 
-    protected final Task<List<ItemBatchOperation>> CreateBodyStreamAsync(
+    protected final CompletableFuture<List<ItemBatchOperation>> CreateBodyStreamAsync(
         final List<ItemBatchOperation> operations,
         final boolean ensureContinuousOperationIndexes) {
 
@@ -90,8 +95,7 @@ public abstract class ServerBatchRequest
                 break;
             }
 
-            //C# TO JAVA CONVERTER TODO TASK: There is no equivalent to 'await' in Java:
-            await operation.MaterializeResourceAsync(this.serializerCore);
+            /*await*/ operation.MaterializeResourceAsync(this.serializerCore);
             materializedCount++;
 
             previousOperationIndex = operation.getOperationIndex();
@@ -122,9 +126,8 @@ public abstract class ServerBatchRequest
         this.operationResizableWriteBuffer =
             new MemorySpanResizer<Byte>(estimatedMaxOperationLength + operationSerializationOverheadOverEstimateInBytes);
 
-        //C# TO JAVA CONVERTER TODO TASK: There is no equivalent to 'await' in Java:
-        Result r = await this.bodyStream.WriteRecordIOAsync(null, this.WriteOperation);
-        Debug.Assert(r == Result.Success, "Failed to serialize batch request");
+        Result r = /*await*/ this.bodyStream.WriteRecordIOAsync(null, this.WriteOperation);
+        assert r == Result.SUCCESS : "Failed to serialize batch request";
 
         this.bodyStream.Position = 0;
 
@@ -142,41 +145,37 @@ public abstract class ServerBatchRequest
             overflowOperations);
     }
 
-    //C# TO JAVA CONVERTER WARNING: Unsigned integer types have no direct equivalent in Java:
-    //ORIGINAL LINE: private Result WriteOperation(long index, out ReadOnlyMemory<byte> buffer)
     private Result WriteOperation(long index, tangible.OutObject<ReadOnlyMemory<Byte>> buffer) {
+
         if (this.bodyStream.Length > this.maxBodyLength) {
-            // If there is only one operation within the request, we will keep it even if it
-            // exceeds the maximum size allowed for the body.
+            // If there is only one operation within the request, we will keep it even if it exceeds the maximum size
+            // allowed for the body.
             if (index > 1) {
                 this.shouldDeleteLastWrittenRecord = true;
             }
-
             buffer.argValue = null;
-            return Result.Success;
+            return Result.SUCCESS;
         }
 
         this.bodyStreamPositionBeforeWritingCurrentRecord = this.bodyStream.Length;
 
         if (index >= this.operations.Count) {
             buffer.argValue = null;
-            return Result.Success;
+            return Result.SUCCESS;
         }
 
         ItemBatchOperation operation = this.operations.Array[this.operations.Offset + (int) index];
 
-        RowBuffer row = new RowBuffer(this.operationResizableWriteBuffer.Memory.Length, this.operationResizableWriteBuffer);
-        row.InitLayout(HybridRowVersion.V1, BatchSchemaProvider.getBatchOperationLayout(), BatchSchemaProvider.getBatchLayoutResolver());
-        tangible.RefObject<RowBuffer> tempRef_row = new tangible.RefObject<RowBuffer>(row);
-        Result r = RowWriter.WriteBuffer(tempRef_row, operation, ItemBatchOperation.WriteOperation);
-        row = tempRef_row.argValue;
-        if (r != Result.Success) {
-            buffer.argValue = null;
-            return r;
+        RowBuffer rowBuffer = new RowBuffer(this.operationResizableWriteBuffer.Memory.Length, this.operationResizableWriteBuffer);
+        rowBuffer.initLayout(HybridRowVersion.V1, BatchSchemaProvider.getBatchOperationLayout(), BatchSchemaProvider.getBatchLayoutResolverNamespace());
+        Result result = RowWriter.writeBuffer(rowBuffer, operation, ItemBatchOperation.WriteOperation);
+
+        if (result != Result.SUCCESS) {
+            return result;
         }
 
         this.lastWrittenOperationIndex = (int) index;
-        buffer.argValue = this.operationResizableWriteBuffer.Memory.Slice(0, row.Length);
-        return Result.Success;
+        buffer.argValue = this.operationResizableWriteBuffer.Memory.Slice(0, rowBuffer.Length);
+        return Result.SUCCESS;
     }
 }

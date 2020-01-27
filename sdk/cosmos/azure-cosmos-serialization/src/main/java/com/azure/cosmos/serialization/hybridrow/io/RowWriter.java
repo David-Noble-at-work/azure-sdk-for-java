@@ -822,8 +822,8 @@ public final class RowWriter {
                 return type.<LayoutListWritable<TValue>>typeAs().writeFixedList(this.row, this.cursor, column.get(),
                     value);
             case VARIABLE:
-                return type.<LayoutListWritable<TValue>>typeAs().writeVariableList(this.row, this.cursor,
-                    column.get(), value);
+                return type.<LayoutListWritable<TValue>>typeAs().writeVariableList(this.row, this.cursor, column.get(),
+                    value);
             default:
                 return Result.NOT_FOUND;
         }

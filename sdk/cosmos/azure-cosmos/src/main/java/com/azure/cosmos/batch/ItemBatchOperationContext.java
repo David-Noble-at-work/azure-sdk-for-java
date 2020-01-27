@@ -3,26 +3,34 @@
 
 package com.azure.cosmos.batch;
 
+import com.azure.cosmos.implementation.IDocumentClientRetryPolicy;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import javax.annotation.Nonnull;
 import java.io.IOException;
+
+import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
  * Context for a particular Batch operation.
  */
 public class ItemBatchOperationContext implements AutoCloseable {
-    private BatchAsyncBatcher CurrentBatcher;
-    private String PartitionKeyRangeId;
-    private IDocumentClientRetryPolicy retryPolicy;
-    private TaskCompletionSource<TransactionalBatchOperationResult> taskCompletionSource =
-        new TaskCompletionSource<TransactionalBatchOperationResult>();
 
-    public ItemBatchOperationContext(String partitionKeyRangeId) {
+    private static final Logger logger = LoggerFactory.getLogger(ItemBatchOperationContext.class);
+
+    private BatchAsyncBatcher CurrentBatcher;
+    private final String PartitionKeyRangeId;
+    private final IDocumentClientRetryPolicy retryPolicy;
+
+    public ItemBatchOperationContext(@Nonnull final String partitionKeyRangeId) {
         this(partitionKeyRangeId, null);
     }
 
-    //C# TO JAVA CONVERTER NOTE: Java does not support optional parameters. Overloaded method(s) are created above:
-    //ORIGINAL LINE: public ItemBatchOperationContext(string partitionKeyRangeId, IDocumentClientRetryPolicy
-    // retryPolicy = null)
-    public ItemBatchOperationContext(String partitionKeyRangeId, IDocumentClientRetryPolicy retryPolicy) {
+    public ItemBatchOperationContext(
+        @Nonnull final String partitionKeyRangeId, final IDocumentClientRetryPolicy retryPolicy) {
+
+        checkNotNull(partitionKeyRangeId, "expected non-null partitionKeyRangeId");
         this.PartitionKeyRangeId = partitionKeyRangeId;
         this.retryPolicy = retryPolicy;
     }
@@ -64,7 +72,7 @@ public class ItemBatchOperationContext implements AutoCloseable {
      */
     public final Task<ShouldRetryResult> ShouldRetryAsync(TransactionalBatchOperationResult batchOperationResult,
                                                           CancellationToken cancellationToken) {
-        if (this.retryPolicy == null || batchOperationResult.getIsSuccessStatusCode()) {
+        if (this.retryPolicy == null || batchOperationResult.isSuccessStatusCode()) {
             return Task.FromResult(ShouldRetryResult.NoRetry());
         }
 
@@ -81,11 +89,9 @@ public class ItemBatchOperationContext implements AutoCloseable {
         return AssertBatcher(completer, null);
     }
 
-    //C# TO JAVA CONVERTER NOTE: Java does not support optional parameters. Overloaded method(s) are created above:
-    //ORIGINAL LINE: private bool AssertBatcher(BatchAsyncBatcher completer, Exception innerException = null)
     private boolean AssertBatcher(BatchAsyncBatcher completer, RuntimeException innerException) {
         if (completer != this.getCurrentBatcher()) {
-            DefaultTrace.TraceCritical(String.format("Operation was completed by incorrect batcher."));
+            logger.error("Operation was completed by incorrect batcher");
             this.taskCompletionSource.SetException(new RuntimeException(String.format("Operation was completed by " +
                 "incorrect batcher."), innerException));
             return false;

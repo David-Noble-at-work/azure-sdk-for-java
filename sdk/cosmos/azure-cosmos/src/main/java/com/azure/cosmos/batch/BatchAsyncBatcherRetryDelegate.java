@@ -10,5 +10,5 @@ import java.util.concurrent.CompletableFuture;
  */
 @FunctionalInterface
 public interface BatchAsyncBatcherRetryDelegate {
-    CompletableFuture<Void> invoke(ItemBatchOperation operation);
+    CompletableFuture<Void> invoke(ItemBatchOperation<?> operation);
 }

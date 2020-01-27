@@ -3,10 +3,30 @@
 
 package com.azure.cosmos.batch;
 
+import com.azure.cosmos.core.Out;
+import com.azure.cosmos.serialization.hybridrow.HybridRowVersion;
+import com.azure.cosmos.serialization.hybridrow.Result;
+import com.azure.cosmos.serialization.hybridrow.RowBuffer;
+import com.azure.cosmos.serialization.hybridrow.io.RowReader;
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.ByteBufInputStream;
+import io.netty.handler.codec.http.HttpResponseStatus;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import javax.annotation.Nonnull;
+import java.io.InputStream;
+import java.time.Duration;
+
+import static com.google.common.base.Preconditions.checkState;
+
 /**
  * Represents a result for a specific operation that was part of a {@link TransactionalBatch} request.
  */
 public class TransactionalBatchOperationResult {
+
+    private static Logger logger = LoggerFactory.getLogger(TransactionalBatchOperationResult.class);
+
     /**
      * Gets the cosmos diagnostic information for the current request to Azure Cosmos DB service
      */
@@ -34,26 +54,26 @@ public class TransactionalBatchOperationResult {
      */
     //C# TO JAVA CONVERTER TODO TASK: C# to Java Converter cannot determine whether this System.IO.Stream is input or
     // output:
-    private Stream ResourceStream;
+    private InputStream resourceStream;
     /**
      * In case the operation is rate limited, indicates the time post which a retry can be attempted.
      */
-    private TimeSpan RetryAfter = new TimeSpan();
+    private Duration RetryAfter;
     /**
      * Gets the completion status of the operation.
      */
-    private HttpStatusCode StatusCode;
+    private HttpResponseStatus responseStatus;
     /**
      * Gets detail on the completion status of the operation.
      */
-    private SubStatusCodes SubStatusCode;
+    private int SubStatusCode;
 
-    public TransactionalBatchOperationResult(HttpStatusCode statusCode) {
-        this.setStatusCode(statusCode);
+    public TransactionalBatchOperationResult(HttpResponseStatus responseStatus) {
+        this.setResponseStatus(responseStatus);
     }
 
     public TransactionalBatchOperationResult(TransactionalBatchOperationResult other) {
-        this.setStatusCode(other.getStatusCode());
+        this.setResponseStatus(other.getResponseStatus());
         this.setSubStatusCode(other.getSubStatusCode());
         this.setETag(other.getETag());
         this.setResourceStream(other.getResourceStream());
@@ -86,9 +106,9 @@ public class TransactionalBatchOperationResult {
     /**
      * Gets a value indicating whether the current operation completed successfully.
      */
-    public boolean getIsSuccessStatusCode() {
-        int statusCodeInt = (int) this.getStatusCode();
-        return statusCodeInt >= 200 && statusCodeInt <= 299;
+    public boolean isSuccessStatusCode() {
+        int statusCode = (int) this.getResponseStatus().code();
+        return statusCode >= 200 && statusCode <= 299;
     }
 
     public double getRequestCharge() {
@@ -101,188 +121,176 @@ public class TransactionalBatchOperationResult {
 
     //C# TO JAVA CONVERTER TODO TASK: C# to Java Converter cannot determine whether this System.IO.Stream is input or
     // output:
-    public Stream getResourceStream() {
-        return ResourceStream;
+    public InputStream getResourceStream() {
+        return this.resourceStream;
     }
 
     //C# TO JAVA CONVERTER TODO TASK: C# to Java Converter cannot determine whether this System.IO.Stream is input or
     // output:
-    public void setResourceStream(Stream value) {
-        ResourceStream = value;
+    public void setResourceStream(InputStream value) {
+        this.resourceStream = value;
     }
 
-    public TimeSpan getRetryAfter() {
+    public Duration getRetryAfter() {
         return RetryAfter;
     }
 
-    public void setRetryAfter(TimeSpan value) {
+    public void setRetryAfter(Duration value) {
         RetryAfter = value;
     }
 
-    public HttpStatusCode getStatusCode() {
-        return StatusCode;
+    public HttpResponseStatus getResponseStatus() {
+        return this.responseStatus;
     }
 
-    private void setStatusCode(HttpStatusCode value) {
-        StatusCode = value;
+    private void setResponseStatus(HttpResponseStatus value) {
+        this.responseStatus = value;
     }
 
-    public SubStatusCodes getSubStatusCode() {
+    public int getSubStatusCode() {
         return SubStatusCode;
     }
 
-    public void setSubStatusCode(SubStatusCodes value) {
+    public void setSubStatusCode(int value) {
         SubStatusCode = value;
     }
 
-    //C# TO JAVA CONVERTER WARNING: Unsigned integer types have no direct equivalent in Java:
-    //ORIGINAL LINE: internal static Result ReadOperationResult(Memory<byte> input, out
-    // TransactionalBatchOperationResult batchOperationResult)
-    public static Result ReadOperationResult(Memory<Byte> input,
-                                             tangible.OutObject<TransactionalBatchOperationResult> batchOperationResult) {
-        RowBuffer row = new RowBuffer(input.Length);
-        if (!row.ReadFrom(input.Span, HybridRowVersion.V1, BatchSchemaProvider.getBatchLayoutResolver())) {
-            batchOperationResult.argValue = null;
-            return Result.Failure;
+    public static Result ReadOperationResult(
+        @Nonnull Memory<Byte> input, @Nonnull Out<TransactionalBatchOperationResult> batchOperationResult) {
+
+        RowBuffer rowBuffer = new RowBuffer(input.Length);
+
+        if (!rowBuffer.readFrom(input.Span, HybridRowVersion.V1, BatchSchemaProvider.getBatchLayoutResolverNamespace())) {
+            batchOperationResult.set(null);
+            return Result.FAILURE;
         }
 
-        tangible.RefObject<RowBuffer> tempRef_row = new tangible.RefObject<RowBuffer>(row);
-        RowReader reader = new RowReader(tempRef_row);
-        row = tempRef_row.argValue;
-        tangible.RefObject<RowReader> tempRef_reader = new tangible.RefObject<RowReader>(reader);
-        Result result = TransactionalBatchOperationResult.ReadOperationResult(tempRef_reader, batchOperationResult);
-        reader = tempRef_reader.argValue;
-        if (result != Result.Success) {
+        Result result = TransactionalBatchOperationResult.ReadOperationResult(new RowReader(rowBuffer), batchOperationResult);
+
+        if (result != Result.SUCCESS) {
             return result;
         }
 
         // Ensure the mandatory fields were populated
-        if (batchOperationResult.argValue.getStatusCode() == null) {
-            return Result.Failure;
+
+        if (batchOperationResult.get().getResponseStatus() == null) {
+            return Result.FAILURE;
         }
 
-        return Result.Success;
+        return Result.SUCCESS;
     }
 
     public final ResponseMessage ToResponseMessage() {
+
         Headers headers = new Headers();
         headers.SubStatusCode = this.getSubStatusCode();
         headers.ETag = this.getETag();
         headers.RetryAfter = this.getRetryAfter();
         headers.RequestCharge = this.getRequestCharge();
 
-        //C# TO JAVA CONVERTER TODO TASK: C# to Java Converter could not resolve the named parameters in the following line:
-        //ORIGINAL LINE: ResponseMessage responseMessage = new ResponseMessage(statusCode:this.StatusCode, requestMessage: null, errorMessage: null, error: null, headers: headers, diagnostics: this.DiagnosticsContext ?? new CosmosDiagnosticsContext())
-        ResponseMessage responseMessage = new ResponseMessage(statusCode:this.getStatusCode(), requestMessage:
-        null, errorMessage:null, error:null, headers:headers, diagnostics:
-        this.getDiagnosticsContext() != null ? this.getDiagnosticsContext() : new CosmosDiagnosticsContext())
-        {
-            Content = this.getResourceStream()
-        }
-
-        return responseMessage;
+        return new ResponseMessage(
+            this.getResponseStatus(), null, null, null, headers, this.getDiagnosticsContext() != null
+            ? this.getDiagnosticsContext()
+            : new CosmosDiagnosticsContext()).setContent(this.getResourceStream());
     }
 
-    private static Result ReadOperationResult(tangible.RefObject<RowReader> reader,
-                                              tangible.OutObject<TransactionalBatchOperationResult> batchOperationResult) {
-        batchOperationResult.argValue = new TransactionalBatchOperationResult();
-        while (reader.argValue.Read()) {
-            Result r;
-            switch (reader.argValue.Path) {
+    @SuppressWarnings("unchecked")
+    private static Result ReadOperationResult(
+        @Nonnull final RowReader reader,
+        @Nonnull final Out<TransactionalBatchOperationResult> batchOperationResult) {
+
+        batchOperationResult.set(new TransactionalBatchOperationResult());
+        @SuppressWarnings("rawtypes") Out out = new Out();
+
+        while (reader.read()) {
+
+            final String path = reader.path().toUtf16();
+            final Result result;
+
+            checkState(path != null, "expected non-null path");
+
+            switch (path) {
+
                 case "statusCode":
-                    int statusCode;
-                    //C# TO JAVA CONVERTER TODO TASK: The following method call contained an unresolved 'out' keyword
-                    // - these cannot be converted using the 'OutObject' helper class unless the method is within the
-                    // code being modified:
-                    r = reader.argValue.ReadInt32(out statusCode);
-                    if (r != Result.Success) {
-                        return r;
+
+                    result = reader.readInt32((Out<Integer>) out);
+
+                    if (result != Result.SUCCESS) {
+                        return result;
                     }
 
-                    batchOperationResult.argValue.setStatusCode((HttpStatusCode) statusCode);
+                    batchOperationResult.get().setResponseStatus(HttpResponseStatus.valueOf((Integer) out.get()));
                     break;
 
                 case "subStatusCode":
-                    int subStatusCode;
-                    //C# TO JAVA CONVERTER TODO TASK: The following method call contained an unresolved 'out' keyword
-                    // - these cannot be converted using the 'OutObject' helper class unless the method is within the
-                    // code being modified:
-                    r = reader.argValue.ReadInt32(out subStatusCode);
-                    if (r != Result.Success) {
-                        return r;
+
+                    result = reader.readInt32((Out<Integer>) out);
+
+                    if (result != Result.SUCCESS) {
+                        return result;
                     }
 
-                    batchOperationResult.argValue.setSubStatusCode((SubStatusCodes) subStatusCode);
+                    batchOperationResult.get().setSubStatusCode((Integer) out.get());
                     break;
 
                 case "eTag":
-                    String eTag;
-                    //C# TO JAVA CONVERTER TODO TASK: The following method call contained an unresolved 'out' keyword
-                    // - these cannot be converted using the 'OutObject' helper class unless the method is within the
-                    // code being modified:
-                    r = reader.argValue.ReadString(out eTag);
-                    if (r != Result.Success) {
-                        return r;
+
+                    result = reader.readString((Out<String>) out);
+
+                    if (result != Result.SUCCESS) {
+                        return result;
                     }
 
-                    batchOperationResult.argValue.setETag(eTag);
+                    batchOperationResult.get().setETag((String) out.get());
                     break;
 
                 case "resourceBody":
-                    byte[] resourceBody;
-                    //C# TO JAVA CONVERTER TODO TASK: The following method call contained an unresolved 'out' keyword
-                    // - these cannot be converted using the 'OutObject' helper class unless the method is within the
-                    // code being modified:
-                    //C# TO JAVA CONVERTER WARNING: Unsigned integer types have no direct equivalent in Java:
-                    //ORIGINAL LINE: r = reader.ReadBinary(out byte[] resourceBody);
-                    r = reader.argValue.ReadBinary(out resourceBody);
-                    if (r != Result.Success) {
-                        return r;
+
+                    result = reader.readBinary((Out<ByteBuf>) out);
+
+                    if (result != Result.SUCCESS) {
+                        return result;
                     }
 
-                    //C# TO JAVA CONVERTER TODO TASK: C# to Java Converter could not resolve the named parameters in
-                    // the following line:
-                    //ORIGINAL LINE: batchOperationResult.ResourceStream = new MemoryStream(buffer: resourceBody,
-                    // index: 0, count: resourceBody.Length, writable: false, publiclyVisible: true);
-                    //C# TO JAVA CONVERTER TODO TASK: C# to Java Converter cannot determine whether this System.IO
-                    // .MemoryStream is input or output:
-                    batchOperationResult.argValue.setResourceStream(new MemoryStream(buffer:resourceBody, index:0,
-                    count:resourceBody.Length, writable:false, publiclyVisible:true))
+                    batchOperationResult.get().setResourceStream(new ByteBufInputStream((ByteBuf) out.get(), true));
                     break;
 
                 case "requestCharge":
-                    double requestCharge;
-                    //C# TO JAVA CONVERTER TODO TASK: The following method call contained an unresolved 'out' keyword
-                    // - these cannot be converted using the 'OutObject' helper class unless the method is within the
-                    // code being modified:
-                    r = reader.argValue.ReadFloat64(out requestCharge);
-                    if (r != Result.Success) {
-                        return r;
+
+                    result = reader.readFloat64((Out<Double>) out);
+
+                    if (result != Result.SUCCESS) {
+                        return result;
                     }
 
-                    // Round request charge to 2 decimals on the operation results
-                    // similar to how we round them for the full response.
-                    batchOperationResult.argValue.setRequestCharge(Double.isNaN(requestCharge) ? Double.NaN :
-                        Math.round(requestCharge * Math.pow(10, 2)) / Math.pow(10, 2));
+                    // Round charge to 2 decimals on the results similar to how we round them for a full response
+
+                    Double requestCharge = (Double) out.get();
+
+                    batchOperationResult.get().setRequestCharge(Double.isNaN(requestCharge)
+                        ? Double.NaN
+                        : Math.round(requestCharge * Math.pow(10, 2)) / Math.pow(10, 2));
+
                     break;
 
                 case "retryAfterMilliseconds":
-                    int retryAfterMilliseconds;
-                    //C# TO JAVA CONVERTER TODO TASK: The following method call contained an unresolved 'out' keyword
-                    // - these cannot be converted using the 'OutObject' helper class unless the method is within the
-                    // code being modified:
-                    //C# TO JAVA CONVERTER WARNING: Unsigned integer types have no direct equivalent in Java:
-                    //ORIGINAL LINE: r = reader.ReadUInt32(out uint retryAfterMilliseconds);
-                    r = reader.argValue.ReadUInt32(out retryAfterMilliseconds);
-                    if (r != Result.Success) {
-                        return r;
+
+                    result = reader.readUInt32((Out<Long>) out);
+
+                    if (result != Result.SUCCESS) {
+                        return result;
                     }
 
-                    batchOperationResult.argValue.setRetryAfter(TimeSpan.FromMilliseconds(retryAfterMilliseconds));
+                    batchOperationResult.get().setRetryAfter(Duration.ofMillis((Long) out.get()));
+                    break;
+
+                default:
+
+                    logger.debug("unrecognized field skipped: {}", path);
                     break;
             }
         }
 
-        return Result.Success;
+        return Result.SUCCESS;
     }
 }

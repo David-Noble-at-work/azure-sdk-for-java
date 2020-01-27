@@ -21,11 +21,13 @@ import static com.google.common.base.Strings.lenientFormat;
 
 public final class BatchSchemaProvider {
 
+    // region Fields
+
     private static final String SCHEMAS = "HybridRowBatchSchemas.json";
 
     private static final Logger logger = LoggerFactory.getLogger(BatchSchemaProvider.class);
 
-    private static final Supplier<Namespace> schemaNamespace = Suppliers.memoize(() -> {
+    private static final Supplier<Namespace> namespace = Suppliers.memoize(() -> {
 
         final Optional<Namespace> namespace;
 
@@ -33,6 +35,7 @@ public final class BatchSchemaProvider {
             namespace = Namespace.parse(stream);
         } catch (IOException cause) {
             String message = lenientFormat("failed to initialize %s due to %s", BatchSchemaProvider.class, cause);
+            logger.error(message);
             throw new IllegalStateException(message, cause);
         }
 
@@ -46,31 +49,45 @@ public final class BatchSchemaProvider {
         });
     });
 
-    private static final Supplier<LayoutResolverNamespace> layoutResolver = Suppliers.memoize(() ->
-        new LayoutResolverNamespace(schemaNamespace.get()));
+    private static final Supplier<LayoutResolverNamespace> layoutResolverNamespaceSupplier = Suppliers.memoize(() ->
+        new LayoutResolverNamespace(namespace.get()));
 
-    private static final Supplier<Layout> batchOperationLayout = Suppliers.memoize(() -> getLayout("BatchOperation"));
+    private static final Supplier<Layout> batchOperationLayoutSupplier = Suppliers.memoize(() ->
+        getLayout("BatchOperation"));
 
-    private static final Supplier<Layout> batchResultLayout = Suppliers.memoize(() -> getLayout("BatchResult"));
+    private static final Supplier<Layout> batchResultLayoutSupplier = Suppliers.memoize(() ->
+        getLayout("BatchResult"));
 
-    public static LayoutResolverNamespace getBatchLayoutResolver() {
-        return layoutResolver.get();
+    // endregion
+
+    // region Accessors
+
+    public static LayoutResolverNamespace getBatchLayoutResolverNamespace() {
+        return layoutResolverNamespaceSupplier.get();
     }
 
     public static Layout getBatchOperationLayout() {
-        return batchOperationLayout.get();
+        return batchOperationLayoutSupplier.get();
     }
 
     public static Layout getBatchResultLayout() {
-        return batchResultLayout.get();
+        return batchResultLayoutSupplier.get();
     }
 
-    public static Namespace getBatchSchemaNamespace() {
-        return schemaNamespace.get();
+    public static Namespace getBatchNamespace() {
+        return namespace.get();
+    }
+
+    // endregion
+
+    // region Privates
+
+    private BatchSchemaProvider() {
+
     }
 
     private static Layout getLayout(String schemaName) {
-        return layoutResolver.get().resolve(schemaNamespace.get().schemas().stream().filter(x ->
+        return layoutResolverNamespaceSupplier.get().resolve(namespace.get().schemas().stream().filter(x ->
             x.name().equals(schemaName)).findFirst().orElseThrow(() -> {
                 String message = lenientFormat(
                     "failed to initialize %s because %s schema is not defined in %s",
@@ -94,4 +111,6 @@ public final class BatchSchemaProvider {
 
         throw new FileNotFoundException(lenientFormat("cannot find %s", name));
     }
+
+    // endregion
 }

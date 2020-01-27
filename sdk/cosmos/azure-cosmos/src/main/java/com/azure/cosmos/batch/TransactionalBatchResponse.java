@@ -3,38 +3,51 @@
 
 package com.azure.cosmos.batch;
 
+import com.azure.cosmos.implementation.HttpConstants.HttpHeaders;
+import com.azure.cosmos.implementation.HttpConstants.StatusCodes;
 import com.azure.cosmos.implementation.HttpConstants.SubStatusCodes;
+import com.azure.cosmos.serialization.hybridrow.HybridRowVersion;
+import com.azure.cosmos.serialization.hybridrow.Result;
 
 import java.io.IOException;
 import java.time.Duration;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.Iterator;
+import java.util.List;
+import java.util.ListIterator;
+import java.util.concurrent.CompletableFuture;
+import java.util.stream.Stream;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
  * Response of a {@link TransactionalBatch} request.
  */
-public class TransactionalBatchResponse implements IReadOnlyList<TransactionalBatchOperationResult>, AutoCloseable {
+public class TransactionalBatchResponse implements AutoCloseable, List<TransactionalBatchOperationResult> {
 
     private static String EMPTY_UUID = "00000000-0000-0000-0000-000000000000";
-
-    /**
-     * Gets the ActivityId that identifies the server request made to execute the batch.
-     */
-    private String activityId;
     /**
      * Gets the cosmos diagnostic information for the current request to Azure Cosmos DB service
      */
     private CosmosDiagnostics Diagnostics;
     private CosmosDiagnosticsContext DiagnosticsContext;
+    private CosmosSerializerCore SerializerCore;
+    /**
+     * Gets the ActivityId that identifies the server request made to execute the batch.
+     */
+    private String activityId;
     /**
      * Gets the reason for failure of the batch request.
      *
      * <value>The reason for failure, if any.</value>
      */
     private String errorMessage;
-    private IReadOnlyList<ItemBatchOperation> Operations;
+    private boolean isClosed;
+    private List<ItemBatchOperation> operations;
+
     /**
      * Gets the request charge for the batch request.
      *
@@ -43,21 +56,22 @@ public class TransactionalBatchResponse implements IReadOnlyList<TransactionalBa
      * </value>
      */
     private double requestCharge;
+
+    private List<TransactionalBatchOperationResult> results;
+
     /**
      * Gets the amount of time to wait before retrying this or any other request within Cosmos container or collection
      * due to throttling.
      */
     private Duration retryAfter = null;
-    private CosmosSerializerCore SerializerCore;
     /**
      * Gets the completion status code of the batch request.
      *
      * <value>The request completion status code.</value>
      */
     private int statusCode;
+
     private int subStatusCode;
-    private boolean isClosed;
-    private ArrayList<TransactionalBatchOperationResult> results;
 
     /**
      * Initializes a new instance of the {@link TransactionalBatchResponse} class. This method is intended to be used
@@ -73,7 +87,7 @@ public class TransactionalBatchResponse implements IReadOnlyList<TransactionalBa
         int statusCode,
         int subStatusCode,
         String errorMessage,
-        IReadOnlyList<ItemBatchOperation> operations,
+        List<ItemBatchOperation> operations,
         CosmosDiagnosticsContext diagnosticsContext) {
 
         this(statusCode, subStatusCode, errorMessage, 0.0D, null, EMPTY_UUID, diagnosticsContext, operations, null);
@@ -94,7 +108,7 @@ public class TransactionalBatchResponse implements IReadOnlyList<TransactionalBa
         Duration retryAfter,
         String activityId,
         CosmosDiagnosticsContext diagnosticsContext,
-        IReadOnlyList<ItemBatchOperation> operations,
+        List<ItemBatchOperation> operations,
         CosmosSerializerCore serializer) {
 
         this.setStatusCode(statusCode);
@@ -112,13 +126,6 @@ public class TransactionalBatchResponse implements IReadOnlyList<TransactionalBa
 
     public String getActivityId() {
         return activityId;
-    }
-
-    /**
-     * Gets the number of operation results.
-     */
-    public int getCount() {
-        return this.results == null ? null : this.results.size() != null ? this.results.size() : 0;
     }
 
     public CosmosDiagnostics getDiagnostics() {
@@ -145,12 +152,12 @@ public class TransactionalBatchResponse implements IReadOnlyList<TransactionalBa
         return statusCodeInt >= 200 && statusCodeInt <= 299;
     }
 
-    public final IReadOnlyList<ItemBatchOperation> getOperations() {
-        return Operations;
+    public final List<ItemBatchOperation> getOperations() {
+        return this.operations;
     }
 
-    public final void setOperations(IReadOnlyList<ItemBatchOperation> value) {
-        Operations = value;
+    public final void setOperations(List<ItemBatchOperation> value) {
+        this.operations = value;
     }
 
     public double getRequestCharge() {
@@ -182,7 +189,72 @@ public class TransactionalBatchResponse implements IReadOnlyList<TransactionalBa
         return this.subStatusCode;
     }
 
-    public static Task<TransactionalBatchResponse> FromResponseMessageAsync(
+    @Override
+    public boolean isEmpty() {
+        return this.results.isEmpty();
+    }
+
+    @Override
+    public boolean add(TransactionalBatchOperationResult result) {
+        return this.results.add(result);
+    }
+
+    @Override
+    public boolean addAll(Collection<? extends TransactionalBatchOperationResult> collection) {
+        return this.results.addAll(collection);
+    }
+
+    @Override
+    public boolean addAll(int index, Collection<? extends TransactionalBatchOperationResult> collection) {
+        return this.results.addAll(index, collection);
+    }
+
+    @Override
+    public void clear() {
+        this.results.clear();
+    }
+
+    @Override
+    public boolean contains(Object result) {
+        return this.results.contains(result);
+    }
+
+    @Override
+    public boolean containsAll(Collection<?> c) {
+        return false;
+    }
+
+    @Override
+    public Iterator<TransactionalBatchOperationResult> iterator() {
+        return this.results.iterator();
+    }
+
+    @Override
+    public boolean remove(Object result) {
+        return this.results.remove(result);
+    }
+
+    @Override
+    public boolean removeAll(Collection<?> collection) {
+        return this.results.removeAll(collection);
+    }
+
+    @Override
+    public boolean retainAll(Collection<?> collection) {
+        return this.results.retainAll(collection);
+    }
+
+    @Override
+    public Object[] toArray() {
+        return this.results.toArray();
+    }
+
+    @Override
+    public <T> T[] toArray(T[] a) {
+        return this.results.toArray(a);
+    }
+
+    public static CompletableFuture<TransactionalBatchResponse> FromResponseMessageAsync(
         ResponseMessage responseMessage,
         ServerBatchRequest serverRequest,
         CosmosSerializerCore serializer) {
@@ -194,10 +266,12 @@ public class TransactionalBatchResponse implements IReadOnlyList<TransactionalBa
     // responseMessage, ServerBatchRequest serverRequest, CosmosSerializerCore serializer, bool
     // shouldPromoteOperationStatus = true)
     //C# TO JAVA CONVERTER NOTE: Java does not support optional parameters. Overloaded method(s) are created above:
-    public static Task<TransactionalBatchResponse> FromResponseMessageAsync(ResponseMessage responseMessage,
-                                                                            ServerBatchRequest serverRequest,
-                                                                            CosmosSerializerCore serializer,
-                                                                            boolean shouldPromoteOperationStatus) {
+    public static CompletableFuture<TransactionalBatchResponse> FromResponseMessageAsync(
+        ResponseMessage responseMessage,
+        ServerBatchRequest serverRequest,
+        CosmosSerializerCore serializer,
+        boolean shouldPromoteOperationStatus) {
+
         try (responseMessage) {
             TransactionalBatchResponse response = null;
             if (responseMessage.Content != null) {
@@ -211,19 +285,18 @@ public class TransactionalBatchResponse implements IReadOnlyList<TransactionalBa
                     // .MemoryStream is input or output:
                     content = new MemoryStream();
                     //C# TO JAVA CONVERTER TODO TASK: There is no equivalent to 'await' in Java:
-                    await responseMessage.Content.CopyToAsync(content);
+                    /*await*/ responseMessage.Content.CopyToAsync(content);
                 }
 
                 if (content.ReadByte() == (int) HybridRowVersion.V1) {
                     content.Position = 0;
-                    //C# TO JAVA CONVERTER TODO TASK: There is no equivalent to 'await' in Java:
-                    response = await
+                    response = /*await*/
                     TransactionalBatchResponse.PopulateFromContentAsync(content, responseMessage, serverRequest,
                         serializer, shouldPromoteOperationStatus);
 
                     if (response == null) {
                         // Convert any payload read failures as InternalServerError
-                        response = new TransactionalBatchResponse(HttpStatusCode.InternalServerError,
+                        response = new TransactionalBatchResponse(StatusCodes.INTERNAL_SERVER_ERROR,
                             SubStatusCodes.UNKNOWN, ClientResources.ServerResponseDeserializationFailure,
                             responseMessage.Headers.RequestCharge, responseMessage.Headers.RetryAfter,
                             responseMessage.Headers.ActivityId, responseMessage.DiagnosticsContext,
@@ -244,8 +317,8 @@ public class TransactionalBatchResponse implements IReadOnlyList<TransactionalBa
                 if (responseMessage.IsSuccessStatusCode) {
                     // Server should be guaranteeing number of results equal to operations when
                     // batch request is successful - so fail as InternalServerError if this is not the case.
-                    response = new TransactionalBatchResponse(HttpStatusCode.InternalServerError,
-                        SubStatusCodes.Unknown, ClientResources.InvalidServerResponse,
+                    response = new TransactionalBatchResponse(HttpResponseStatus.InternalServerError,
+                        SubStatusCodes.UNKNOWN, ClientResources.InvalidServerResponse,
                         responseMessage.Headers.RequestCharge, responseMessage.Headers.RetryAfter,
                         responseMessage.Headers.ActivityId, responseMessage.DiagnosticsContext,
                         serverRequest.getOperations(), serializer);
@@ -255,13 +328,13 @@ public class TransactionalBatchResponse implements IReadOnlyList<TransactionalBa
                 // individual operations.
                 int retryAfterMilliseconds = 0;
 
-                if ((int) responseMessage.StatusCode == (int) StatusCodes.TooManyRequests) {
+                if ((int) responseMessage.StatusCode == (int) StatusCodes.TOO_MANY_REQUESTS) {
                     tangible.OutObject<Integer> tempOut_retryAfterMilliseconds = new tangible.OutObject<Integer>();
                     String retryAfter;
                     //C# TO JAVA CONVERTER TODO TASK: The following method call contained an unresolved 'out' keyword
                     // - these cannot be converted using the 'OutObject' helper class unless the method is within the
                     // code being modified:
-                    if (!responseMessage.Headers.TryGetValue(HttpConstants.HttpHeaders.RetryAfterInMilliseconds,
+                    if (!responseMessage.Headers.TryGetValue(HttpHeaders.RETRY_AFTER_IN_MILLISECONDS,
                         out retryAfter) || retryAfter == null || !tangible.TryParseHelper.tryParseInt(retryAfter,
                         tempOut_retryAfterMilliseconds)) {
                         retryAfterMilliseconds = tempOut_retryAfterMilliseconds.argValue;
@@ -279,34 +352,12 @@ public class TransactionalBatchResponse implements IReadOnlyList<TransactionalBa
     }
 
     /**
-     * Gets an enumerator over the operation results.
+     * Gets all the Activity IDs associated with the response.
      *
-     * @return Enumerator over the operation results.
+     * @return An enumerable that contains the Activity IDs.
      */
-    public Iterator<TransactionalBatchOperationResult> GetEnumerator() {
-        return this.results.iterator();
-    }
-
-    /**
-     Gets all the Activity IDs associated with the response.
-
-     @return An enumerable that contains the Activity IDs.
-     */
-    //C# TO JAVA CONVERTER TODO TASK: There is no preprocessor in Java:
-    //#if INTERNAL
-    //C# TO JAVA CONVERTER TODO TASK: Statements that are interrupted by preprocessor statements are not converted by
-    // C# to Java Converter:
-    public
-    //#else
-    //C# TO JAVA CONVERTER TODO TASK: Statements that are interrupted by preprocessor statements are not converted by
-    // C# to Java Converter:
-    internal
-
-    /**
-     * <inheritdoc />
-     */
-    public final Iterator GetEnumerator() {
-        return this.iterator();
+    public Iterable<String> GetActivityIds() {
+        return Stream.of(this.getActivityId())::iterator;
     }
 
     /**
@@ -321,9 +372,10 @@ public class TransactionalBatchResponse implements IReadOnlyList<TransactionalBa
      * @return Result of batch operation that contains a Resource deserialized to specified type.
      */
     public <T> TransactionalBatchOperationResult<T> GetOperationResultAtIndex(int index) {
-        TransactionalBatchOperationResult result = this.results.get(index);
 
+        TransactionalBatchOperationResult result = this.results.get(index);
         T resource = null;
+
         if (result.getResourceStream() != null) {
             resource = this.getSerializerCore().<T>FromStream(result.getResourceStream());
         }
@@ -346,8 +398,56 @@ public class TransactionalBatchResponse implements IReadOnlyList<TransactionalBa
      *
      * @return Result of operation at the provided index in the batch.
      */
+    @Override
     public TransactionalBatchOperationResult get(int index) {
         return this.results.get(index);
+    }
+
+    @Override
+    public TransactionalBatchOperationResult set(int index, TransactionalBatchOperationResult result) {
+        return this.results.set(index, result);
+    }
+
+    @Override
+    public void add(int index, TransactionalBatchOperationResult element) {
+
+    }
+
+    @Override
+    public TransactionalBatchOperationResult remove(int index) {
+        return null;
+    }
+
+    @Override
+    public int indexOf(Object o) {
+        return 0;
+    }
+
+    @Override
+    public int lastIndexOf(Object o) {
+        return 0;
+    }
+
+    @Override
+    public ListIterator<TransactionalBatchOperationResult> listIterator() {
+        return null;
+    }
+
+    @Override
+    public ListIterator<TransactionalBatchOperationResult> listIterator(int index) {
+        return null;
+    }
+
+    @Override
+    public List<TransactionalBatchOperationResult> subList(int fromIndex, int toIndex) {
+        return null;
+    }
+
+    /**
+     * Gets the number of operation results.
+     */
+    public int size() {
+        return this.results == null ? 0 : this.results.size();
     }
 
     /**
@@ -368,27 +468,21 @@ public class TransactionalBatchResponse implements IReadOnlyList<TransactionalBa
         }
     }
 
-    private void CreateAndPopulateResults(IReadOnlyList<ItemBatchOperation> operations) {
+    private void CreateAndPopulateResults(List<ItemBatchOperation> operations) {
         CreateAndPopulateResults(operations, 0);
     }
 
-    //C# TO JAVA CONVERTER NOTE: Java does not support optional parameters. Overloaded method(s) are created above:
-    //ORIGINAL LINE: private void CreateAndPopulateResults(IReadOnlyList<ItemBatchOperation> operations, int
-    // retryAfterMilliseconds = 0)
-    private void CreateAndPopulateResults(IReadOnlyList<ItemBatchOperation> operations, int retryAfterMilliseconds) {
-        this.results = new ArrayList<TransactionalBatchOperationResult>();
-        for (int i = 0; i < operations.Count; i++) {
-            TransactionalBatchOperationResult tempVar = new TransactionalBatchOperationResult(this.getStatusCode());
-            tempVar.setSubStatusCode(this.getSubStatusCode());
-            tempVar.setRetryAfter(TimeSpan.FromMilliseconds(retryAfterMilliseconds));
-            this.results.add(tempVar);
-        }
-    }
+    private void CreateAndPopulateResults(List<ItemBatchOperation> operations, int retryAfterMilliseconds) {
 
-    //#endif
-    private java.lang.Iterable<String> GetActivityIds() {
-        //C# TO JAVA CONVERTER TODO TASK: Java does not have an equivalent to the C# 'yield' keyword:
-        yield return this.getActivityId();
+        TransactionalBatchOperationResult[] results = new TransactionalBatchOperationResult[operations.size()];
+
+        for (int i = 0; i < operations.size(); i++) {
+            this.results.add(new TransactionalBatchOperationResult(this.getStatusCode())
+                .setSubStatusCode(this.getSubStatusCode())
+                .setRetryAfter(Duration.ofMillis(retryAfterMilliseconds)));
+        }
+
+        this.results = Collections.unmodifiableList(Arrays.asList(results));
     }
 
     //C# TO JAVA CONVERTER TODO TASK: There is no equivalent in Java to the 'async' keyword:
@@ -412,11 +506,11 @@ public class TransactionalBatchResponse implements IReadOnlyList<TransactionalBa
         //C# TO JAVA CONVERTER TODO TASK: There is no equivalent to 'await' in Java:
         //C# TO JAVA CONVERTER WARNING: Unsigned integer types have no direct equivalent in Java:
         //ORIGINAL LINE: Result res = await content.ReadRecordIOAsync(record =>
-        Result res = await content.ReadRecordIOAsync(record ->
+        Result res = /*await*/ content.ReadRecordIOAsync(record ->
         {
             TransactionalBatchOperationResult operationResult;
             Result r = TransactionalBatchOperationResult.ReadOperationResult(record, out operationResult);
-            if (r != Result.Success) {
+            if (r != Result.SUCCESS) {
                 return r;
             }
 
@@ -424,11 +518,11 @@ public class TransactionalBatchResponse implements IReadOnlyList<TransactionalBa
             return r;
         }, resizer:new MemorySpanResizer<Byte>(resizerInitialCapacity))
 
-        if (res != Result.Success) {
+        if (res != Result.SUCCESS) {
             return null;
         }
 
-        HttpStatusCode responseStatusCode = responseMessage.StatusCode;
+        HttpResponseStatus responseStatusCode = responseMessage.StatusCode;
         SubStatusCodes responseSubStatusCode = responseMessage.Headers.SubStatusCode;
 
         // Promote the operation error status as the Batch response error status if we have a MultiStatus response

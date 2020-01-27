@@ -3,6 +3,9 @@
 
 package com.azure.cosmos.batch;
 
+import com.azure.cosmos.implementation.Strings;
+import io.netty.handler.codec.http.HttpResponseStatus;
+
 import javax.annotation.Nonnull;
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -11,9 +14,12 @@ import java.util.Iterator;
  * Response of a cross partition key batch request.
  */
 public class PartitionKeyRangeBatchResponse extends TransactionalBatchResponse {
-    private CosmosSerializerCore SerializerCore;
+
+    private CosmosSerializerCore serializerCore;
     private boolean isDisposed;
+
     // Results sorted in the order operations had been added.
+
     private TransactionalBatchOperationResult[] resultsByOperationIndex;
     private TransactionalBatchResponse serverResponse;
 
@@ -25,37 +31,39 @@ public class PartitionKeyRangeBatchResponse extends TransactionalBatchResponse {
      * @param serializerCore Serializer to deserialize response resource body streams.
      */
     public PartitionKeyRangeBatchResponse(
-        int originalOperationsCount,
-        @Nonnull TransactionalBatchResponse serverResponse,
-        CosmosSerializerCore serializerCore) {
+        final int originalOperationsCount,
+        @Nonnull final TransactionalBatchResponse serverResponse,
+        @Nonnull final CosmosSerializerCore serializerCore) {
 
         this.setStatusCode(serverResponse.getStatusCode());
 
         this.serverResponse = serverResponse;
         this.resultsByOperationIndex = new TransactionalBatchOperationResult[originalOperationsCount];
 
-        StringBuilder errorMessageBuilder = new StringBuilder();
-        ArrayList<ItemBatchOperation> itemBatchOperations = new ArrayList<ItemBatchOperation>();
+        final StringBuilder errorMessageBuilder = new StringBuilder();
+
         // We expect number of results == number of operations here
-        for (int index = 0; index < serverResponse.getOperations().Count; index++) {
-            int operationIndex = serverResponse.getOperations().get(index).OperationIndex;
-            if (this.resultsByOperationIndex[operationIndex] == null || this.resultsByOperationIndex[operationIndex].getStatusCode() == StatusCodes.TooManyRequests) {
+
+        for (int index = 0; index < serverResponse.getOperations().size(); index++) {
+
+            final int operationIndex = serverResponse.getOperations().get(index).getOperationIndex();
+            final TransactionalBatchOperationResult result = this.resultsByOperationIndex[operationIndex];
+
+            if (result == null || result.getResponseStatus() == HttpResponseStatus.TOO_MANY_REQUESTS) {
                 this.resultsByOperationIndex[operationIndex] = serverResponse.get(index);
             }
         }
 
-        itemBatchOperations.addAll(serverResponse.getOperations());
+        final ArrayList<ItemBatchOperation> itemBatchOperations = new ArrayList<>(serverResponse.getOperations());
         this.setRequestCharge(this.getRequestCharge() + serverResponse.getRequestCharge());
 
-        if (!tangible.StringHelper.isNullOrEmpty(serverResponse.getErrorMessage())) {
-            errorMessageBuilder.append(String.format("%1$s; ", serverResponse.getErrorMessage()));
+        if (!Strings.isNullOrEmpty(serverResponse.getErrorMessage())) {
+            errorMessageBuilder.append(serverResponse.getErrorMessage());
         }
 
-        this.setErrorMessage(errorMessageBuilder.length() > 2
-            ? errorMessageBuilder.toString(0, errorMessageBuilder.length() - 2)
-            : null);
+        this.setErrorMessage(errorMessageBuilder.length() > 0 ? errorMessageBuilder.toString() : null);
         this.setOperations(itemBatchOperations);
-        this.SerializerCore = serializerCore;
+        this.serializerCore = serializerCore;
     }
 
     /**
@@ -70,7 +78,7 @@ public class PartitionKeyRangeBatchResponse extends TransactionalBatchResponse {
      * Gets the number of operation results.
      */
     @Override
-    public int getCount() {
+    public int size() {
         return this.resultsByOperationIndex.length;
     }
 
@@ -89,7 +97,7 @@ public class PartitionKeyRangeBatchResponse extends TransactionalBatchResponse {
 
     @Override
     public CosmosSerializerCore getSerializerCore() {
-        return SerializerCore;
+        return serializerCore;
     }
 
     /**
@@ -118,7 +126,8 @@ public class PartitionKeyRangeBatchResponse extends TransactionalBatchResponse {
      */
     @Override
     public <T> TransactionalBatchOperationResult<T> GetOperationResultAtIndex(int index) {
-        if (index >= this.getCount()) {
+
+        if (index >= this.size()) {
             throw new IndexOutOfBoundsException();
         }
 
@@ -140,18 +149,6 @@ public class PartitionKeyRangeBatchResponse extends TransactionalBatchResponse {
         return this.resultsByOperationIndex[index];
     }
 
-    //C# TO JAVA CONVERTER TODO TASK: There is no preprocessor in Java:
-    //#if INTERNAL
-    //C# TO JAVA CONVERTER TODO TASK: Statements that are interrupted by preprocessor statements are not converted by
-    // C# to Java Converter:
-    public
-    //#else
-    //C# TO JAVA CONVERTER TODO TASK: Statements that are interrupted by preprocessor statements are not converted by
-    // C# to Java Converter:
-    internal
-    //#endif
-    @Override
-
     /**
      * Disposes the disposable members held.
      *
@@ -165,9 +162,5 @@ public class PartitionKeyRangeBatchResponse extends TransactionalBatchResponse {
         }
 
         super.Dispose(disposing);
-    }
-
-    private java.lang.Iterable<String> GetActivityIds() {
-        return new String[] { this.getActivityId() };
     }
 }

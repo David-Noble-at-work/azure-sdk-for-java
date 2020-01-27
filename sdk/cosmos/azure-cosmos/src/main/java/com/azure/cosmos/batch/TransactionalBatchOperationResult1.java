@@ -8,9 +8,7 @@ package com.azure.cosmos.batch;
  *
  * <typeparam name="T">The type of the Resource which this class wraps.</typeparam>
  */
-//C# TO JAVA CONVERTER TODO TASK: There is no preprocessor in Java:
-///#pragma warning disable SA1402 // File may only contain a single type
-public class TransactionalBatchOperationResult<T> extends TransactionalBatchOperationResult
+public class TransactionalBatchOperationResult1<T> extends TransactionalBatchOperationResult
     //C# TO JAVA CONVERTER TODO TASK: There is no preprocessor in Java:
     ///#pragma warning restore SA1402 // File may only contain a single type
 {
@@ -25,7 +23,7 @@ public class TransactionalBatchOperationResult<T> extends TransactionalBatchOper
      * @param result BatchOperationResult with stream resource.
      * @param resource Deserialized resource.
      */
-    public TransactionalBatchOperationResult(TransactionalBatchOperationResult result, T resource) {
+    public TransactionalBatchOperationResult1(TransactionalBatchOperationResult result, T resource) {
         super(result);
         this.setResource(resource);
     }
@@ -33,7 +31,7 @@ public class TransactionalBatchOperationResult<T> extends TransactionalBatchOper
     /**
      * Initializes a new instance of the <see cref="TransactionalBatchOperationResult{T}"/> class.
      */
-    protected TransactionalBatchOperationResult() {
+    protected TransactionalBatchOperationResult1() {
     }
 
     public T getResource() {

@@ -64,7 +64,7 @@ public class BatchAsyncBatcher {
         checkNotNull(serializerCore, "expected non-null serializerCore");
 
         this.executor = (PartitionKeyRangeServerBatchRequest request) -> executor.invoke(request);
-        this.retrier = (ItemBatchOperation operation) -> retrier.invoke(operation);
+        this.retrier = (ItemBatchOperation<?> operation) -> retrier.invoke(operation);
         this.batchOperations = new ArrayList<>(maxBatchOperationCount);
         this.maxBatchOperationCount = maxBatchOperationCount;
         this.maxBatchByteSize = maxBatchByteSize;
@@ -145,7 +145,7 @@ public class BatchAsyncBatcher {
                             response.setDiagnosticsContext(batchResponse.getDiagnosticsContext());
                         }
 
-                        if (!response.getIsSuccessStatusCode()) {
+                        if (!response.isSuccessStatusCode()) {
                             //C# TO JAVA CONVERTER TODO TASK: There is no equivalent to 'await' in Java:
                             Documents.ShouldRetryResult shouldRetry = /*await*/
                             itemBatchOperation.getContext().ShouldRetryAsync(response);
@@ -201,8 +201,8 @@ public class BatchAsyncBatcher {
         this.currentSize += itemByteSize;
 
         // Operation index is in the scope of the current batch
-        operation.setOperationIndex(this.batchOperations.size());
-        operation.getContext().setCurrentBatcher(this);
+
+        operation.setOperationIndex(this.batchOperations.size()).getContext().setCurrentBatcher(this);
         this.batchOperations.add(operation);
 
         return true;
