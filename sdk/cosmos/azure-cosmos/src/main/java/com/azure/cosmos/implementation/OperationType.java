@@ -24,6 +24,7 @@ public enum OperationType {
     Head,
     HeadFeed,
     MigratePartition,
+    Patch,
     Pause,
     PreCreateValidation,
     OfferPreGrowValidation,
@@ -46,8 +47,9 @@ public enum OperationType {
     public boolean isWriteOperation() {
         return this == Create
             || this == Delete
-            || this == Recreate
             || this == ExecuteJavaScript
+            || this == Patch
+            || this == Recreate
             || this == Replace
             || this == Upsert
             || this == Update;

@@ -26,7 +26,7 @@ public class RequestOptions {
     private Integer resourceTokenExpirySeconds;
     private String offerType;
     private Integer offerThroughput;
-    private PartitionKey partitionkey;
+    private PartitionKey partitionKey;
     private String partitionKeyRangeId;
     private boolean scriptLoggingEnabled;
     private boolean populateQuotaInfo;
@@ -46,8 +46,9 @@ public class RequestOptions {
      *
      * @param preTriggerInclude the triggers to be invoked before the operation.
      */
-    public void setPreTriggerInclude(List<String> preTriggerInclude) {
+    public RequestOptions setPreTriggerInclude(List<String> preTriggerInclude) {
         this.preTriggerInclude = preTriggerInclude;
+        return this;
     }
 
     /**
@@ -64,8 +65,9 @@ public class RequestOptions {
      *
      * @param postTriggerInclude the triggers to be invoked after the operation.
      */
-    public void setPostTriggerInclude(List<String> postTriggerInclude) {
+    public RequestOptions setPostTriggerInclude(List<String> postTriggerInclude) {
         this.postTriggerInclude = postTriggerInclude;
+        return this;
     }
 
     /**
@@ -82,8 +84,9 @@ public class RequestOptions {
      *
      * @param accessCondition the access condition.
      */
-    public void setAccessCondition(AccessCondition accessCondition) {
+    public RequestOptions setAccessCondition(AccessCondition accessCondition) {
         this.accessCondition = accessCondition;
+        return this;
     }
 
     /**
@@ -100,8 +103,9 @@ public class RequestOptions {
      *
      * @param indexingDirective the indexing directive.
      */
-    public void setIndexingDirective(IndexingDirective indexingDirective) {
+    public RequestOptions setIndexingDirective(IndexingDirective indexingDirective) {
         this.indexingDirective = indexingDirective;
+        return this;
     }
 
     /**
@@ -118,8 +122,9 @@ public class RequestOptions {
      *
      * @param consistencyLevel the consistency level.
      */
-    public void setConsistencyLevel(ConsistencyLevel consistencyLevel) {
+    public RequestOptions setConsistencyLevel(ConsistencyLevel consistencyLevel) {
         this.consistencyLevel = consistencyLevel;
+        return this;
     }
 
     /**
@@ -136,8 +141,9 @@ public class RequestOptions {
      *
      * @param sessionToken the session token.
      */
-    public void setSessionToken(String sessionToken) {
+    public RequestOptions setSessionToken(String sessionToken) {
         this.sessionToken = sessionToken;
+        return this;
     }
 
     /**
@@ -154,8 +160,9 @@ public class RequestOptions {
      *
      * @param resourceTokenExpirySeconds the resource token expiry seconds.
      */
-    public void setResourceTokenExpirySeconds(Integer resourceTokenExpirySeconds) {
+    public RequestOptions setResourceTokenExpirySeconds(Integer resourceTokenExpirySeconds) {
         this.resourceTokenExpirySeconds = resourceTokenExpirySeconds;
+        return this;
     }
 
     /**
@@ -172,8 +179,9 @@ public class RequestOptions {
      *
      * @param offerType the offer type.
      */
-    public void setOfferType(String offerType) {
+    public RequestOptions setOfferType(String offerType) {
         this.offerType = offerType;
+        return this;
     }
 
     /**
@@ -190,8 +198,9 @@ public class RequestOptions {
      *
      * @param offerThroughput the throughput value.
      */
-    public void setOfferThroughput(Integer offerThroughput) {
+    public RequestOptions setOfferThroughput(Integer offerThroughput) {
         this.offerThroughput = offerThroughput;
+        return this;
     }
 
     /**
@@ -200,16 +209,17 @@ public class RequestOptions {
      * @return the partition key value.
      */
     public PartitionKey getPartitionKey() {
-        return this.partitionkey;
+        return this.partitionKey;
     }
 
     /**
      * Sets the partition key used to identify the current request's target partition.
      *
-     * @param partitionkey the partition key value.
+     * @param partitionKey the partition key value.
      */
-    public void setPartitionKey(PartitionKey partitionkey) {
-        this.partitionkey = partitionkey;
+    public RequestOptions setPartitionKey(PartitionKey partitionKey) {
+        this.partitionKey = partitionKey;
+        return this;
     }
 
     /**
@@ -226,8 +236,9 @@ public class RequestOptions {
      *
      * @param partitionKeyRangeId the partition key range id value.
      */
-    protected void setPartitionKeyRengeId(String partitionKeyRangeId) {
+    protected RequestOptions setPartitionKeyRangeId(String partitionKeyRangeId) {
         this.partitionKeyRangeId = partitionKeyRangeId;
+        return this;
     }
 
     /**
@@ -246,8 +257,9 @@ public class RequestOptions {
      *
      * @param scriptLoggingEnabled true if stored procedure Javascript logging is enabled
      */
-    public void setScriptLoggingEnabled(boolean scriptLoggingEnabled) {
+    public RequestOptions setScriptLoggingEnabled(boolean scriptLoggingEnabled) {
         this.scriptLoggingEnabled = scriptLoggingEnabled;
+        return this;
     }
 
     /**
@@ -268,8 +280,9 @@ public class RequestOptions {
      *
      * @param populateQuotaInfo a boolean value indicating whether PopulateQuotaInfo is enabled or not
      */
-    public void setPopulateQuotaInfo(boolean populateQuotaInfo) {
+    public RequestOptions setPopulateQuotaInfo(boolean populateQuotaInfo) {
         this.populateQuotaInfo = populateQuotaInfo;
+        return this;
     }
 
     /**
@@ -278,11 +291,12 @@ public class RequestOptions {
      * @param name  a string representing the custom option's name
      * @param value a STRING representing the custom option's value
      */
-    public void setHeader(String name, String value) {
+    public RequestOptions setHeader(String name, String value) {
         if (this.customOptions == null) {
             this.customOptions = new HashMap<>();
         }
         this.customOptions.put(name, value);
+        return this;
     }
 
     /**
@@ -307,8 +321,8 @@ public class RequestOptions {
      *
      * @param properties the properties.
      */
-    public void setProperties(Map<String, Object> properties) {
+    public RequestOptions setProperties(Map<String, Object> properties) {
         this.properties = properties;
+        return this;
     }
-
 }

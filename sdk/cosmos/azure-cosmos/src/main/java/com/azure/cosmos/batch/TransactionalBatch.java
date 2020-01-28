@@ -5,11 +5,12 @@ package com.azure.cosmos.batch;
 
 import com.azure.cosmos.CosmosContainer;
 import com.azure.cosmos.PartitionKey;
-import com.azure.cosmos.implementation.HttpConstants;
+import com.azure.cosmos.implementation.RequestOptions;
+import io.netty.handler.codec.http.HttpResponseStatus;
 
 import javax.annotation.Nonnull;
+import java.io.InputStream;
 import java.util.concurrent.CompletableFuture;
-import java.util.stream.Stream;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -17,7 +18,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
  * Represents a batch of operations against items with the same {@link PartitionKey} in a container.
  * <p>
  * The batch operations will be performed in a transactional manner at the Azure Cosmos DB service. Use {@link
- * CosmosContainer#CreateTransactionalBatch} to create an instance of this class.
+ * CosmosContainer#createTransactionalBatch} to create an instance of this class.
  * <h3>Example</h3>
  * <p>
  * This example atomically modifies a set of documents as a batch.<pre>{@code
@@ -96,20 +97,20 @@ public interface TransactionalBatch {
      */
     default <T> TransactionalBatch createItem(@Nonnull T item) {
         checkNotNull(item, "expected non-null item");
-        return this.CreateItem(item, null);
+        return this.createItem(item, null);
     }
 
     /**
      * Adds an operation to create an item into the batch.
+     *
+     * @param <T> The type of item to be created.
      *
      * @param item A JSON serializable object that must contain an id property. See {@link CosmosSerializer} to
      * implement a custom serializer.
      * @param requestOptions The options for the item request.
-     * @param <T> The type of item to be created.
-     *
      * @return The transactional batch instance with the operation added.
      */
-    <T> TransactionalBatch CreateItem(@Nonnull T item, TransactionalBatchItemRequestOptions requestOptions);
+    <T> TransactionalBatch createItem(@Nonnull T item, RequestOptions requestOptions);
 
     /**
      * Adds an operation to create an item into the batch.
@@ -119,8 +120,8 @@ public interface TransactionalBatch {
      *
      * @return The transactional batch instance with the operation added.
      */
-    default TransactionalBatch CreateItemStream(@Nonnull Stream streamPayload) {
-        return this.CreateItemStream(streamPayload, null);
+    default TransactionalBatch createItemStream(@Nonnull InputStream streamPayload) {
+        return this.createItemStream(streamPayload, null);
     }
 
     /**
@@ -132,8 +133,8 @@ public interface TransactionalBatch {
      *
      * @return The transactional batch instance with the operation added.
      */
-    TransactionalBatch CreateItemStream(
-        @Nonnull Stream streamPayload, TransactionalBatchItemRequestOptions requestOptions);
+    TransactionalBatch createItemStream(
+        @Nonnull InputStream streamPayload, RequestOptions requestOptions);
 
     /**
      * Adds an operation to delete an item into the batch.
@@ -142,9 +143,9 @@ public interface TransactionalBatch {
      *
      * @return The transactional batch instance with the operation added.
      */
-    default TransactionalBatch DeleteItem(@Nonnull String id) {
+    default TransactionalBatch deleteItem(@Nonnull String id) {
         checkNotNull(id, "expected non-null id");
-        return this.DeleteItem(id, null);
+        return this.deleteItem(id, null);
     }
 
     /**
@@ -155,15 +156,15 @@ public interface TransactionalBatch {
      *
      * @return The transactional batch instance with the operation added.
      */
-    TransactionalBatch DeleteItem(@Nonnull String id, TransactionalBatchItemRequestOptions requestOptions);
+    TransactionalBatch deleteItem(@Nonnull String id, RequestOptions requestOptions);
 
     /**
      * Executes the transactional batch at the Azure Cosmos service as an asynchronous operation.
      *
      * @return An awaitable response which contains details of execution of the transactional batch.
      * <p>
-     * If the transactional batch executes successfully, the {@link TransactionalBatchResponse#StatusCode} on the
-     * response returned will be set to {@link HttpConstants.StatusCodes#OK}.
+     * If the transactional batch executes successfully, the {@link TransactionalBatchResponse#getResponseStatus} on the
+     * response returned will be set to {@link HttpResponseStatus#OK}.
      * <p>
      * If an operation within the transactional batch fails during execution, no changes from the batch will be
      * committed and the status of the failing operation is made available in the <see
@@ -176,14 +177,14 @@ public interface TransactionalBatch {
      * Dependency); for the operation that caused the batch to abort, the value of this field will indicate the cause of
      * failure as a HTTP status code.
      * <p>
-     * The {@link TransactionalBatchResponse#StatusCode} on the response returned may also have values such as
+     * The {@link TransactionalBatchResponse#getResponseStatus} on the response returned may also have values such as
      * HTTP 5xx in case of server errors and HTTP 429 (Too Many Requests).
      * <p>
      * This API only throws on client side exceptions. This is to increase performance and prevent the overhead of
-     * throwing exceptions. Use {@link TransactionalBatchResponse#IsSuccessStatusCode} on the response returned to
+     * throwing exceptions. Use {@link TransactionalBatchResponse#isSuccessStatusCode} on the response returned to
      * ensure that the transactional batch succeeded.
      */
-    CompletableFuture<TransactionalBatchResponse> ExecuteAsync();
+    CompletableFuture<TransactionalBatchResponse> executeAsync();
 
     /**
      * Adds an operation to read an item into the batch.
@@ -192,9 +193,9 @@ public interface TransactionalBatch {
      *
      * @return The transactional batch instance with the operation added.
      */
-    default TransactionalBatch ReadItem(@Nonnull String id) {
+    default TransactionalBatch readItem(@Nonnull String id) {
         checkNotNull(id, "expected non-null id");
-        return this.ReadItem(id, null);
+        return this.readItem(id, null);
     }
 
     /**
@@ -205,7 +206,7 @@ public interface TransactionalBatch {
      *
      * @return The transactional batch instance with the operation added.
      */
-    TransactionalBatch ReadItem(@Nonnull String id, TransactionalBatchItemRequestOptions requestOptions);
+    TransactionalBatch readItem(@Nonnull String id, RequestOptions requestOptions);
 
     /**
      * Adds an operation to replace an item into the batch.
@@ -213,29 +214,29 @@ public interface TransactionalBatch {
      * @param id The unique id of the item.
      * @param item A JSON serializable object that must contain an id property. See {@link CosmosSerializer} to
      * implement a custom serializer.
-     * @param <T> The type of item to be created.
+     * @param <TItem> The type of item to be created.
      *
      * @return The transactional batch instance with the operation added.
      */
-    default <T> TransactionalBatch ReplaceItem(@Nonnull String id, @Nonnull T item) {
+    default <TItem> TransactionalBatch replaceItem(@Nonnull String id, @Nonnull TItem item) {
         checkNotNull(id, "expected non-null id");
         checkNotNull(item, "expected non-null item");
-        return this.ReplaceItem(id, item, null);
+        return this.replaceItem(id, item, null);
     }
 
     /**
      * Adds an operation to replace an item into the batch.
      *
+     * @param <TItem> The type of item to be created.
+     *
      * @param id The unique id of the item.
      * @param item A JSON serializable object that must contain an id property. See {@link CosmosSerializer} to
      * implement a custom serializer.
      * @param requestOptions The options for the item request.
-     * @param <T> The type of item to be created.
-     *
      * @return The transactional batch instance with the operation added.
      */
-    <T> TransactionalBatch ReplaceItem(
-        @Nonnull String id, @Nonnull T item, TransactionalBatchItemRequestOptions requestOptions);
+    <TItem> TransactionalBatch replaceItem(
+        @Nonnull String id, @Nonnull TItem item, RequestOptions requestOptions);
 
     /**
      * Adds an operation to replace an item into the batch.
@@ -246,10 +247,10 @@ public interface TransactionalBatch {
      *
      * @return The transactional batch instance with the operation added.
      */
-    default TransactionalBatch ReplaceItemStream(@Nonnull String id, @Nonnull Stream streamPayload) {
+    default TransactionalBatch replaceItemStream(@Nonnull String id, @Nonnull InputStream streamPayload) {
         checkNotNull(id, "expected non-null id");
         checkNotNull(streamPayload, "expected non-null streamPayload");
-        return this.ReplaceItemStream(id, streamPayload, null);
+        return this.replaceItemStream(id, streamPayload, null);
     }
 
     /**
@@ -262,34 +263,34 @@ public interface TransactionalBatch {
      *
      * @return The transactional batch instance with the operation added.
      */
-    TransactionalBatch ReplaceItemStream(
-        @Nonnull String id, @Nonnull Stream streamPayload, TransactionalBatchItemRequestOptions requestOptions);
+    TransactionalBatch replaceItemStream(
+        @Nonnull String id, @Nonnull InputStream streamPayload, RequestOptions requestOptions);
 
     /**
      * Adds an operation to upsert an item into the batch.
      *
      * @param item A JSON serializable object that must contain an id property. See {@link CosmosSerializer} to
      * implement a custom serializer.
-     * @param <T> The type of item to be created.
+     * @param <TItem> The type of item to be created.
      *
      * @return The transactional batch instance with the operation added.
      */
-    default <T> TransactionalBatch UpsertItem(@Nonnull T item) {
+    default <TItem> TransactionalBatch upsertItem(@Nonnull TItem item) {
         checkNotNull(item, "expected non-null item");
-        return this.UpsertItem(item, null);
+        return this.upsertItem(item, null);
     }
 
     /**
      * Adds an operation to upsert an item into the batch.
+     *
+     * @param <TItem> The type of item to be created.
      *
      * @param item A JSON serializable object that must contain an id property. See {@link CosmosSerializer} to
      * implement a custom serializer.
      * @param requestOptions The options for the item request.
-     * @param <T> The type of item to be created.
-     *
      * @return The transactional batch instance with the operation added.
      */
-    <T> TransactionalBatch UpsertItem(@Nonnull T item, TransactionalBatchItemRequestOptions requestOptions);
+    <TItem> TransactionalBatch upsertItem(@Nonnull TItem item, RequestOptions requestOptions);
 
     /**
      * Adds an operation to upsert an item into the batch.
@@ -299,9 +300,9 @@ public interface TransactionalBatch {
      *
      * @return The transactional batch instance with the operation added.
      */
-    default TransactionalBatch UpsertItemStream(@Nonnull Stream streamPayload) {
+    default TransactionalBatch upsertItemStream(@Nonnull InputStream streamPayload) {
         checkNotNull(streamPayload, "expected non-null streamPayload");
-        return this.UpsertItemStream(streamPayload, null);
+        return this.upsertItemStream(streamPayload, null);
     }
 
     /**
@@ -313,6 +314,5 @@ public interface TransactionalBatch {
      *
      * @return The transactional batch instance with the operation added.
      */
-    TransactionalBatch UpsertItemStream(
-        @Nonnull Stream streamPayload, TransactionalBatchItemRequestOptions requestOptions);
+    TransactionalBatch upsertItemStream(@Nonnull InputStream streamPayload, RequestOptions requestOptions);
 }

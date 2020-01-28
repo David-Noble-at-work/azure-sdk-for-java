@@ -20,18 +20,10 @@ public class CosmosItemRequestOptions {
 
     /**
      * Constructor
-     */
-    public CosmosItemRequestOptions() {
-        super();
-    }
-
-    /**
-     * Constructor
      *
      * @param partitionKey the partition key
      */
-    CosmosItemRequestOptions(PartitionKey partitionKey){
-        super();
+    CosmosItemRequestOptions(PartitionKey partitionKey) {
         setPartitionKey(partitionKey);
     }
 

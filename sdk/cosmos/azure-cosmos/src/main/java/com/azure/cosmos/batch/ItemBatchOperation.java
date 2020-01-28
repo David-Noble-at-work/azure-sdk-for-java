@@ -6,6 +6,7 @@ package com.azure.cosmos.batch;
 import com.azure.cosmos.PartitionKey;
 import com.azure.cosmos.implementation.HttpConstants.HttpHeaders;
 import com.azure.cosmos.implementation.OperationType;
+import com.azure.cosmos.implementation.RequestOptions;
 import com.azure.cosmos.implementation.ResourceType;
 import com.azure.cosmos.implementation.directconnectivity.WFConstants.BackendHeaders;
 import com.azure.cosmos.serialization.hybridrow.Result;
@@ -28,13 +29,13 @@ public class ItemBatchOperation<TResource> implements AutoCloseable {
 
     private ItemBatchOperationContext context;
     private CosmosDiagnosticsContext diagnosticsContext;
-    private String Id;
+    private String id;
     private int operationIndex;
     private OperationType operationType;
     private Documents.PartitionKey parsedPartitionKey;
     private PartitionKey partitionKey;
     private String partitionKeyJson;
-    private TransactionalBatchItemRequestOptions requestOptions;
+    private RequestOptions requestOptions;
     private Memory<Byte> body;
     private TResource resource;
 
@@ -42,85 +43,13 @@ public class ItemBatchOperation<TResource> implements AutoCloseable {
 
     // region Constructors
 
-    public ItemBatchOperation(
-        @Nonnull final OperationType operationType,
-        final int operationIndex) {
-
-        this(operationType, operationIndex, (PartitionKey) null, null, null, null, null);
-    }
-
-    public ItemBatchOperation(
-        @Nonnull final OperationType operationType,
-        final int operationIndex,
-        final PartitionKey partitionKey) {
-
-        this(operationType, operationIndex, partitionKey, null, null, null, null);
-    }
-
-    public ItemBatchOperation(
-        @Nonnull final OperationType operationType,
-        final int operationIndex,
-        final PartitionKey partitionKey,
-        final String id) {
-
-        this(operationType, operationIndex, partitionKey, id, null, null, null);
-    }
-
-    public ItemBatchOperation(
-        @Nonnull final OperationType operationType,
-        final int operationIndex,
-        final PartitionKey partitionKey,
-        final String id,
-        final TResource resource) {
-
-        this(operationType, operationIndex, partitionKey, id, resource, null, null);
-    }
-
-    public ItemBatchOperation(
+    private ItemBatchOperation(
         @Nonnull final OperationType operationType,
         final int operationIndex,
         final PartitionKey partitionKey,
         final String id,
         final TResource resource,
-        final TransactionalBatchItemRequestOptions requestOptions) {
-
-        this(operationType, operationIndex, partitionKey, id, resource, requestOptions, null);
-    }
-
-    public ItemBatchOperation(
-        @Nonnull final OperationType operationType,
-        final int operationIndex,
-        final String id) {
-
-        this(operationType, operationIndex, null, id, null, null, null);
-    }
-
-    public ItemBatchOperation(
-        @Nonnull final OperationType operationType,
-        final int operationIndex,
-        final String id,
-        final TResource resource) {
-
-        this(operationType, operationIndex, null, id, resource, null, null);
-    }
-
-    public ItemBatchOperation(
-        OperationType operationType,
-        int operationIndex,
-        String id,
-        TResource resource,
-        TransactionalBatchItemRequestOptions requestOptions) {
-
-        this(operationType, operationIndex, null, id, resource, requestOptions, null);
-    }
-
-    public ItemBatchOperation(
-        @Nonnull final OperationType operationType,
-        final int operationIndex,
-        final PartitionKey partitionKey,
-        final String id,
-        final TResource resource,
-        final TransactionalBatchItemRequestOptions requestOptions,
+        final RequestOptions requestOptions,
         final CosmosDiagnosticsContext diagnosticsContext) {
 
         checkArgument(operationIndex >= 0, "expected operationIndex >= 0, not %s", operationIndex);
@@ -129,7 +58,7 @@ public class ItemBatchOperation<TResource> implements AutoCloseable {
         this.operationType = operationType;
         this.operationIndex = operationIndex;
         this.partitionKey = partitionKey;
-        this.Id = id;
+        this.id = id;
         this.resource = resource;
         this.requestOptions = requestOptions;
         this.diagnosticsContext = diagnosticsContext;
@@ -162,14 +91,14 @@ public class ItemBatchOperation<TResource> implements AutoCloseable {
     }
 
     public final String getId() {
-        return Id;
+        return id;
     }
 
     public final int getOperationIndex() {
         return operationIndex;
     }
 
-    public final ItemBatchOperation<TResource> setOperationIndex(int value) {
+    public final ItemBatchOperation<TResource> setOperationIndex(final int value) {
         operationIndex = value;
         return this;
     }
@@ -182,27 +111,30 @@ public class ItemBatchOperation<TResource> implements AutoCloseable {
         return parsedPartitionKey;
     }
 
-    public final void setParsedPartitionKey(Documents.PartitionKey value) {
+    public final ItemBatchOperation<TResource> setParsedPartitionKey(Documents.PartitionKey value) {
         parsedPartitionKey = value;
+        return this;
     }
 
     public final PartitionKey getPartitionKey() {
         return partitionKey;
     }
 
-    public final void setPartitionKey(PartitionKey value) {
+    public final ItemBatchOperation<TResource> setPartitionKey(final PartitionKey value) {
         partitionKey = value;
+        return this;
     }
 
     public final String getPartitionKeyJson() {
         return partitionKeyJson;
     }
 
-    public final void setPartitionKeyJson(String value) {
+    public final ItemBatchOperation<TResource> setPartitionKeyJson(final String value) {
         partitionKeyJson = value;
+        return this;
     }
 
-    public final TransactionalBatchItemRequestOptions getRequestOptions() {
+    public final RequestOptions getRequestOptions() {
         return requestOptions;
     }
 
@@ -210,16 +142,18 @@ public class ItemBatchOperation<TResource> implements AutoCloseable {
         return resource;
     }
 
-    private void setResource(TResource value) {
+    private ItemBatchOperation<TResource> setResource(final TResource value) {
         resource = value;
+        return this;
     }
 
     public final Memory<Byte> getResourceBody() {
         return this.body;
     }
 
-    public final void setResourceBody(Memory<Byte> value) {
+    public final ItemBatchOperation<TResource> setResourceBody(Memory<Byte> value) {
         this.body = value;
+        return this;
     }
 
     // endregion
@@ -463,4 +397,63 @@ public class ItemBatchOperation<TResource> implements AutoCloseable {
     }
 
     // endregion
+
+    public static final class Builder<TResource> {
+
+        private final OperationType operationType;
+        private final int operationIndex;
+
+        private ItemBatchOperationContext context;
+        private CosmosDiagnosticsContext diagnosticsContext;
+        private String id;
+        private PartitionKey partitionKey;
+        private RequestOptions requestOptions;
+        private TResource resource;
+
+
+        public Builder(@Nonnull final OperationType type, final int index) {
+
+            checkNotNull(type, "expected non-null type");
+            checkArgument(index >= 0, "expected index >= 0, not %s", index);
+
+            this.operationType = type;
+            this.operationIndex = index;
+        }
+
+        public Builder<TResource> diagnosticsContext(CosmosDiagnosticsContext value) {
+            this.diagnosticsContext = value;
+            return this;
+        }
+
+        public Builder<TResource> id(String value) {
+            this.id = value;
+            return this;
+        }
+
+        public Builder<TResource> partitionKey(PartitionKey value) {
+            this.partitionKey = value;
+            return this;
+        }
+
+        public Builder<TResource> requestOptions(RequestOptions value) {
+            this.requestOptions = value;
+            return this;
+        }
+
+        public Builder<TResource> resource(TResource value) {
+            this.resource = value;
+            return this;
+        }
+
+        public ItemBatchOperation<TResource> build() {
+            return new ItemBatchOperation<>(
+                this.operationType,
+                this.operationIndex,
+                this.partitionKey,
+                this.id,
+                this.resource,
+                this.requestOptions,
+                this.diagnosticsContext);
+        }
+    }
 }

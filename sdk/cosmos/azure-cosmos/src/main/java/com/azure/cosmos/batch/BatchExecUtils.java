@@ -5,67 +5,96 @@ package com.azure.cosmos.batch;
 
 import com.azure.cosmos.PartitionKey;
 import com.azure.cosmos.PartitionKeyDefinition;
+import com.azure.cosmos.implementation.HttpConstants;
+import com.azure.cosmos.implementation.HttpConstants.HttpHeaders;
 import com.azure.cosmos.implementation.RequestOptions;
 import com.azure.cosmos.implementation.directconnectivity.WFConstants.BackendHeaders;
+import com.azure.cosmos.implementation.routing.CollectionRoutingMap;
 
+import javax.annotation.Nonnull;
 import java.io.InputStream;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
+import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
  * Util methods for batch requests.
  */
 public final class BatchExecUtils {
+
     // Using the same buffer size as the Stream.DefaultCopyBufferSize
     private static final int BufferSize = 81920;
 
-    public static void EnsureValid(List<ItemBatchOperation> operations, RequestOptions batchOptions) {
-        String errorMessage = BatchExecUtils.IsValid(operations, batchOptions);
+    public static void ensureValid(final List<ItemBatchOperation> operations, final RequestOptions options) {
+
+        final String errorMessage = BatchExecUtils.isValid(operations, options);
 
         if (errorMessage != null) {
             throw new IllegalArgumentException(errorMessage);
         }
     }
 
-    public static String GetPartitionKeyRangeId(PartitionKey partitionKey, PartitionKeyDefinition partitionKeyDefinition, Routing.CollectionRoutingMap collectionRoutingMap) {
-        String effectivePartitionKey = partitionKey.InternalKey.GetEffectivePartitionKeyString(partitionKeyDefinition);
-        return collectionRoutingMap.GetRangeByEffectivePartitionKey(effectivePartitionKey).Id;
+    public static String getPartitionKeyRangeId(
+        @Nonnull final PartitionKey key,
+        @Nonnull final PartitionKeyDefinition keyDefinition,
+        @Nonnull final CollectionRoutingMap collectionRoutingMap) {
+
+        checkNotNull(key, "expected non-null key");
+        checkNotNull(keyDefinition, "expected non-null keyDefinition");
+        checkNotNull(collectionRoutingMap, "expected non-null collectionRoutingMap");
+
+        final String effectiveKey = key.getEffectivePartitionKeyString(keyDefinition);
+        return collectionRoutingMap.getRangeByEffectivePartitionKey(effectiveKey).getId();
     }
 
-    public static String IsValid(List<ItemBatchOperation> operations, RequestOptions batchOptions) {
-        String errorMessage = null;
+    public static String isValid(final List<ItemBatchOperation> operations, RequestOptions options) {
+
+        final String errorMessage = null;
 
         if (operations.size() == 0) {
             errorMessage = ClientResources.BatchNoOperations;
         }
 
-        if (errorMessage == null && batchOptions != null) {
-            if (batchOptions.IfMatchEtag != null || batchOptions.IfNoneMatchEtag != null) {
+        if (errorMessage == null && options != null) {
+            if (options.IfMatchEtag != null || options.IfNoneMatchEtag != null) {
                 errorMessage = ClientResources.BatchRequestOptionNotSupported;
             }
         }
 
         if (errorMessage == null) {
-            for (ItemBatchOperation operation : operations) {
-                Object epkObj;
-                Object epkStrObj;
-                Object pkStrObj;
-                //C# TO JAVA CONVERTER TODO TASK: The following method call contained an unresolved 'out' keyword -
-                // these cannot be converted using the 'OutObject' helper class unless the method is within the code
-                // being modified:
-                if (operation.getRequestOptions() != null && operation.getRequestOptions().Properties != null && (operation.getRequestOptions().Properties.TryGetValue(BackendHeaders.EffectivePartitionKey, out epkObj) | operation.getRequestOptions().Properties.TryGetValue(BackendHeaders.EffectivePartitionKeyString, out epkStrObj) | operation.getRequestOptions().Properties.TryGetValue(HttpConstants.HttpHeaders.PartitionKey, out pkStrObj))) {
-                    //C# TO JAVA CONVERTER WARNING: Unsigned integer types have no direct equivalent in Java:
-                    //ORIGINAL LINE: byte[] epk = epkObj instanceof byte[] ? (byte[])epkObj : null;
-                    byte[] epk = epkObj instanceof byte[] ? (byte[]) epkObj : null;
-                    String epkStr = epkStrObj instanceof String ? (String) epkStrObj : null;
-                    String partitionKeyJsonString = pkStrObj instanceof String ? (String) pkStrObj : null;
-                    if ((epk == null && partitionKeyJsonString == null) || epkStr == null) {
-                        errorMessage = String.format(ClientResources.EpkPropertiesPairingExpected, BackendHeaders.EFFECTIVE_PARTITION_KEY, BackendHeaders.EFFECTIVE_PARTITION_KEY_STRING);
-                    }
 
-                    if (operation.getPartitionKey() != null && !operation.getRequestOptions().IsEffectivePartitionKeyRouting) {
-                        errorMessage = ClientResources.PKAndEpkSetTogether;
+            for (ItemBatchOperation operation : operations) {
+
+                final RequestOptions operationOptions = operation.getRequestOptions();
+
+                final Map<String, Object> properties = operationOptions != null
+                    ? operationOptions.getProperties()
+                    : null;
+
+                if (properties != null) {
+
+                    final Object epkObj = properties.get(BackendHeaders.EFFECTIVE_PARTITION_KEY);
+                    final Object epkStrObj = properties.get(BackendHeaders.EFFECTIVE_PARTITION_KEY_STRING);
+                    final Object pkStrObj = properties.get(HttpHeaders.PARTITION_KEY);
+                    && (
+                        operation.getRequestOptions().getProperties().TryGetValue(BackendHeaders.EFFECTIVE_PARTITION_KEY, out epkObj)
+                        | operation.getRequestOptions().getProperties().TryGetValue(BackendHeaders.EFFECTIVE_PARTITION_KEY_STRING, out epkStrObj)
+                        | operation.getRequestOptions().getProperties().TryGetValue(HttpHeaders.PARTITION_KEY, out pkStrObj)))
+                    {
+                        //C# TO JAVA CONVERTER WARNING: Unsigned integer types have no direct equivalent in Java:
+                        //ORIGINAL LINE: byte[] epk = epkObj instanceof byte[] ? (byte[])epkObj : null;
+                        byte[] epk = epkObj instanceof byte[] ? (byte[]) epkObj : null;
+                        String epkStr = epkStrObj instanceof String ? (String) epkStrObj : null;
+                        String partitionKeyJsonString = pkStrObj instanceof String ? (String) pkStrObj : null;
+                        if ((epk == null && partitionKeyJsonString == null) || epkStr == null) {
+                            errorMessage = String.format(ClientResources.EpkPropertiesPairingExpected, BackendHeaders.EFFECTIVE_PARTITION_KEY, BackendHeaders.EFFECTIVE_PARTITION_KEY_STRING);
+                        }
+
+                        if (operation.getPartitionKey() != null && !operation.getRequestOptions().IsEffectivePartitionKeyRouting) {
+                            errorMessage = ClientResources.PKAndEpkSetTogether;
+                        }
                     }
                 }
             }

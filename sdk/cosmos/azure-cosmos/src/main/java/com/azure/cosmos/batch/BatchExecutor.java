@@ -41,7 +41,7 @@ public final class BatchExecutor {
 
         try (this.diagnosticsContext.CreateOverallScope("BatchExecuteAsync")) {
 
-            BatchExecUtils.EnsureValid(this.inputOperations, this.batchOptions);
+            BatchExecUtils.ensureValid(this.inputOperations, this.batchOptions);
             PartitionKey serverRequestPartitionKey = this.partitionKey;
 
             if (this.batchOptions != null && this.batchOptions.IsEffectivePartitionKeyRouting) {

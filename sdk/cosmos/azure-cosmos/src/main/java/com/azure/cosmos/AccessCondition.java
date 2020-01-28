@@ -32,7 +32,7 @@ public final class AccessCondition {
     }
 
     /**
-     * Gets the value of the condition - for AccessConditionType IfMatchs and IfNotMatch, this is the ETag that has to
+     * Gets the value of the condition - for AccessConditionType IfMatches and IfNotMatch, this is the ETag that has to
      * be compared to.
      *
      * @return the condition.
