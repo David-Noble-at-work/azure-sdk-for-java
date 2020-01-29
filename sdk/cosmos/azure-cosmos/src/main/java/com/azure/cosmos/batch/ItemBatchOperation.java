@@ -14,6 +14,7 @@ import com.azure.cosmos.serialization.hybridrow.io.RowWriter;
 import com.azure.cosmos.serialization.hybridrow.layouts.TypeArgument;
 
 import javax.annotation.Nonnull;
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.concurrent.CompletableFuture;
 
@@ -36,7 +37,7 @@ public class ItemBatchOperation<TResource> implements AutoCloseable {
     private PartitionKey partitionKey;
     private String partitionKeyJson;
     private RequestOptions requestOptions;
-    private Memory<Byte> body;
+    private byte[] body;
     private TResource resource;
 
     // endregion
@@ -235,21 +236,19 @@ public class ItemBatchOperation<TResource> implements AutoCloseable {
     }
 
     /**
-     * Materializes the operation's resource into a Memory{byte} wrapping a byte array.
+     * Materializes the operation's resource into a byte array synchronously.
      *
      * @param serializerCore Serializer to serialize user provided objects to JSON.
      */
-    public CompletableFuture<Void> MaterializeResourceAsync(@Nonnull final CosmosSerializerCore serializerCore) {
+    public void materializeResource(@Nonnull final CosmosSerializerCore serializerCore) throws IOException {
 
-        if (this.body.IsEmpty && this.resource != null) {
+        if (this.body == null && this.resource != null) {
             try (InputStream inputStream = this.resource instanceof InputStream
                 ? (InputStream) resource
-                : serializerCore.ToStream(this.getResource())) {
-                this.body = /*await*/ BatchExecUtils.StreamToMemoryAsync(inputStream);
+                : serializerCore.ToStream(this.resource)) {
+                this.body = /*await*/ BatchExecUtils.inputStreamToBytes(inputStream);
             }
         }
-
-        return CompletableFuture.completedFuture(null);
     }
 
     public static Result WriteOperation(

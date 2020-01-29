@@ -5,27 +5,31 @@ package com.azure.cosmos.batch;
 
 import com.azure.cosmos.PartitionKey;
 import com.azure.cosmos.PartitionKeyDefinition;
-import com.azure.cosmos.implementation.HttpConstants;
 import com.azure.cosmos.implementation.HttpConstants.HttpHeaders;
 import com.azure.cosmos.implementation.RequestOptions;
 import com.azure.cosmos.implementation.directconnectivity.WFConstants.BackendHeaders;
 import com.azure.cosmos.implementation.routing.CollectionRoutingMap;
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.ByteBufUtil;
+import io.netty.buffer.Unpooled;
 
 import javax.annotation.Nonnull;
+import java.io.IOException;
 import java.io.InputStream;
+import java.nio.channels.ReadableByteChannel;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.CompletableFuture;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.base.Strings.lenientFormat;
+import static java.lang.Math.max;
 
 /**
  * Util methods for batch requests.
  */
 public final class BatchExecUtils {
 
-    // Using the same buffer size as the Stream.DefaultCopyBufferSize
-    private static final int BufferSize = 81920;
+    private static final int MINIMUM_BUFFER_SIZE = 81920;
 
     public static void ensureValid(final List<ItemBatchOperation> operations, final RequestOptions options) {
 
@@ -51,118 +55,76 @@ public final class BatchExecUtils {
 
     public static String isValid(final List<ItemBatchOperation> operations, RequestOptions options) {
 
-        final String errorMessage = null;
-
         if (operations.size() == 0) {
-            errorMessage = ClientResources.BatchNoOperations;
+            return "batch request did not have any operations to be executed";
         }
 
-        if (errorMessage == null && options != null) {
-            if (options.IfMatchEtag != null || options.IfNoneMatchEtag != null) {
-                errorMessage = ClientResources.BatchRequestOptionNotSupported;
-            }
+        if (options != null && options.getAccessCondition() != null) {
+            assert options.getAccessCondition().getCondition() != null;
+            assert options.getAccessCondition().getType() != null;
+            return "one or more request options provided on the batch request are not supported";
         }
 
-        if (errorMessage == null) {
+        for (ItemBatchOperation operation : operations) {
 
-            for (ItemBatchOperation operation : operations) {
+            final RequestOptions operationOptions = operation.getRequestOptions();
 
-                final RequestOptions operationOptions = operation.getRequestOptions();
+            final Map<String, Object> properties = operationOptions != null
+                ? operationOptions.getProperties()
+                : null;
 
-                final Map<String, Object> properties = operationOptions != null
-                    ? operationOptions.getProperties()
-                    : null;
+            if (properties != null) {
 
-                if (properties != null) {
+                final String epkString = (String) properties.computeIfPresent(
+                    BackendHeaders.EFFECTIVE_PARTITION_KEY_STRING,
+                    (k, v) -> v instanceof String ? v : null);
 
-                    final Object epkObj = properties.get(BackendHeaders.EFFECTIVE_PARTITION_KEY);
-                    final Object epkStrObj = properties.get(BackendHeaders.EFFECTIVE_PARTITION_KEY_STRING);
-                    final Object pkStrObj = properties.get(HttpHeaders.PARTITION_KEY);
-                    && (
-                        operation.getRequestOptions().getProperties().TryGetValue(BackendHeaders.EFFECTIVE_PARTITION_KEY, out epkObj)
-                        | operation.getRequestOptions().getProperties().TryGetValue(BackendHeaders.EFFECTIVE_PARTITION_KEY_STRING, out epkStrObj)
-                        | operation.getRequestOptions().getProperties().TryGetValue(HttpHeaders.PARTITION_KEY, out pkStrObj)))
-                    {
-                        //C# TO JAVA CONVERTER WARNING: Unsigned integer types have no direct equivalent in Java:
-                        //ORIGINAL LINE: byte[] epk = epkObj instanceof byte[] ? (byte[])epkObj : null;
-                        byte[] epk = epkObj instanceof byte[] ? (byte[]) epkObj : null;
-                        String epkStr = epkStrObj instanceof String ? (String) epkStrObj : null;
-                        String partitionKeyJsonString = pkStrObj instanceof String ? (String) pkStrObj : null;
-                        if ((epk == null && partitionKeyJsonString == null) || epkStr == null) {
-                            errorMessage = String.format(ClientResources.EpkPropertiesPairingExpected, BackendHeaders.EFFECTIVE_PARTITION_KEY, BackendHeaders.EFFECTIVE_PARTITION_KEY_STRING);
-                        }
+                final byte[] epk = (byte[]) properties.computeIfPresent(
+                    BackendHeaders.EFFECTIVE_PARTITION_KEY,
+                    (k, v) -> v instanceof byte[] ? v : null);
 
-                        if (operation.getPartitionKey() != null && !operation.getRequestOptions().IsEffectivePartitionKeyRouting) {
-                            errorMessage = ClientResources.PKAndEpkSetTogether;
-                        }
-                    }
+                final String pk = (String) properties.computeIfPresent(
+                    HttpHeaders.PARTITION_KEY,
+                    (k, v) -> v instanceof String ? v : null);
+
+                if ((epk == null && pk == null) || epkString == null) {
+                    return lenientFormat(
+                        "expected byte[] value for %s and string value for %s, not (%s, %s)",
+                        BackendHeaders.EFFECTIVE_PARTITION_KEY,
+                        BackendHeaders.EFFECTIVE_PARTITION_KEY_STRING,
+                        epk == null
+                            ? (pk == null ? "null" : pk)
+                            : ByteBufUtil.hexDump(epk), epkString == null ? "null" : epkString);
                 }
             }
         }
 
-        return errorMessage;
+        return null;
     }
 
     /**
-     * Converts a Stream to a Memory{byte} wrapping a byte array.
+     * Converts an input stream to a byte buffer.
      *
-     * @param stream Stream to be converted to bytes.
+     * @param inputStream Stream to be converted to bytes.
      *
      * @return A Memory{byte}.
+     *
+     * @throws IOException if a {@link ReadableByteChannel} over {@code inputStream} cannot be created.
      */
-    public static CompletableFuture<Memory<Byte>> StreamToMemoryAsync(InputStream stream) {
+    public static byte[] inputStreamToBytes(@Nonnull final InputStream inputStream) throws IOException {
 
-        if (stream.CanSeek) {
-            // Some derived implementations of MemoryStream (such as versions of RecyclableMemoryStream prior to 1.2
-            // .2 that we may be using)
-            // return an incorrect response from TryGetBuffer. Use TryGetBuffer only on the MemoryStream type and not
-            // derived types.
-            //C# TO JAVA CONVERTER TODO TASK: C# to Java Converter cannot determine whether this System.IO
-            // .MemoryStream is input or output:
-            MemoryStream memStream = stream instanceof MemoryStream ? (MemoryStream) stream : null;
-            ArraySegment<Byte> memBuffer;
-            tangible.OutObject<System.ArraySegment<Byte>> tempOut_memBuffer =
-                new tangible.OutObject<System.ArraySegment<Byte>>();
-            //C# TO JAVA CONVERTER WARNING: Unsigned integer types have no direct equivalent in Java:
-            //ORIGINAL LINE: if (memStream != null && memStream.GetType() == typeof(MemoryStream) && memStream
-            // .TryGetBuffer(out ArraySegment<byte> memBuffer))
-            //C# TO JAVA CONVERTER TODO TASK: C# to Java Converter cannot determine whether this System.IO
-            // .MemoryStream is input or output:
-            if (memStream != null && memStream.getClass() == MemoryStream.class && memStream.TryGetBuffer(tempOut_memBuffer)) {
-                memBuffer = tempOut_memBuffer.argValue;
-                return memBuffer;
-            } else {
-                memBuffer = tempOut_memBuffer.argValue;
+        int length = max(inputStream.available(), MINIMUM_BUFFER_SIZE);
+        final ByteBuf buffer = Unpooled.buffer(length);
+
+        try {
+            while (buffer.writeBytes(inputStream, length) >= 0) {
+                length = max(inputStream.available(), MINIMUM_BUFFER_SIZE);
             }
-
-            //C# TO JAVA CONVERTER WARNING: Unsigned integer types have no direct equivalent in Java:
-            //ORIGINAL LINE: byte[] bytes = new byte[stream.Length];
-            byte[] bytes = new byte[stream.Length];
-            int sum = 0;
-            int count;
-            while ((count =/*await*/ stream.ReadAsync(bytes, sum, bytes.length - sum)) > 0) {
-                sum += count;
-            }
-
-            return bytes;
-        } else {
-            int bufferSize = BatchExecUtils.BufferSize;
-            //C# TO JAVA CONVERTER WARNING: Unsigned integer types have no direct equivalent in Java:
-            //ORIGINAL LINE: byte[] buffer = new byte[bufferSize];
-            byte[] buffer = new byte[bufferSize];
-
-            try (MemoryStream memoryStream = new MemoryStream(bufferSize)) {
-                int sum = 0;
-                int count;
-                while ((count = /*await*/ stream.ReadAsync(buffer, 0, bufferSize)) >0) {
-                    sum += count;
-                    memoryStream.Write(buffer, 0, count);
-                }
-
-                //C# TO JAVA CONVERTER WARNING: Unsigned integer types have no direct equivalent in Java:
-                //ORIGINAL LINE: return new Memory<byte>(memoryStream.GetBuffer(), 0, (int)memoryStream.Length);
-                return new Memory<Byte>(memoryStream.GetBuffer(), 0, (int) memoryStream.Length);
-            }
+        } catch (IOException error) {
+            buffer.release();
+            throw error;
         }
+
+        return buffer.array();
     }
 }

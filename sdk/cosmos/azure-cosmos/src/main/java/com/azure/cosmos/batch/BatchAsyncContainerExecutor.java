@@ -144,7 +144,7 @@ public class BatchAsyncContainerExecutor implements AutoCloseable {
             assert BatchAsyncContainerExecutor.ValidateOperationEPK(operation, itemRequestOptions);
         }
 
-        /*await*/ operation.MaterializeResourceAsync(this.cosmosClientContext.SerializerCore);
+        /*await*/ operation.materializeResource(this.cosmosClientContext.SerializerCore);
     }
 
     public final void close() throws IOException {

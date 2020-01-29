@@ -95,7 +95,7 @@ public abstract class ServerBatchRequest
                 break;
             }
 
-            /*await*/ operation.MaterializeResourceAsync(this.serializerCore);
+            /*await*/ operation.materializeResource(this.serializerCore);
             materializedCount++;
 
             previousOperationIndex = operation.getOperationIndex();
