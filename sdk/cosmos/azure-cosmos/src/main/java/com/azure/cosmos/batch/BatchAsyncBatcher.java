@@ -3,6 +3,7 @@
 
 package com.azure.cosmos.batch;
 
+import com.azure.cosmos.serializer.CosmosSerializerCore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

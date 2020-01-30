@@ -16,9 +16,12 @@ import io.netty.buffer.Unpooled;
 import javax.annotation.Nonnull;
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.channels.ReadableByteChannel;
+import java.nio.ByteBuffer;
+import java.nio.channels.AsynchronousByteChannel;
+import java.nio.channels.CompletionHandler;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Strings.lenientFormat;
@@ -103,15 +106,56 @@ public final class BatchExecUtils {
     }
 
     /**
-     * Converts an input stream to a byte buffer.
+     * Reads a sequence of bytes from an {@link AsynchronousByteChannel asynchronous byte channel} into a byte array.
      *
-     * @param inputStream Stream to be converted to bytes.
+     * @param channel a readable asynchronous byte channel.
      *
-     * @return A Memory{byte}.
-     *
-     * @throws IOException if a {@link ReadableByteChannel} over {@code inputStream} cannot be created.
+     * @return a {@link CompletableFuture completable future} representing the result of the operation.
      */
-    public static byte[] inputStreamToBytes(@Nonnull final InputStream inputStream) throws IOException {
+    public static CompletableFuture<byte[]> readAll(@Nonnull final AsynchronousByteChannel channel) {
+
+        final CompletableFuture<byte[]> future = new CompletableFuture<>();
+        final ByteBuffer buffer = ByteBuffer.allocate(MINIMUM_BUFFER_SIZE);
+        final ByteBuf sequence = Unpooled.buffer(MINIMUM_BUFFER_SIZE);
+
+        CompletionHandler<Integer, Void> completionHandler = new CompletionHandler<Integer, Void>() {
+
+            @Override
+            public void completed(final Integer result, final Void attachment) {
+                if (result == -1) {
+                    final byte[] array = sequence.array();
+                    sequence.release();
+                    future.complete(array);
+                } else {
+                    if (result > 0) {
+                        sequence.writeBytes(buffer);
+                    }
+                    buffer.clear();
+                    channel.read(buffer, null, this);
+                }
+            }
+
+            @Override
+            public void failed(final Throwable error, final Void attachment) {
+                sequence.release();
+                future.completeExceptionally(error);
+            }
+        };
+
+        channel.read(buffer, null, completionHandler);
+        return future;
+    }
+
+    /**
+     * Reads a sequence of bytes from an {@link InputStream input stream} into a byte array.
+     *
+     * @param inputStream an input stream.
+     *
+     * @return a byte array.
+     *
+     * @throws IOException if the specified stream throws an exception.
+     */
+    public static byte[] readAll(@Nonnull final InputStream inputStream) throws IOException {
 
         int length = max(inputStream.available(), MINIMUM_BUFFER_SIZE);
         final ByteBuf buffer = Unpooled.buffer(length);
@@ -125,6 +169,9 @@ public final class BatchExecUtils {
             throw error;
         }
 
-        return buffer.array();
+        final byte[] result = buffer.array();
+        buffer.release();
+
+        return result;
     }
 }

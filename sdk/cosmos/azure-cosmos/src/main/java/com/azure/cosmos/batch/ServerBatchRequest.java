@@ -7,6 +7,7 @@ import com.azure.cosmos.serialization.hybridrow.HybridRowVersion;
 import com.azure.cosmos.serialization.hybridrow.Result;
 import com.azure.cosmos.serialization.hybridrow.RowBuffer;
 import com.azure.cosmos.serialization.hybridrow.io.RowWriter;
+import com.azure.cosmos.serializer.CosmosSerializerCore;
 
 import java.util.ArrayList;
 import java.util.List;

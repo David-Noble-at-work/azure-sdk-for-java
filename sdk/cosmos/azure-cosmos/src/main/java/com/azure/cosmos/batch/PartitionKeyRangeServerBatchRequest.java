@@ -3,6 +3,8 @@
 
 package com.azure.cosmos.batch;
 
+import com.azure.cosmos.serializer.CosmosSerializerCore;
+
 import javax.annotation.Nonnull;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;

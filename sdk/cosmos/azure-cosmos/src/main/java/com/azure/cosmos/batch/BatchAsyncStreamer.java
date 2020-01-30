@@ -3,6 +3,8 @@
 
 package com.azure.cosmos.batch;
 
+import com.azure.cosmos.serializer.CosmosSerializerCore;
+
 import java.io.IOException;
 
 import static com.google.common.base.Preconditions.checkArgument;

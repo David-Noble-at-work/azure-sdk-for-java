@@ -12,10 +12,12 @@ import com.azure.cosmos.implementation.directconnectivity.WFConstants.BackendHea
 import com.azure.cosmos.serialization.hybridrow.Result;
 import com.azure.cosmos.serialization.hybridrow.io.RowWriter;
 import com.azure.cosmos.serialization.hybridrow.layouts.TypeArgument;
+import com.azure.cosmos.serializer.CosmosSerializerCore;
 
 import javax.annotation.Nonnull;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.channels.AsynchronousByteChannel;
 import java.util.concurrent.CompletableFuture;
 
 import static com.google.common.base.Preconditions.checkArgument;
@@ -240,15 +242,39 @@ public class ItemBatchOperation<TResource> implements AutoCloseable {
      *
      * @param serializerCore Serializer to serialize user provided objects to JSON.
      */
-    public void materializeResource(@Nonnull final CosmosSerializerCore serializerCore) throws IOException {
+    public CompletableFuture<Void> materializeResource(@Nonnull final CosmosSerializerCore serializerCore) throws IOException {
+
+        final CompletableFuture<Void> future = new CompletableFuture<>();
 
         if (this.body == null && this.resource != null) {
-            try (InputStream inputStream = this.resource instanceof InputStream
-                ? (InputStream) resource
-                : serializerCore.ToStream(this.resource)) {
-                this.body = /*await*/ BatchExecUtils.inputStreamToBytes(inputStream);
+
+            if (this.resource instanceof AsynchronousByteChannel) {
+
+                BatchExecUtils.readAll((AsynchronousByteChannel) this.resource).whenComplete((body, error) -> {
+                    if (body == null) {
+                        future.completeExceptionally(error);
+                    } else {
+                        this.body = body;
+                        future.complete(null);
+                    }
+                });
+
+            } else {
+
+                try (InputStream inputStream = this.resource instanceof InputStream
+                    ? (InputStream) resource
+                    : serializerCore.ToStream(this.resource)) {
+                    this.body = BatchExecUtils.readAll(inputStream);
+                } catch (Throwable error) {
+                    future.completeExceptionally(error);
+                    return future;
+                }
+
+                future.complete(null);
             }
         }
+
+        return future;
     }
 
     public static Result WriteOperation(

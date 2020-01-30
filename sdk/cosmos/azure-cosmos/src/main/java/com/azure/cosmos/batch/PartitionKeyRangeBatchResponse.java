@@ -4,6 +4,7 @@
 package com.azure.cosmos.batch;
 
 import com.azure.cosmos.implementation.Strings;
+import com.azure.cosmos.serializer.CosmosSerializerCore;
 import io.netty.handler.codec.http.HttpResponseStatus;
 
 import javax.annotation.Nonnull;
