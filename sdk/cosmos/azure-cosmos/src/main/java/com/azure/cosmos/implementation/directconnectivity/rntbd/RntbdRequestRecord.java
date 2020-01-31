@@ -24,6 +24,7 @@ import java.util.UUID;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.atomic.AtomicIntegerFieldUpdater;
 import java.util.concurrent.atomic.AtomicReferenceFieldUpdater;
 
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -34,6 +35,12 @@ public final class RntbdRequestRecord extends CompletableFuture<StoreResponse> {
 
     private static final Logger logger = LoggerFactory.getLogger(RntbdRequestRecord.class);
 
+    private static final AtomicIntegerFieldUpdater REQUEST_LENGTH =
+        AtomicIntegerFieldUpdater.newUpdater(RntbdRequestRecord.class, "requestLength");
+
+    private static final AtomicIntegerFieldUpdater RESPONSE_LENGTH =
+        AtomicIntegerFieldUpdater.newUpdater(RntbdRequestRecord.class, "responseLength");
+
     private static final AtomicReferenceFieldUpdater<RntbdRequestRecord, Stage> STAGE =
         AtomicReferenceFieldUpdater.newUpdater(
             RntbdRequestRecord.class,
@@ -43,6 +50,8 @@ public final class RntbdRequestRecord extends CompletableFuture<StoreResponse> {
     private final RntbdRequestArgs args;
     private final RntbdRequestTimer timer;
 
+    private volatile int requestLength;
+    private volatile int responseLength;
     private volatile Stage stage;
 
     private volatile OffsetDateTime timeCompleted;
@@ -57,6 +66,8 @@ public final class RntbdRequestRecord extends CompletableFuture<StoreResponse> {
         checkNotNull(timer, "expected non-null timer");
 
         this.timeQueued = OffsetDateTime.now();
+        this.requestLength = -1;
+        this.responseLength = -1;
         this.stage = Stage.QUEUED;
         this.args = args;
         this.timer = timer;
@@ -76,8 +87,26 @@ public final class RntbdRequestRecord extends CompletableFuture<StoreResponse> {
         return this.args.lifetime();
     }
 
+    public int requestLength() {
+        return this.requestLength;
+    }
+
+    RntbdRequestRecord requestLength(int value) {
+        REQUEST_LENGTH.set(this, value);
+        return this;
+    }
+
+    public int responseLength() {
+        return this.responseLength;
+    }
+
+    RntbdRequestRecord responseLength(int value) {
+        RESPONSE_LENGTH.set(this, value);
+        return this;
+    }
+
     public Stage stage() {
-        return STAGE.get(this);
+        return this.stage;
     }
 
     public RntbdRequestRecord stage(final Stage value) {
@@ -229,6 +258,8 @@ public final class RntbdRequestRecord extends CompletableFuture<StoreResponse> {
 
             generator.writeStartObject();
             generator.writeObjectField("args", value.args());
+            generator.writeNumberField("requestLength", value.requestLength());
+            generator.writeNumberField("responseLength", value.responseLength());
 
             // status
 

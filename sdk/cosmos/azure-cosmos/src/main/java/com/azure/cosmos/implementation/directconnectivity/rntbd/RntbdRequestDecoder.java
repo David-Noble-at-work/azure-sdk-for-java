@@ -37,8 +37,8 @@ public final class RntbdRequestDecoder extends ByteToMessageDecoder {
     /**
      * Decode the input {@link ByteBuf} to an {@link RntbdRequest} instance.
      * <p>
-     * This method will be called till either the input {@link ByteBuf} has nothing to read after return from this
-     * method or till nothing was read from the input {@link ByteBuf}.
+     * This method will be called until either the input {@link ByteBuf} has nothing to read after return from this
+     * method or until nothing was read from the input {@link ByteBuf}.
      *
      * @param context the {@link ChannelHandlerContext} to which this {@link ByteToMessageDecoder} belongs.
      * @param in the {@link ByteBuf} from which to read data
@@ -47,14 +47,17 @@ public final class RntbdRequestDecoder extends ByteToMessageDecoder {
      * @throws IllegalStateException thrown if an error occurs
      */
     @Override
-    protected void decode(final ChannelHandlerContext context, final ByteBuf in, final List<Object> out) {
+    protected void decode(
+        final ChannelHandlerContext context,
+        final ByteBuf in,
+        final List<Object> out) throws IllegalStateException {
 
         final RntbdRequest request;
         in.markReaderIndex();
 
         try {
             request = RntbdRequest.decode(in);
-        } catch (final Throwable error) {
+        } catch (final IllegalStateException error) {
             in.resetReaderIndex();
             throw error;
         }
