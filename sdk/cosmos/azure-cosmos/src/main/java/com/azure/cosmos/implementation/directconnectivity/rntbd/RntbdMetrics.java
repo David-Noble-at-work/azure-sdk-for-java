@@ -200,18 +200,18 @@ public final class RntbdMetrics {
 
         Gauge.builder(nameOf("channelsAvailable"), endpoint, RntbdEndpoint::channelsAvailable)
              .description("available channel count")
-             .tags(this.tags)
-             .register(registry);
+            .tags(this.tags)
+            .register(registry);
 
         Gauge.builder(nameOf("concurrentRequests"), endpoint, RntbdEndpoint::concurrentRequests)
             .description("executing or queued request count")
-            .tags(this.tags)
-            .register(registry);
+             .tags(this.tags)
+             .register(registry);
 
         Gauge.builder(nameOf("requestQueueLength"), endpoint, RntbdEndpoint::requestQueueLength)
             .description("queued request count")
-            .tags(this.tags)
-            .register(registry);
+             .tags(this.tags)
+             .register(registry);
 
         Gauge.builder(nameOf("usedDirectMemory"), endpoint, x -> x.usedDirectMemory())
              .description("Java direct memory usage (MiB)")
@@ -361,12 +361,12 @@ public final class RntbdMetrics {
             @Override
             public String get(@Nullable String key) {
                 return null;
-            }
+    }
 
-            @Override
+    @Override
             public String prefix() {
                 return "console";
-            }
+    }
 
         };
 

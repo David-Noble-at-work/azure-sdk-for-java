@@ -13,7 +13,7 @@ Licensed under the MIT License.
 
   <groupId>com.azure</groupId>
   <artifactId>azure-cosmos-parent</artifactId>
-  <version>4.0.0-beta.1</version>
+  <version>4.0.0-SNAPSHOT</version>
   <packaging>pom</packaging>
 
   <name>Microsoft Azure Cosmos DB SQL API</name>
@@ -25,6 +25,10 @@ Licensed under the MIT License.
       <id>azure-java-build-docs</id>
       <url>${site.url}/site/${project.artifactId}</url>
     </site>
+    <repository>
+      <id>azure-sdk-for-java</id>
+      <url>https://pkgs.dev.azure.com/azure-sdk/public/_packaging/azure-sdk-for-java/maven/v1</url>
+    </repository>
   </distributionManagement>
 
   <scm>
@@ -37,16 +41,16 @@ Licensed under the MIT License.
     <cosmosdb-sdk-direct-impl.version>${project.version}</cosmosdb-sdk-direct-impl.version>
     <direct-connectivity-version>${project.version}</direct-connectivity-version>
     <fastutil.version>8.3.0</fastutil.version>
-    <guava.version>27.0.1-jre</guava.version>
     <metrics.version>4.1.0</metrics.version>
     <micrometer.version>1.2.0</micrometer.version>
     <mockito.version>1.10.19</mockito.version>
-    <netty.version>4.1.43.Final</netty.version>
     <netty-tcnative.version>2.0.27.Final</netty-tcnative.version>
-    <reactor-core.version>3.3.0.RELEASE</reactor-core.version>
-    <reactor-netty.version>0.9.0.RELEASE</reactor-netty.version>
     <sdk-version>${project.version}</sdk-version>
-    <testng.version>7.0.0</testng.version>
+    <guava.version>27.0.1-jre</guava.version>
+    <reactor-core.version>3.3.2.RELEASE</reactor-core.version>
+    <netty.version>4.1.45.Final</netty.version>
+    <reactor-netty.version>0.9.4.RELEASE</reactor-netty.version>
+    <azure.core.version>1.3.0-beta.1.dev.20200120.1</azure.core.version>
     <test.groups>unit</test.groups>
     <collectedArtifactsForReleaseLocation>${project.basedir}/target/collectedArtifactsForRelease</collectedArtifactsForReleaseLocation>
     <javadoc.opts/>
@@ -54,10 +58,48 @@ Licensed under the MIT License.
 
   <dependencyManagement>
     <dependencies>
+
       <dependency>
-        <groupId>com.microsoft.azure</groupId>
+        <groupId>io.netty</groupId>
+        <artifactId>netty-codec-http</artifactId>
+        <version>${netty.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>io.netty</groupId>
+        <artifactId>netty-codec-http2</artifactId>
+        <version>${netty.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>io.netty</groupId>
+        <artifactId>netty-handler</artifactId>
+        <version>${netty.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>io.netty</groupId>
+        <artifactId>netty-transport-native-epoll</artifactId>
+        <version>${netty.version}</version>
+        <classifier>linux-x86_64</classifier>
+      </dependency>
+
+      <dependency>
+        <groupId>io.netty</groupId>
+        <artifactId>netty-handler-proxy</artifactId>
+        <version>${netty.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>com.azure</groupId>
+        <artifactId>azure-cosmos-serialization</artifactId>
+        <version>4.0.0-SNAPSHOT</version>
+      </dependency>
+
+      <dependency>
+        <groupId>com.azure</groupId>
         <artifactId>azure-cosmos</artifactId>
-        <version>4.0.0-beta.1</version>
+        <version>4.0.0-SNAPSHOT</version>
       </dependency>
 
       <dependency>
@@ -71,12 +113,12 @@ Licensed under the MIT License.
         <groupId>io.projectreactor</groupId>
         <artifactId>reactor-core</artifactId>
         <version>${reactor-core.version}</version>
-      </dependency>
-
-      <dependency>
+        <exclusions>
+          <exclusion>
         <groupId>io.netty</groupId>
-        <artifactId>netty-codec-http</artifactId>
-        <version>${netty.version}</version>
+            <artifactId>*</artifactId>
+          </exclusion>
+        </exclusions>
       </dependency>
 
       <dependency>
@@ -92,11 +134,23 @@ Licensed under the MIT License.
         <classifier>linux-x86_64</classifier>
       </dependency>
 
+      <!-- https://mvnrepository.com/artifact/com.microsoft.azure/azure-core -->
       <dependency>
+        <groupId>com.azure</groupId>
+        <artifactId>azure-core</artifactId>
+        <version>${azure.core.version}</version>
+        <exclusions>
+          <exclusion>
+            <groupId>io.projectreactor</groupId>
+            <artifactId>reactor-core</artifactId>
+          </exclusion>
+          <exclusion>
         <groupId>io.netty</groupId>
-        <artifactId>netty-handler</artifactId>
-        <version>${netty.version}</version>
+            <artifactId>*</artifactId>
+          </exclusion>
+        </exclusions>
       </dependency>
+
     </dependencies>
   </dependencyManagement>
 
