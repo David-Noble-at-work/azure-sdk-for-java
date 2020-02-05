@@ -3,6 +3,7 @@
 
 package com.azure.cosmos.batch;
 
+import com.azure.cosmos.implementation.IRetryPolicy.ShouldRetryResult;
 import com.azure.cosmos.serializer.CosmosSerializerCore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -12,9 +13,11 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Semaphore;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.base.Preconditions.checkState;
 
 /**
  * Maintains a batch of operations and dispatches it as a unit of work.
@@ -35,7 +38,7 @@ public class BatchAsyncBatcher {
 
     private static final Logger logger = LoggerFactory.getLogger(BatchAsyncBatcher.class);
 
-    private final InterlockIncrementCheck interlockIncrementCheck = new InterlockIncrementCheck();
+    private final Semaphore interlockIncrementCheck = new Semaphore(1);
     private final ArrayList<ItemBatchOperation> batchOperations;
     private long currentSize = 0;
     private boolean dispatched = false;
@@ -76,21 +79,18 @@ public class BatchAsyncBatcher {
         return this.batchOperations.isEmpty();
     }
 
-    //C# TO JAVA CONVERTER TODO TASK: There is no equivalent in Java to the 'async' keyword:
-    //ORIGINAL LINE: internal virtual async Task<Tuple<PartitionKeyRangeServerBatchRequest,
-    // ArraySegment<ItemBatchOperation>>> CreateServerRequestAsync(CancellationToken cancellationToken)
-    public Task<Tuple<PartitionKeyRangeServerBatchRequest, List<ItemBatchOperation>>> CreateServerRequestAsync() {
+    public CompletableFuture<ServerBatchOperationsRequest> CreateServerRequestAsync() {
 
         // All operations must be for the same partition key range
 
-        @SuppressWarnings("unchecked") final List<ItemBatchOperation> operationsArraySegment = Collections.unmodifiableList(new ArrayList<>(this.batchOperations));
         final String partitionKeyRangeId = this.batchOperations.get(0).getContext().getPartitionKeyRangeId();
 
-        //C# TO JAVA CONVERTER TODO TASK: There is no equivalent to 'await' in Java:
+        final List<ItemBatchOperation> itemBatchOperations = Collections.unmodifiableList(
+            new ArrayList<>(this.batchOperations));
 
-        PartitionKeyRangeServerBatchRequest.CreateAsync(
+        return /*await*/ PartitionKeyRangeServerBatchRequest.createAsync(
             partitionKeyRangeId,
-            operationsArraySegment,
+            itemBatchOperations,
             this.maxBatchByteSize,
             this.maxBatchOperationCount,
             false,
@@ -99,46 +99,51 @@ public class BatchAsyncBatcher {
 
     public CompletableFuture<Void> DispatchAsync() {
 
-        this.interlockIncrementCheck.EnterLockCheck();
-
-        ArrayList<ItemBatchOperation> pendingOperations = new ArrayList<>();
-        PartitionKeyRangeServerBatchRequest serverRequest = null;
+        checkState(interlockIncrementCheck.tryAcquire(), "failed to acquire dispatch permit");
+        ArrayList<ItemBatchOperation> pendingOperations;
+        PartitionKeyRangeServerBatchRequest serverRequest;
 
         try {
             try {
                 // HybridRow serialization might leave some pending operations out of the batch
-                //C# TO JAVA CONVERTER TODO TASK: There is no equivalent to 'await' in Java:
-                Tuple<PartitionKeyRangeServerBatchRequest, List<ItemBatchOperation>> createRequestResponse =
-                    /*await*/
-                this.CreateServerRequestAsync();
-                serverRequest = createRequestResponse.Item1;
-                pendingOperations = createRequestResponse.Item2;
+
+                ServerBatchOperationsRequest request = /*await*/this.CreateServerRequestAsync();
+                serverRequest = request.getBatchRequest();
+                pendingOperations = request.getOperations();
+
                 // Any overflow goes to a new batch
+
                 for (ItemBatchOperation operation : pendingOperations) {
                     //C# TO JAVA CONVERTER TODO TASK: There is no equivalent to 'await' in Java:
                     /*await*/ this.retrier.invoke(operation);
                 }
-            } catch (RuntimeException ex) {
+            } catch (RuntimeException error) {
+
                 // Exceptions happening during request creation, fail the entire list
+
                 for (ItemBatchOperation itemBatchOperation : this.batchOperations) {
-                    itemBatchOperation.getContext().Fail(this, ex);
+                    itemBatchOperation.getContext().Fail(this, error);
                 }
 
-                throw ex;
+                throw error;
             }
 
             try {
-                PartitionKeyRangeBatchExecutionResult result = /*await*/
-                this.executor.invoke(serverRequest);
-                try (PartitionKeyRangeBatchResponse batchResponse =
-                         new PartitionKeyRangeBatchResponse(serverRequest.getOperations().Count,
-                             result.getServerResponse(), this.serializerCore)) {
+                PartitionKeyRangeBatchExecutionResult result = /*await*/this.executor.invoke(serverRequest);
+
+                try (PartitionKeyRangeBatchResponse batchResponse = new PartitionKeyRangeBatchResponse(
+
+                    serverRequest.getOperations().size(),
+                    result.getServerResponse(),
+                    this.serializerCore)) {
+
                     for (ItemBatchOperation itemBatchOperation : batchResponse.getOperations()) {
-                        TransactionalBatchOperationResult response =
-                            batchResponse.get(itemBatchOperation.getOperationIndex());
+
+                        TransactionalBatchOperationResult response = batchResponse.get(itemBatchOperation.getOperationIndex());
 
                         // Bulk has diagnostics per a item operation.
                         // Batch has a single diagnostics for the execute operation
+
                         if (itemBatchOperation.getDiagnosticsContext() != null) {
                             response.setDiagnosticsContext(itemBatchOperation.getDiagnosticsContext());
                             response.getDiagnosticsContext().Append(batchResponse.getDiagnosticsContext());
@@ -147,11 +152,8 @@ public class BatchAsyncBatcher {
                         }
 
                         if (!response.isSuccessStatusCode()) {
-                            //C# TO JAVA CONVERTER TODO TASK: There is no equivalent to 'await' in Java:
-                            Documents.ShouldRetryResult shouldRetry = /*await*/
-                            itemBatchOperation.getContext().ShouldRetryAsync(response);
-                            if (shouldRetry.ShouldRetry) {
-                                //C# TO JAVA CONVERTER TODO TASK: There is no equivalent to 'await' in Java:
+                            ShouldRetryResult shouldRetry = /*await*/itemBatchOperation.getContext().ShouldRetryAsync(response);
+                            if (shouldRetry.shouldRetry) {
                                 /*await*/ this.retrier.invoke(itemBatchOperation);
                                 continue;
                             }
@@ -160,16 +162,15 @@ public class BatchAsyncBatcher {
                         itemBatchOperation.getContext().Complete(this, response);
                     }
                 }
-            } catch (RuntimeException error) {
+            } catch (Throwable error) {
                 // Exceptions happening during execution fail all the Tasks part of the request (excluding overflow)
                 for (ItemBatchOperation itemBatchOperation : serverRequest.getOperations()) {
                     itemBatchOperation.getContext().Fail(this, error);
                 }
-
                 throw error;
             }
 
-        } catch (RuntimeException error) {
+        } catch (Throwable error) {
             logger.error("Exception during BatchAsyncBatcher: ", error);
         } finally {
             this.batchOperations.clear();
@@ -177,7 +178,7 @@ public class BatchAsyncBatcher {
         }
     }
 
-    public boolean TryAdd(ItemBatchOperation operation) {
+    public boolean tryAdd(ItemBatchOperation operation) {
 
         checkNotNull(operation, "expected non-null operation");
         checkNotNull(operation.getContext(), "expected non-null operation context");

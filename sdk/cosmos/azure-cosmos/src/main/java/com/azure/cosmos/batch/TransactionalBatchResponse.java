@@ -3,11 +3,13 @@
 
 package com.azure.cosmos.batch;
 
+import com.azure.cosmos.Resource;
 import com.azure.cosmos.implementation.HttpConstants.HttpHeaders;
 import com.azure.cosmos.implementation.HttpConstants.StatusCodes;
 import com.azure.cosmos.implementation.HttpConstants.SubStatusCodes;
 import com.azure.cosmos.serialization.hybridrow.HybridRowVersion;
 import com.azure.cosmos.serialization.hybridrow.Result;
+import com.azure.cosmos.serializer.CosmosSerializerCore;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import org.apache.commons.collections4.list.UnmodifiableList;
 
@@ -30,6 +32,8 @@ import static com.google.common.base.Preconditions.checkNotNull;
  * Response of a {@link TransactionalBatch} request.
  */
 public class TransactionalBatchResponse implements AutoCloseable, List<TransactionalBatchOperationResult> {
+
+    // region Fields
 
     private static String EMPTY_UUID = "00000000-0000-0000-0000-000000000000";
 
@@ -79,6 +83,10 @@ public class TransactionalBatchResponse implements AutoCloseable, List<Transacti
     private Duration retryAfter;
     private CosmosSerializerCore serializer;
     private int subStatusCode;
+
+    // endregion
+
+    // region Constructors
 
     /**
      * Initializes a new instance of the {@link TransactionalBatchResponse} class. This method is intended to be used
@@ -133,12 +141,16 @@ public class TransactionalBatchResponse implements AutoCloseable, List<Transacti
         this.serializer = serializer;
     }
 
+    // endregion
+
+    // region Accessors
+
     public String getActivityId() {
         return this.activityId;
     }
 
     public CosmosDiagnostics getDiagnostics() {
-        return this.diagnosticsContext;
+        return (CosmosDiagnostics) this.diagnosticsContext;
     }
 
     public CosmosDiagnosticsContext getDiagnosticsContext() {
@@ -190,6 +202,10 @@ public class TransactionalBatchResponse implements AutoCloseable, List<Transacti
         return this.results.isEmpty();
     }
 
+    // endregion
+
+    // region Methods
+
     public static CompletableFuture<TransactionalBatchResponse> FromResponseMessageAsync(
         ResponseMessage responseMessage,
         ServerBatchRequest serverRequest,
@@ -197,11 +213,6 @@ public class TransactionalBatchResponse implements AutoCloseable, List<Transacti
         return FromResponseMessageAsync(responseMessage, serverRequest, serializer, true);
     }
 
-    //C# TO JAVA CONVERTER TODO TASK: There is no equivalent in Java to the 'async' keyword:
-    //ORIGINAL LINE: internal static async Task<TransactionalBatchResponse> FromResponseMessageAsync(ResponseMessage
-    // responseMessage, ServerBatchRequest serverRequest, CosmosSerializerCore serializer, bool
-    // shouldPromoteOperationStatus = true)
-    //C# TO JAVA CONVERTER NOTE: Java does not support optional parameters. Overloaded method(s) are created above:
     public static CompletableFuture<TransactionalBatchResponse> FromResponseMessageAsync(
         ResponseMessage responseMessage,
         ServerBatchRequest serverRequest,
@@ -297,23 +308,23 @@ public class TransactionalBatchResponse implements AutoCloseable, List<Transacti
     }
 
     /**
-     * Gets the result of the operation at the provided index in the batch - the returned result has a Resource of
-     * provided type.
+     * Gets the result of the operation at the provided index in the batch
+     * <p>
+     * The returned result has a {@link Resource} of the provided type.
      *
-     * <typeparam name="T">Type to which the Resource in the operation result needs to be deserialized to, when
-     * present.</typeparam>
+     * @param <T> Type to which the Resource in the operation result needs to be deserialized, when present.
      *
      * @param index 0-based index of the operation in the batch whose result needs to be returned.
      *
      * @return Result of batch operation that contains a Resource deserialized to specified type.
      */
-    public <T> TransactionalBatchOperationResult<T> GetOperationResultAtIndex(int index) {
+    public <T> TransactionalBatchOperationResult<T> GetOperationResultAtIndex(int index, Class<T> type) {
 
         TransactionalBatchOperationResult result = this.results.get(index);
         T resource = null;
 
         if (result.getResourceStream() != null) {
-            resource = this.getSerializer().<T>FromStream(result.getResourceStream());
+            resource = this.getSerializer().<T>FromStream(result.getResourceStream(), type);
         }
 
         return new TransactionalBatchOperationResult<T>(result, resource);
@@ -347,7 +358,7 @@ public class TransactionalBatchResponse implements AutoCloseable, List<Transacti
     /**
      * Closes the current {@link TransactionalBatchResponse}.
      */
-    public final void close() throws Exception {
+    public void close() throws Exception {
 
         UnmodifiableList<ItemBatchOperation> operations = operationsUpdater.getAndSet(this, null);
 
@@ -469,13 +480,7 @@ public class TransactionalBatchResponse implements AutoCloseable, List<Transacti
         this.results = Collections.unmodifiableList(Arrays.asList(results));
     }
 
-    //C# TO JAVA CONVERTER TODO TASK: There is no equivalent in Java to the 'async' keyword:
-    //ORIGINAL LINE: private static async Task<TransactionalBatchResponse> PopulateFromContentAsync(Stream content,
-    // ResponseMessage responseMessage, ServerBatchRequest serverRequest, CosmosSerializerCore serializer, bool
-    // shouldPromoteOperationStatus)
-    //C# TO JAVA CONVERTER TODO TASK: C# to Java Converter cannot determine whether this System.IO.Stream is input or
-    // output:
-    private static Task<TransactionalBatchResponse> PopulateFromContentAsync(
+    private static CompletableFuture<TransactionalBatchResponse> PopulateFromContentAsync(
         Stream content,
         ResponseMessage responseMessage,
         ServerBatchRequest serverRequest,
@@ -484,12 +489,10 @@ public class TransactionalBatchResponse implements AutoCloseable, List<Transacti
 
         ArrayList<TransactionalBatchOperationResult> results = new ArrayList<TransactionalBatchOperationResult>();
 
-        // content is ensured to be seekable in caller.
+        // content is ensured to be seekable in caller
+
         int resizerInitialCapacity = (int) content.Length;
 
-        //C# TO JAVA CONVERTER TODO TASK: There is no equivalent to 'await' in Java:
-        //C# TO JAVA CONVERTER WARNING: Unsigned integer types have no direct equivalent in Java:
-        //ORIGINAL LINE: Result res = await content.ReadRecordIOAsync(record =>
         Result res = /*await*/ content.ReadRecordIOAsync(record ->
         {
             TransactionalBatchOperationResult operationResult;
@@ -529,4 +532,6 @@ public class TransactionalBatchResponse implements AutoCloseable, List<Transacti
         response.results = results;
         return response;
     }
+
+    // endregion
 }

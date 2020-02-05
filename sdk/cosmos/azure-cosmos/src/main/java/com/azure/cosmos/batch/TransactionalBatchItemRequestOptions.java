@@ -11,18 +11,20 @@ import com.azure.cosmos.implementation.RequestOptions;
  */
 public class TransactionalBatchItemRequestOptions extends RequestOptions {
 
-    public static TransactionalBatchItemRequestOptions fromItemRequestOptions(final CosmosItemRequestOptions options) {
+    public static TransactionalBatchItemRequestOptions fromItemRequestOptions(final RequestOptions options) {
 
         if (options == null) {
             return null;
         }
 
-        TransactionalBatchItemRequestOptions batchItemRequestOptions = new TransactionalBatchItemRequestOptions()
+        TransactionalBatchItemRequestOptions itemRequestOptions = new TransactionalBatchItemRequestOptions();
+
+        itemRequestOptions
             .setIndexingDirective(options.getIndexingDirective())
             .setAccessCondition(options.getAccessCondition())
-            .setProperties(options.Properties);
-        batchItemRequestOptions.IsEffectivePartitionKeyRouting = options.IsEffectivePartitionKeyRouting;
+            .setProperties(options.getProperties());
 
-        return batchItemRequestOptions;
+        itemRequestOptions.IsEffectivePartitionKeyRouting = options.IsEffectivePartitionKeyRouting;
+        return itemRequestOptions;
     }
 }

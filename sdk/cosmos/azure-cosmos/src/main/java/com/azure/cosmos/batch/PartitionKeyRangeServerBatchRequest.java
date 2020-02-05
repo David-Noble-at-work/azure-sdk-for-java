@@ -11,11 +11,9 @@ import java.util.concurrent.CompletableFuture;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-public final class PartitionKeyRangeServerBatchRequest extends ServerBatchRequest {
-    /**
-     * Gets the PartitionKeyRangeId that applies to all operations in this request.
-     */
-    private String PartitionKeyRangeId;
+final class PartitionKeyRangeServerBatchRequest extends ServerBatchRequest {
+
+    private final String partitionKeyRangeId;
 
     /**
      * Initializes a new instance of the {@link PartitionKeyRangeServerBatchRequest} class.
@@ -25,7 +23,7 @@ public final class PartitionKeyRangeServerBatchRequest extends ServerBatchReques
      * @param maxOperationCount Maximum number of operations allowed in the request.
      * @param serializerCore Serializer to serialize user provided objects to JSON.
      */
-    public PartitionKeyRangeServerBatchRequest(
+    PartitionKeyRangeServerBatchRequest(
         @Nonnull final String partitionKeyRangeId,
         int maxBodyLength,
         int maxOperationCount,
@@ -33,11 +31,16 @@ public final class PartitionKeyRangeServerBatchRequest extends ServerBatchReques
 
         super(maxBodyLength, maxOperationCount, serializerCore);
         checkNotNull(partitionKeyRangeId, "expected non-null partitionKeyRangeId");
-        this.PartitionKeyRangeId = partitionKeyRangeId;
+        this.partitionKeyRangeId = partitionKeyRangeId;
     }
 
+    /**
+     * Gets the PartitionKeyRangeId that applies to all operations in this request.
+     *
+     * @return PartitionKeyRangeId that applies to all operations in this request.
+     */
     public String getPartitionKeyRangeId() {
-        return PartitionKeyRangeId;
+        return this.partitionKeyRangeId;
     }
 
     /**
@@ -56,12 +59,7 @@ public final class PartitionKeyRangeServerBatchRequest extends ServerBatchReques
      * @return A newly created instance of {@link PartitionKeyRangeServerBatchRequest} and the overflow
      * ItemBatchOperation not being processed.
      */
-    //C# TO JAVA CONVERTER TODO TASK: There is no equivalent in Java to the 'async' keyword:
-    //ORIGINAL LINE: public static async Task<Tuple<PartitionKeyRangeServerBatchRequest,
-    // ArraySegment<ItemBatchOperation>>> CreateAsync(string partitionKeyRangeId, ArraySegment<ItemBatchOperation>
-    // operations, int maxBodyLength, int maxOperationCount, bool ensureContinuousOperationIndexes,
-    // CosmosSerializerCore serializerCore, CancellationToken cancellationToken)
-    public static CompletableFuture<Tuple<PartitionKeyRangeServerBatchRequest, List<ItemBatchOperation>>> CreateAsync(
+    public static CompletableFuture<ServerBatchOperationsRequest> createAsync(
         final String partitionKeyRangeId,
         final List<ItemBatchOperation> operations,
         final int maxBodyLength,
@@ -69,11 +67,13 @@ public final class PartitionKeyRangeServerBatchRequest extends ServerBatchReques
         final boolean ensureContinuousOperationIndexes,
         CosmosSerializerCore serializerCore) {
 
-        PartitionKeyRangeServerBatchRequest request = new PartitionKeyRangeServerBatchRequest(partitionKeyRangeId,
-            maxBodyLength, maxOperationCount, serializerCore);
-        //C# TO JAVA CONVERTER TODO TASK: There is no equivalent to 'await' in Java:
-        ArraySegment<ItemBatchOperation> pendingOperations = await
-        request.CreateBodyStreamAsync(operations, cancellationToken, ensureContinuousOperationIndexes);
-        return new Tuple<PartitionKeyRangeServerBatchRequest, ArraySegment<ItemBatchOperation>>(request, pendingOperations);
+        final PartitionKeyRangeServerBatchRequest request = new PartitionKeyRangeServerBatchRequest(
+            partitionKeyRangeId,
+            maxBodyLength,
+            maxOperationCount,
+            serializerCore);
+
+        List<ItemBatchOperation> pendingOperations = /*await*/request.CreateBodyStreamAsync(operations, ensureContinuousOperationIndexes);
+        return new ServerBatchOperationsRequest(request, pendingOperations);
     }
 }

@@ -3,34 +3,29 @@
 
 package com.azure.cosmos.batch;
 
+import com.azure.cosmos.core.Out;
 import com.azure.cosmos.serialization.hybridrow.HybridRowVersion;
 import com.azure.cosmos.serialization.hybridrow.Result;
 import com.azure.cosmos.serialization.hybridrow.RowBuffer;
 import com.azure.cosmos.serialization.hybridrow.io.RowWriter;
 import com.azure.cosmos.serializer.CosmosSerializerCore;
 
+import javax.annotation.Nonnull;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
-//C# TO JAVA CONVERTER TODO TASK: There is no preprocessor in Java:
-///#pragma warning disable CA1001 // Types that own disposable fields should be disposable
-public abstract class ServerBatchRequest
-    //C# TO JAVA CONVERTER TODO TASK: There is no preprocessor in Java:
-    ///#pragma warning restore CA1001 // Types that own disposable fields should be disposable
-{
-    //C# TO JAVA CONVERTER TODO TASK: C# to Java Converter cannot determine whether this System.IO.MemoryStream is
-    // input or output:
+public abstract class ServerBatchRequest {
+
+    private final int maxBodyLength;
+    private final int maxOperationCount;
+
+    private final CosmosSerializerCore serializerCore;
     private MemoryStream bodyStream;
     private long bodyStreamPositionBeforeWritingCurrentRecord;
     private int lastWrittenOperationIndex;
-    private final int maxBodyLength;
-    private final int maxOperationCount;
-    //C# TO JAVA CONVERTER WARNING: Unsigned integer types have no direct equivalent in Java:
-    //ORIGINAL LINE: private MemorySpanResizer<byte> operationResizableWriteBuffer;
     private MemorySpanResizer<Byte> operationResizableWriteBuffer;
-    private ArrayList<ItemBatchOperation> operations = new ArrayList<ItemBatchOperation>();
-    private final CosmosSerializerCore serializerCore;
+    private ArrayList<ItemBatchOperation> operations = new ArrayList<>();
     private boolean shouldDeleteLastWrittenRecord;
 
     /**
@@ -55,14 +50,24 @@ public abstract class ServerBatchRequest
      *
      * @return Body stream.
      */
-    //C# TO JAVA CONVERTER TODO TASK: C# to Java Converter cannot determine whether this System.IO.MemoryStream is
-    // input or output:
     public final MemoryStream TransferBodyStream() {
-        //C# TO JAVA CONVERTER TODO TASK: C# to Java Converter cannot determine whether this System.IO.MemoryStream
-        // is input or output:
         MemoryStream bodyStream = this.bodyStream;
         this.bodyStream = null;
         return bodyStream;
+    }
+
+
+    /**
+     * Adds as many operations as possible from the provided list of operations in the list order while having the body
+     * stream not exceed maxBodySize.
+     *
+     * @param operations Operations to be added; read-only.
+     *
+     * @return Any pending operations that were not included in the request.
+     */
+    protected final CompletableFuture<List<ItemBatchOperation>> CreateBodyStreamAsync(
+        @Nonnull final List<ItemBatchOperation> operations) {
+        return CreateBodyStreamAsync(operations, false);
     }
 
     /**
@@ -75,11 +80,6 @@ public abstract class ServerBatchRequest
      *
      * @return Any pending operations that were not included in the request.
      */
-
-    protected final CompletableFuture<List<ItemBatchOperation>> CreateBodyStreamAsync(List<ItemBatchOperation> operations) {
-        return CreateBodyStreamAsync(operations, false);
-    }
-
     protected final CompletableFuture<List<ItemBatchOperation>> CreateBodyStreamAsync(
         final List<ItemBatchOperation> operations,
         final boolean ensureContinuousOperationIndexes) {
@@ -117,15 +117,12 @@ public abstract class ServerBatchRequest
         this.operations = new List<ItemBatchOperation>(operations.Array, operations.Offset, materializedCount);
 
         final int operationSerializationOverheadOverEstimateInBytes = 200;
-        //C# TO JAVA CONVERTER TODO TASK: C# to Java Converter cannot determine whether this System.IO.MemoryStream
-        // is input or output:
-        this.bodyStream =
-            new MemoryStream(approximateTotalLength + (operationSerializationOverheadOverEstimateInBytes * materializedCount));
-        //C# TO JAVA CONVERTER WARNING: Unsigned integer types have no direct equivalent in Java:
-        //ORIGINAL LINE: this.operationResizableWriteBuffer = new MemorySpanResizer<byte>(estimatedMaxOperationLength
-        // + operationSerializationOverheadOverEstimateInBytes);
-        this.operationResizableWriteBuffer =
-            new MemorySpanResizer<Byte>(estimatedMaxOperationLength + operationSerializationOverheadOverEstimateInBytes);
+
+        this.bodyStream = new MemoryStream(
+            approximateTotalLength + (operationSerializationOverheadOverEstimateInBytes * materializedCount));
+
+        this.operationResizableWriteBuffer = new MemorySpanResizer<Byte>(
+            estimatedMaxOperationLength + operationSerializationOverheadOverEstimateInBytes);
 
         Result r = /*await*/ this.bodyStream.WriteRecordIOAsync(null, this.WriteOperation);
         assert r == Result.SUCCESS : "Failed to serialize batch request";
@@ -134,19 +131,20 @@ public abstract class ServerBatchRequest
 
         if (this.shouldDeleteLastWrittenRecord) {
             this.bodyStream.SetLength(this.bodyStreamPositionBeforeWritingCurrentRecord);
-            this.operations = new ArraySegment<ItemBatchOperation>(operations.Array, operations.Offset,
-                this.lastWrittenOperationIndex);
+            this.operations = new ArraySegment<ItemBatchOperation>(
+                operations.Array, operations.Offset, this.lastWrittenOperationIndex);
         } else {
-            this.operations = new ArraySegment<ItemBatchOperation>(operations.Array, operations.Offset,
-                this.lastWrittenOperationIndex + 1);
+            this.operations = new ArraySegment<ItemBatchOperation>(
+                operations.Array, operations.Offset, this.lastWrittenOperationIndex + 1);
         }
 
         int overflowOperations = operations.Count - this.operations.Count;
-        return new ArrayList<ItemBatchOperation>(operations.Array, this.operations.Count + operations.Offset,
-            overflowOperations);
+
+        return new ArrayList<ItemBatchOperation>(
+            operations.Array, this.operations.Count + operations.Offset, overflowOperations);
     }
 
-    private Result WriteOperation(long index, tangible.OutObject<ReadOnlyMemory<Byte>> buffer) {
+    private Result WriteOperation(long index, Out<ReadOnlyMemory<Byte>> buffer) {
 
         if (this.bodyStream.Length > this.maxBodyLength) {
             // If there is only one operation within the request, we will keep it even if it exceeds the maximum size
@@ -154,14 +152,14 @@ public abstract class ServerBatchRequest
             if (index > 1) {
                 this.shouldDeleteLastWrittenRecord = true;
             }
-            buffer.argValue = null;
+            buffer.set(null);
             return Result.SUCCESS;
         }
 
         this.bodyStreamPositionBeforeWritingCurrentRecord = this.bodyStream.Length;
 
         if (index >= this.operations.Count) {
-            buffer.argValue = null;
+            buffer.set(null);
             return Result.SUCCESS;
         }
 
@@ -172,11 +170,13 @@ public abstract class ServerBatchRequest
         Result result = RowWriter.writeBuffer(rowBuffer, operation, ItemBatchOperation.WriteOperation);
 
         if (result != Result.SUCCESS) {
+            buffer.set(null);
             return result;
         }
 
         this.lastWrittenOperationIndex = (int) index;
-        buffer.argValue = this.operationResizableWriteBuffer.Memory.Slice(0, rowBuffer.Length);
+        buffer.set(this.operationResizableWriteBuffer.Memory.Slice(0, rowBuffer.Length));
+
         return Result.SUCCESS;
     }
 }

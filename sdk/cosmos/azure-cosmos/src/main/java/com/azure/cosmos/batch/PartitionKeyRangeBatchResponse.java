@@ -3,23 +3,33 @@
 
 package com.azure.cosmos.batch;
 
-import com.azure.cosmos.implementation.Strings;
+import com.azure.cosmos.Resource;
 import com.azure.cosmos.serializer.CosmosSerializerCore;
 import io.netty.handler.codec.http.HttpResponseStatus;
 
 import javax.annotation.Nonnull;
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.stream.Stream;
+
+import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
  * Response of a cross partition key batch request.
  */
 public class PartitionKeyRangeBatchResponse extends TransactionalBatchResponse {
 
+    // region Fields
+
     // Results sorted in the order operations had been added.
 
     private final TransactionalBatchOperationResult[] resultsByOperationIndex;
     private final TransactionalBatchResponse serverResponse;
+
+    // endregion
+
+    // region Constructors
 
     /**
      * Initializes a new instance of the {@link PartitionKeyRangeBatchResponse} class.
@@ -61,6 +71,10 @@ public class PartitionKeyRangeBatchResponse extends TransactionalBatchResponse {
         }
     }
 
+    // endregion
+
+    // region Accessors
+
     /**
      * Gets the ActivityId that identifies the server request made to execute the batch request.
      */
@@ -69,17 +83,6 @@ public class PartitionKeyRangeBatchResponse extends TransactionalBatchResponse {
         return this.serverResponse.getActivityId();
     }
 
-    /**
-     * Gets the number of operation results.
-     */
-    @Override
-    public int size() {
-        return this.resultsByOperationIndex.length;
-    }
-
-    /**
-     * <inheritdoc />
-     */
     @Override
     public CosmosDiagnostics getDiagnostics() {
         return this.serverResponse.getDiagnostics();
@@ -90,9 +93,51 @@ public class PartitionKeyRangeBatchResponse extends TransactionalBatchResponse {
         return this.serverResponse.getDiagnosticsContext();
     }
 
+    /**
+     * Gets the result of the operation at the provided index in the batch
+     * <p>
+     * The returned result has a {@link Resource} of the specified type.
+     *
+     * @param <T> type to which the {@link Resource} in the operation result needs to be deserialized, when present.
+     * @param index 0-based index of the operation in the batch whose result needs to be returned.
+     *
+     * @return Result of batch operation that contains a Resource deserialized to specified type.
+     */
     @Override
-    public CosmosSerializerCore getSerializer() {
-        return serializerCore;
+    public <T> TransactionalBatchOperationResult<T> GetOperationResultAtIndex(
+        final int index, @Nonnull final Class<T> type) {
+
+        checkArgument(0 <= index && index < this.size(), "expected index in range [0, %s), not %s",
+            this.size(),
+            index);
+
+        checkNotNull(type, "expected non-null type");
+
+        final TransactionalBatchOperationResult result = this.resultsByOperationIndex[index];
+        T resource = null;
+
+        if (result.getResourceStream() != null) {
+            resource = this.getSerializer().<T>FromStream(result.getResourceStream(), type);
+        }
+
+        return new TransactionalBatchOperationResult<T>(result, resource);
+    }
+
+    // endregion
+
+    // region Methods
+
+    @Override
+    public void close() throws Exception {
+        if (this.serverResponse != null) {
+            this.serverResponse.close();
+        }
+        super.close();
+    }
+
+    @Override
+    public TransactionalBatchOperationResult get(int index) {
+        return this.resultsByOperationIndex[index];
     }
 
     /**
@@ -101,61 +146,17 @@ public class PartitionKeyRangeBatchResponse extends TransactionalBatchResponse {
      * @return Enumerator over the operation results.
      */
     @Override
-    public Iterator<TransactionalBatchOperationResult> GetEnumerator() {
-        for (TransactionalBatchOperationResult result : this.resultsByOperationIndex) {
-            //C# TO JAVA CONVERTER TODO TASK: Java does not have an equivalent to the C# 'yield' keyword:
-            yield return result;
-        }
+    public Iterator<TransactionalBatchOperationResult> iterator() {
+        return Stream.of(this.resultsByOperationIndex).iterator();
     }
 
     /**
-     * Gets the result of the operation at the provided index in the batch - the returned result has a Resource of
-     * provided type.
-     *
-     * <typeparam name="T">Type to which the Resource in the operation result needs to be deserialized to, when
-     * present.</typeparam>
-     *
-     * @param index 0-based index of the operation in the batch whose result needs to be returned.
-     *
-     * @return Result of batch operation that contains a Resource deserialized to specified type.
+     * Gets the number of operation results.
      */
     @Override
-    public <T> TransactionalBatchOperationResult<T> GetOperationResultAtIndex(int index) {
-
-        if (index >= this.size()) {
-            throw new IndexOutOfBoundsException();
-        }
-
-        TransactionalBatchOperationResult result = this.resultsByOperationIndex[index];
-
-        T resource = null;
-        if (result.getResourceStream() != null) {
-            resource = this.getSerializer().<T>FromStream(result.getResourceStream());
-        }
-
-        return new TransactionalBatchOperationResult<T>(result, resource);
+    public int size() {
+        return this.resultsByOperationIndex.length;
     }
 
-    /**
-     * <inheritdoc />
-     */
-    @Override
-    public TransactionalBatchOperationResult get(int index) {
-        return this.resultsByOperationIndex[index];
-    }
-
-    /**
-     * Disposes the disposable members held.
-     *
-     * @param disposing Indicates whether to dispose managed resources or not.
-     */
-    @Override
-    protected void Dispose(boolean disposing) {
-        if (disposing && !this.isDisposed) {
-            this.isDisposed = true;
-            this.serverResponse == null ? null : this.serverResponse.close();
-        }
-
-        super.Dispose(disposing);
-    }
+    // endregion
 }

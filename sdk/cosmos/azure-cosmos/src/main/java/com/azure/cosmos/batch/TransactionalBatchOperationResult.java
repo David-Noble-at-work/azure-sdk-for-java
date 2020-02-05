@@ -63,6 +63,11 @@ public class TransactionalBatchOperationResult<TResource> {
         this.retryAfter = other.retryAfter;
     }
 
+    public TransactionalBatchOperationResult(TransactionalBatchOperationResult<TResource> result, TResource resource) {
+        this(result);
+        this.resource = resource;
+    }
+
     /**
      * Initializes a new instance of the {@link TransactionalBatchOperationResult} class.
      */
@@ -174,11 +179,11 @@ public class TransactionalBatchOperationResult<TResource> {
     }
 
     public static Result ReadOperationResult(
-        @Nonnull Memory<Byte> input, @Nonnull Out<TransactionalBatchOperationResult<?>> batchOperationResult) {
+        @Nonnull final ByteBuf input, @Nonnull final Out<TransactionalBatchOperationResult<?>> batchOperationResult) {
 
-        RowBuffer rowBuffer = new RowBuffer(input.Length);
+        RowBuffer rowBuffer = new RowBuffer(input.readableBytes());
 
-        if (!rowBuffer.readFrom(input.Span, HybridRowVersion.V1,
+        if (!rowBuffer.readFrom(input, HybridRowVersion.V1,
             BatchSchemaProvider.getBatchLayoutResolverNamespace())) {
             batchOperationResult.set(null);
             return Result.FAILURE;

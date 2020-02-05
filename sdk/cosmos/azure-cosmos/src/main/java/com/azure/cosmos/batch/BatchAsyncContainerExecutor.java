@@ -121,8 +121,7 @@ public class BatchAsyncContainerExecutor implements AutoCloseable {
 
         /*await*/ this.ValidateOperationAsync(operation, itemRequestOptions);
 
-        String resolvedPartitionKeyRangeId = /*await*/
-        this.ResolvePartitionKeyRangeIdAsync(operation);
+        String resolvedPartitionKeyRangeId = /*await*/this.ResolvePartitionKeyRangeIdAsync(operation);
         BatchAsyncStreamer streamer = this.GetOrAddStreamerForPartitionKeyRange(resolvedPartitionKeyRangeId);
         ItemBatchOperationContext context = new ItemBatchOperationContext(resolvedPartitionKeyRangeId,
             BatchAsyncContainerExecutor.GetRetryPolicy(this.retryOptions));

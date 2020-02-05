@@ -29,11 +29,82 @@ import org.slf4j.LoggerFactory;
 import javax.annotation.Nonnull;
 import java.util.concurrent.TimeUnit;
 
+/**
+ * Creates and manages metrics for the Cosmos Direct TCP stack.
+ * <p>
+ * Metrics are created and maintained for each {@link RntbdTransportClient} instance and each of its service {@link
+ * RntbdEndpoint endpoints}. Metrics are tagged with values that identify the {@link RntbdTransportClient transport
+ * client} and service {@link RntbdEndpoint endpoint} to which they apply. See {@link RntbdTransportClient#tag()} and
+ * {@link RntbdEndpoint#tag}.
+ * <p>
+ * This table describes the metrics that are created and managed by this class.
+ * <table>
+ *   <tr>
+ *      <th>Metric</th>
+ *      <th>Description</th>
+ *   </tr>
+ *   <tr><td colspan="2">Timers</td></tr>
+ *   <tr>
+ *     <td>requests</td>
+ *     <td>request rate</td>
+ *   </tr>
+ *   <tr>
+ *     <td>responseErrors</td>
+ *     <td>response error rate</td>
+ *   </tr>
+ *   <tr>
+ *     <td>responseSuccesses</td>
+ *     <td>response success rate</td>
+ *   </tr>
+ *   <tr><td colspan="2">Distribution summaries</td></tr>
+ *   <tr>
+ *     <td>requestSize</td>
+ *     <td>request size (bytes)</td>
+ *   </tr>
+ *   <tr>
+ *     <td>responseSize</td>
+ *     <td>response size (bytes)</td>
+ *   </tr>
+ *   <tr><td colspan="2">Gauges</td></tr>
+ *   <tr>
+ *     <td>channelsAcquired</td>
+ *     <td>acquired channel count</td>
+ *   </tr>
+ *   <tr>
+ *     <td>channelsAvailable</td>
+ *     <td>available channel count</td>
+ *   </tr>
+ *   <tr>
+ *     <td>concurrentRequests</td>
+ *     <td>executing or queued request count</td>
+ *   </tr>
+ *   <tr>
+ *     <td>requestQueueLength</td>
+ *     <td>queued request count</td>
+ *   </tr>
+ *   <tr>
+ *     <td>usedDirectMemory</td>
+ *     <td>Java direct memory usage (MiB)</td>
+ *   </tr>
+ *   <tr>
+ *     <td>usedHeapMemory</td>
+ *     <td>Java heap memory usage (MiB)</td>
+ *   </tr>
+ * </table>
+ *
+ * <h3>Console logging</h3>
+ * <p>
+ * Enable the built-in {@link RntbdMetrics} console logging facility by specifying a positive integer polling interval
+ * in seconds for system property {@code azure.cosmos.monitoring.consoleLogging.step}. Negate this specificatio and
+ * disable console logging by assigning a value of {@coce false} to boolean system property {@code azure.cosmos
+ * .monitoring.consoleLogging.disabled}. This can be useful in debug scenarios when it desirable to enable/disable
+ * console logging without losing the value of {@code azure.cosmos.monitoring.consoleLogging.step}
+ */
 @SuppressWarnings("UnstableApiUsage")
 @JsonPropertyOrder({
-    "tags", "concurrentRequests", "requests", "responseErrors", "responseSuccesses", "completionRate", "responseRate",
-    "requestSize", "responseSize", "channelsAcquired", "channelsAvailable", "requestQueueLength", "usedDirectMemory",
-    "usedHeapMemory"
+    "tags", "requests", "responseErrors", "responseSuccesses", "requestSize", "responseSize", "channelsAcquired",
+    "channelsAvailable", "concurrentRequests", "endpoints", "endpointsEvicted", "requestQueueLength",
+    "usedDirectMemory", "usedHeapMemory"
 })
 public final class RntbdMetrics {
 
@@ -46,9 +117,12 @@ public final class RntbdMetrics {
 
     static {
         try {
-            int step = Integer.getInteger("azure.cosmos.monitoring.consoleLogging.step", 0);
-            if (step > 0) {
-                RntbdMetrics.add(RntbdMetrics.consoleLoggingRegistry(step));
+            boolean disabled = Boolean.getBoolean("azure.cosmos.monitoring.consoleLogging.disabled");
+            if (!disabled) {
+                int step = Integer.getInteger("azure.cosmos.monitoring.consoleLogging.step", 0);
+                if (step > 0) {
+                    RntbdMetrics.add(RntbdMetrics.consoleLoggingRegistry(step));
+                }
             }
         } catch (Throwable error) {
             logger.error("failed to initialize console logging registry due to ", error);
@@ -76,9 +150,38 @@ public final class RntbdMetrics {
 
         this.tags = Tags.of(client.tag(), endpoint.tag());
 
-        this.requests = registry.timer(nameOf("requests"), tags);
-        this.responseErrors = registry.timer(nameOf("responseErrors"), tags);
-        this.responseSuccesses = registry.timer(nameOf("responseSuccesses"), tags);
+        // Timers
+
+        this.requests = Timer.builder(nameOf("requests"))
+            .description("request rate")
+            .tags(tags)
+            .register(registry);
+
+        this.responseErrors = Timer.builder(nameOf("responseErrors"))
+            .description("response error rate")
+            .tags(tags)
+            .register(registry);
+
+        this.responseSuccesses = Timer.builder(nameOf("responseSuccesses"))
+            .description("response success rate")
+            .tags(tags)
+            .register(registry);
+
+        // Distribution summaries
+
+        this.requestSize = DistributionSummary.builder(nameOf("requestSize"))
+            .description("request size (bytes)")
+            .baseUnit("bytes")
+            .tags(this.tags)
+            .register(registry);
+
+        this.responseSize = DistributionSummary.builder(nameOf("responseSize"))
+            .description("response size (bytes)")
+            .baseUnit("bytes")
+            .tags(this.tags)
+            .register(registry);
+
+        // Gauges
 
         Gauge.builder(nameOf("endpoints"), client, RntbdTransportClient::endpointCount)
              .description("endpoint count")
@@ -90,16 +193,6 @@ public final class RntbdMetrics {
              .tag(client.tag().getKey(), client.tag().getValue())
              .register(registry);
 
-        Gauge.builder(nameOf("concurrentRequests"), endpoint, RntbdEndpoint::concurrentRequests)
-             .description("executing or queued request count")
-             .tags(this.tags)
-             .register(registry);
-
-        Gauge.builder(nameOf("requestQueueLength"), endpoint, RntbdEndpoint::requestQueueLength)
-            .description("queued request count")
-            .tags(this.tags)
-            .register(registry);
-
         Gauge.builder(nameOf("channelsAcquired"), endpoint, RntbdEndpoint::channelsAcquired)
              .description("acquired channel count")
              .tags(this.tags)
@@ -109,6 +202,16 @@ public final class RntbdMetrics {
              .description("available channel count")
              .tags(this.tags)
              .register(registry);
+
+        Gauge.builder(nameOf("concurrentRequests"), endpoint, RntbdEndpoint::concurrentRequests)
+            .description("executing or queued request count")
+            .tags(this.tags)
+            .register(registry);
+
+        Gauge.builder(nameOf("requestQueueLength"), endpoint, RntbdEndpoint::requestQueueLength)
+            .description("queued request count")
+            .tags(this.tags)
+            .register(registry);
 
         Gauge.builder(nameOf("usedDirectMemory"), endpoint, x -> x.usedDirectMemory())
              .description("Java direct memory usage (MiB)")
@@ -121,18 +224,6 @@ public final class RntbdMetrics {
              .baseUnit("MiB")
              .tags(this.tags)
              .register(registry);
-
-        this.requestSize = DistributionSummary.builder(nameOf("requestSize"))
-            .description("Request size (bytes)")
-            .baseUnit("bytes")
-            .tags(this.tags)
-            .register(registry);
-
-        this.responseSize = DistributionSummary.builder(nameOf("responseSize"))
-            .description("Response size (bytes)")
-            .baseUnit("bytes")
-            .tags(this.tags)
-            .register(registry);
     }
 
     // endregion

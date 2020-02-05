@@ -20,6 +20,7 @@ import java.io.InputStream;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 
+import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 
@@ -42,6 +43,7 @@ public class CosmosSerializerCore {
     public CosmosSerializerCore(final CosmosSerializer serializer) {
 
         this.serializer = new CosmosJsonSerializerWrapper(serializer);
+
         this.sqlQuerySpecSerializer = CosmosSqlQuerySpecJsonConverter.CreateSqlQuerySpecSerializer(
             this.serializer,
             CosmosSerializerCore.DEFAULT_SERIALIZER);
@@ -60,13 +62,13 @@ public class CosmosSerializerCore {
         return CosmosElementSerializer.<T>GetResources(cosmosArray, this);
     }
 
-    public final <T> T FromStream(InputStream inputStream) {
-        final CosmosSerializer serializer = this.<T>getSerializer();
+    public final <T> T FromStream(InputStream inputStream, Class<T> type) {
+        final CosmosSerializer serializer = this.<T>getSerializer(type);
         return serializer.<T>FromStream(inputStream);
     }
 
     public final <T> InputStream ToStream(T input) {
-        final CosmosSerializer serializer = this.<T>getSerializer();
+        final CosmosSerializer serializer = this.<T>getSerializer((Class<T>) input.getClass());
         return serializer.ToStream(input);
     }
 
@@ -87,22 +89,16 @@ public class CosmosSerializerCore {
             ? this.sqlQuerySpecSerializer
             : DEFAULT_SERIALIZER;
 
-        return serializer.<SqlQuerySpec>ToStream(input);
+        return serializer.ToStream(input);
     }
 
     private <T> CosmosSerializer getSerializer(@Nonnull final Class<T> type) {
 
         checkNotNull(type, "expected non-null type");
 
-        Type genericSuperclass = type.getGenericSuperclass();
-        checkState(!(genericSuperclass instanceof Class), "expected type information for the class modeled by %s",
-            type);
-
-        Type type = ((ParameterizedType) genericSuperclass).getActualTypeArguments()[0];
-
         checkArgument(type != SqlQuerySpec.class, "%s to stream must use the %s override",
-            type.getSimpleName(),
-            type.getSimpleName());
+            SqlQuerySpec.class.getSimpleName(),
+            SqlQuerySpec.class.getSimpleName());
 
         if (this.serializer == null) {
             return CosmosSerializerCore.DEFAULT_SERIALIZER;

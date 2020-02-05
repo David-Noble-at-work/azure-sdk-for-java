@@ -75,7 +75,7 @@ public class BatchAsyncStreamer implements AutoCloseable {
     public final void Add(ItemBatchOperation operation) {
         BatchAsyncBatcher toDispatch = null;
         synchronized (this.dispatchLimiter) {
-            while (!this.currentBatcher.TryAdd(operation)) {
+            while (!this.currentBatcher.tryAdd(operation)) {
                 // Batcher is full
                 toDispatch = this.GetBatchToDispatchAndCreate();
             }

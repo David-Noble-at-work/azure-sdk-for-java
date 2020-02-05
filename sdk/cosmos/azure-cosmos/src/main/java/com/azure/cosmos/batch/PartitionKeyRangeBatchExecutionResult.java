@@ -3,8 +3,8 @@
 
 package com.azure.cosmos.batch;
 
-import com.azure.cosmos.implementation.HttpConstants.StatusCodes;
 import com.azure.cosmos.implementation.HttpConstants.SubStatusCodes;
+import io.netty.handler.codec.http.HttpResponseStatus;
 
 public final class PartitionKeyRangeBatchExecutionResult {
 
@@ -35,9 +35,12 @@ public final class PartitionKeyRangeBatchExecutionResult {
     }
 
     public boolean isSplit() {
-        return this.getServerResponse() != null && this.getServerResponse().getResponseStatus() == StatusCodes.GONE && (
-            this.getServerResponse().getSubStatusCode() == SubStatusCodes.COMPLETING_SPLIT
-                || this.getServerResponse().getSubStatusCode() == SubStatusCodes.COMPLETING_PARTITION_MIGRATION
-                || this.getServerResponse().getSubStatusCode() == SubStatusCodes.PARTITION_KEY_RANGE_GONE);
+
+        TransactionalBatchResponse response = this.getServerResponse();
+
+        return response != null && response.getResponseStatus() == HttpResponseStatus.GONE
+            && (response.getSubStatusCode() == SubStatusCodes.COMPLETING_SPLIT
+            || response.getSubStatusCode() == SubStatusCodes.COMPLETING_PARTITION_MIGRATION
+            || response.getSubStatusCode() == SubStatusCodes.PARTITION_KEY_RANGE_GONE);
     }
 }

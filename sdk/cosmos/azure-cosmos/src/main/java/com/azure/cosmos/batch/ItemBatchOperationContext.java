@@ -4,11 +4,14 @@
 package com.azure.cosmos.batch;
 
 import com.azure.cosmos.implementation.IDocumentClientRetryPolicy;
+import com.azure.cosmos.implementation.IRetryPolicy;
+import com.azure.cosmos.implementation.IRetryPolicy.ShouldRetryResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nonnull;
 import java.io.IOException;
+import java.util.concurrent.CompletableFuture;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -43,7 +46,7 @@ public class ItemBatchOperationContext implements AutoCloseable {
         CurrentBatcher = value;
     }
 
-    public final Task<TransactionalBatchOperationResult> getOperationTask() {
+    public final CompletableFuture<TransactionalBatchOperationResult> getOperationTask() {
         return this.taskCompletionSource.Task;
     }
 
@@ -70,10 +73,11 @@ public class ItemBatchOperationContext implements AutoCloseable {
     /**
      * Based on the Retry Policy, if a failed response should retry.
      */
-    public final Task<ShouldRetryResult> ShouldRetryAsync(TransactionalBatchOperationResult batchOperationResult,
-                                                          CancellationToken cancellationToken) {
+    public final CompletableFuture<ShouldRetryResult> ShouldRetryAsync(
+        @Nonnull final TransactionalBatchOperationResult batchOperationResult) {
+
         if (this.retryPolicy == null || batchOperationResult.isSuccessStatusCode()) {
-            return Task.FromResult(ShouldRetryResult.NoRetry());
+            return CompletableFuture.completedFuture(ShouldRetryResult.noRetry());
         }
 
         ResponseMessage responseMessage = batchOperationResult.ToResponseMessage();
@@ -92,8 +96,9 @@ public class ItemBatchOperationContext implements AutoCloseable {
     private boolean AssertBatcher(BatchAsyncBatcher completer, RuntimeException innerException) {
         if (completer != this.getCurrentBatcher()) {
             logger.error("Operation was completed by incorrect batcher");
-            this.taskCompletionSource.SetException(new RuntimeException(String.format("Operation was completed by " +
-                "incorrect batcher."), innerException));
+            this.taskCompletionSource.SetException(
+                new RuntimeException("Operation was completed by incorrect batcher."),
+                innerException);
             return false;
         }
         return true;

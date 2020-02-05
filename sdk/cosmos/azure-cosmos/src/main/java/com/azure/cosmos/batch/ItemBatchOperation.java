@@ -3,7 +3,9 @@
 
 package com.azure.cosmos.batch;
 
+import com.azure.cosmos.AccessCondition;
 import com.azure.cosmos.PartitionKey;
+import com.azure.cosmos.core.UtfAnyString;
 import com.azure.cosmos.implementation.HttpConstants.HttpHeaders;
 import com.azure.cosmos.implementation.OperationType;
 import com.azure.cosmos.implementation.RequestOptions;
@@ -15,9 +17,9 @@ import com.azure.cosmos.serialization.hybridrow.layouts.TypeArgument;
 import com.azure.cosmos.serializer.CosmosSerializerCore;
 
 import javax.annotation.Nonnull;
-import java.io.IOException;
 import java.io.InputStream;
 import java.nio.channels.AsynchronousByteChannel;
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
 import static com.google.common.base.Preconditions.checkArgument;
@@ -26,20 +28,36 @@ import static com.google.common.base.Preconditions.checkNotNull;
 /**
  * Represents an operation on an item which will be executed as part of a batch request on a container.
  */
-public class ItemBatchOperation<TResource> implements AutoCloseable {
+public final class ItemBatchOperation<TResource> implements AutoCloseable {
 
     // region Fields
+
+    // Constants
+
+    private static final UtfAnyString BINARY_ID = new UtfAnyString("binaryId");
+    private static final UtfAnyString ID = new UtfAnyString("id");
+    private static final UtfAnyString IF_MATCH = new UtfAnyString("ifMatch");
+    private static final UtfAnyString IF_NONE_MATCH = new UtfAnyString("ifNoneMatch");
+    private static final UtfAnyString INDEXING_DIRECTIVE = new UtfAnyString("indexingDirective");
+    private static final UtfAnyString OPERATION_TYPE = new UtfAnyString("operationType");
+    private static final UtfAnyString PARTITION_KEY = new UtfAnyString("partitionKey");
+    private static final UtfAnyString RESOURCE_BODY = new UtfAnyString("resourceBody");
+    private static final UtfAnyString RESOURCE_TYPE = new UtfAnyString("resourceType");
+    private static final UtfAnyString TIME_TO_LIVE_IN_SECONDS = new UtfAnyString("timeToLiveInSeconds");
+
+    // Instance variables
+
+    private final OperationType operationType;
+    private byte[] body;
 
     private ItemBatchOperationContext context;
     private CosmosDiagnosticsContext diagnosticsContext;
     private String id;
     private int operationIndex;
-    private OperationType operationType;
     private Documents.PartitionKey parsedPartitionKey;
     private PartitionKey partitionKey;
     private String partitionKeyJson;
     private RequestOptions requestOptions;
-    private byte[] body;
     private TResource resource;
 
     // endregion
@@ -71,77 +89,81 @@ public class ItemBatchOperation<TResource> implements AutoCloseable {
 
     // region Accessors
 
-    public Memory<Byte> getBody() {
+    public byte[] getBody() {
         return body;
     }
 
-    public ItemBatchOperation setBody(Memory<Byte> body) {
+    public ItemBatchOperation setBody(byte[] body) {
         this.body = body;
         return this;
     }
 
     /**
-     * Operational context used in stream operations.
-     * <p>
-     * {@link BatchAsyncBatcher} {@link BatchAsyncStreamer} {@link BatchAsyncContainerExecutor}
+     * Returns the {@link ItemBatchOperationContext operational context} used in stream operations.
+     *
+     * @return the {@link ItemBatchOperationContext operational context} used in stream operations.
+     *
+     * @see BatchAsyncBatcher
+     * @see BatchAsyncContainerExecutor
+     * @see BatchAsyncStreamer
      */
-    public final ItemBatchOperationContext getContext() {
+    public ItemBatchOperationContext getContext() {
         return context;
     }
 
-    public final CosmosDiagnosticsContext getDiagnosticsContext() {
+    public CosmosDiagnosticsContext getDiagnosticsContext() {
         return diagnosticsContext;
     }
 
-    public final String getId() {
+    public String getId() {
         return id;
     }
 
-    public final int getOperationIndex() {
+    public int getOperationIndex() {
         return operationIndex;
     }
 
-    public final ItemBatchOperation<TResource> setOperationIndex(final int value) {
+    public ItemBatchOperation<TResource> setOperationIndex(final int value) {
         operationIndex = value;
         return this;
     }
 
-    public final OperationType getOperationType() {
+    public OperationType getOperationType() {
         return operationType;
     }
 
-    public final Documents.PartitionKey getParsedPartitionKey() {
+    public Documents.PartitionKey getParsedPartitionKey() {
         return parsedPartitionKey;
     }
 
-    public final ItemBatchOperation<TResource> setParsedPartitionKey(Documents.PartitionKey value) {
+    public ItemBatchOperation<TResource> setParsedPartitionKey(Documents.PartitionKey value) {
         parsedPartitionKey = value;
         return this;
     }
 
-    public final PartitionKey getPartitionKey() {
+    public PartitionKey getPartitionKey() {
         return partitionKey;
     }
 
-    public final ItemBatchOperation<TResource> setPartitionKey(final PartitionKey value) {
+    public ItemBatchOperation<TResource> setPartitionKey(final PartitionKey value) {
         partitionKey = value;
         return this;
     }
 
-    public final String getPartitionKeyJson() {
+    public String getPartitionKeyJson() {
         return partitionKeyJson;
     }
 
-    public final ItemBatchOperation<TResource> setPartitionKeyJson(final String value) {
+    public ItemBatchOperation<TResource> setPartitionKeyJson(final String value) {
         partitionKeyJson = value;
         return this;
     }
 
-    public final RequestOptions getRequestOptions() {
+    public RequestOptions getRequestOptions() {
         return requestOptions;
     }
 
-    public final TResource getResource() {
+    public TResource getResource() {
         return resource;
     }
 
@@ -150,13 +172,8 @@ public class ItemBatchOperation<TResource> implements AutoCloseable {
         return this;
     }
 
-    public final Memory<Byte> getResourceBody() {
+    public byte[] getResourceBody() {
         return this.body;
-    }
-
-    public final ItemBatchOperation<TResource> setResourceBody(Memory<Byte> value) {
-        this.body = value;
-        return this;
     }
 
     // endregion
@@ -164,20 +181,27 @@ public class ItemBatchOperation<TResource> implements AutoCloseable {
     // region Methods
 
     /**
-     * Attaches a context to the current operation to track resolution.
+     * Attaches a {@link ItemBatchOperationContext context} to the {@link ItemBatchOperation current operation}.
+     * <p>
+     * The attached {@link ItemBatchOperationContext context} is used to track resolution.
+     *
+     * @param context the {@link ItemBatchOperationContext context} to attach.
+     *
+     * @return a reference to the {@link ItemBatchOperation current operation}.
      */
-    public final ItemBatchOperation<TResource> AttachContext(@Nonnull final ItemBatchOperationContext context) {
+    public ItemBatchOperation<TResource> AttachContext(@Nonnull final ItemBatchOperationContext context) {
         checkNotNull(context, "expected non-null context");
         this.context = context;
         return this;
     }
 
     /**
-     * Computes and returns an approximation for the length of this {@link ItemBatchOperation}. when serialized.
+     * Computes an underestimate of the serialized length of this {@link ItemBatchOperation}.
      *
-     * @return An under-estimate of the length.
+     * @return an underestimate of the serialized length of this {@link ItemBatchOperation}.
      */
-    public final int GetApproximateSerializedLength() {
+    public int GetApproximateSerializedLength() {
+
         int length = 0;
 
         if (this.getPartitionKeyJson() != null) {
@@ -188,48 +212,45 @@ public class ItemBatchOperation<TResource> implements AutoCloseable {
             length += this.getId().length();
         }
 
-        length += this.body.Length;
+        length += this.body.length;
 
-        if (this.getRequestOptions() != null) {
-            if (this.getRequestOptions().IfMatchEtag != null) {
-                length += this.getRequestOptions().IfMatchEtag.Length;
+        RequestOptions requestOptions = this.getRequestOptions();
+
+        if (requestOptions != null) {
+
+            AccessCondition accessCondition = requestOptions.getAccessCondition();
+
+            switch (accessCondition.getType()) {
+                case IF_MATCH:
+                    length += accessCondition.getCondition().length();
+                    break;
+                case IF_NONE_MATCH:
+                    length += 7;
+                    break;
+                default:
+                    assert false : "Unexpected value: " + accessCondition.getType();
             }
 
-            if (this.getRequestOptions().IfNoneMatchEtag != null) {
-                length += this.getRequestOptions().IfNoneMatchEtag.Length;
-            }
-
-            if (this.getRequestOptions().getIndexingDirective() != null) {
+            if (requestOptions.getIndexingDirective() != null) {
                 length += 7; // "Default", "Include", "Exclude" are possible values
             }
 
-            if (this.getRequestOptions().Properties != null) {
-                Object binaryIdObj;
-                //C# TO JAVA CONVERTER TODO TASK: The following method call contained an unresolved 'out' keyword -
-                // these cannot be converted using the 'OutObject' helper class unless the method is within the code
-                // being modified:
-                if (this.getRequestOptions().Properties.TryGetValue(BackendHeaders.BINARY_ID,
-                    out binaryIdObj)) {
-                    //C# TO JAVA CONVERTER WARNING: Unsigned integer types have no direct equivalent in Java:
-                    //ORIGINAL LINE: byte[] binaryId = binaryIdObj instanceof byte[] ? (byte[])binaryIdObj : null;
-                    byte[] binaryId = binaryIdObj instanceof byte[] ? (byte[]) binaryIdObj : null;
-                    if (binaryId != null) {
-                        length += binaryId.length;
-                    }
+            Map<String, Object> properties = requestOptions.getProperties();
+
+            if (properties != null) {
+
+                byte[] binaryId = (byte[]) properties.computeIfPresent(BackendHeaders.BINARY_ID, (k, v) ->
+                    v instanceof byte[] ? (byte[]) v : null);
+
+                if (binaryId != null) {
+                    length += binaryId.length;
                 }
 
-                Object epkObj;
-                //C# TO JAVA CONVERTER TODO TASK: The following method call contained an unresolved 'out' keyword -
-                // these cannot be converted using the 'OutObject' helper class unless the method is within the code
-                // being modified:
-                if (this.getRequestOptions().Properties.TryGetValue(BackendHeaders.EFFECTIVE_PARTITION_KEY,
-                    out epkObj)) {
-                    //C# TO JAVA CONVERTER WARNING: Unsigned integer types have no direct equivalent in Java:
-                    //ORIGINAL LINE: byte[] epk = epkObj instanceof byte[] ? (byte[])epkObj : null;
-                    byte[] epk = epkObj instanceof byte[] ? (byte[]) epkObj : null;
-                    if (epk != null) {
-                        length += epk.length;
-                    }
+                byte[] epk = (byte[]) properties.computeIfPresent(BackendHeaders.EFFECTIVE_PARTITION_KEY, (k, v) ->
+                    v instanceof byte[] ? (byte[]) v : null);
+
+                if (epk != null) {
+                    length += epk.length;
                 }
             }
         }
@@ -241,8 +262,11 @@ public class ItemBatchOperation<TResource> implements AutoCloseable {
      * Materializes the operation's resource into a byte array synchronously.
      *
      * @param serializerCore Serializer to serialize user provided objects to JSON.
+     *
+     * @return a {@link CompletableFuture future} that will complete when the resource is materialized or an error
+     * occurs.
      */
-    public CompletableFuture<Void> materializeResource(@Nonnull final CosmosSerializerCore serializerCore) throws IOException {
+    public CompletableFuture<Void> materializeResource(@Nonnull final CosmosSerializerCore serializerCore) {
 
         final CompletableFuture<Void> future = new CompletableFuture<>();
 
@@ -283,19 +307,20 @@ public class ItemBatchOperation<TResource> implements AutoCloseable {
         @Nonnull ItemBatchOperation operation) {
 
         boolean pkWritten = false;
-        Result result = writer.writeInt32("operationType", (int) operation.getOperationType());
+
+        Result result = writer.writeInt32(OPERATION_TYPE, (int) operation.getOperationType());
 
         if (result != Result.SUCCESS) {
             return result;
         }
 
-        result = writer.writeInt32("resourceType", (int) ResourceType.Document);
+        result = writer.writeInt32(RESOURCE_TYPE, (int) ResourceType.Document);
         if (result != Result.SUCCESS) {
             return result;
         }
 
         if (operation.getPartitionKeyJson() != null) {
-            result = writer.writeString("partitionKey", operation.getPartitionKeyJson());
+            result = writer.writeString(PARTITION_KEY, operation.getPartitionKeyJson());
             if (result != Result.SUCCESS) {
                 return result;
             }
@@ -304,106 +329,96 @@ public class ItemBatchOperation<TResource> implements AutoCloseable {
         }
 
         if (operation.getId() != null) {
-            result = writer.writeString("id", operation.getId());
+            result = writer.writeString(ID, operation.getId());
             if (result != Result.SUCCESS) {
                 return result;
             }
         }
 
-        if (!operation.getResourceBody().IsEmpty) {
-            result = writer.writeBinary("resourceBody", operation.getResourceBody().Span);
+        if (operation.getResourceBody().length > 0) {
+            result = writer.writeBinary(RESOURCE_BODY, operation.getResourceBody());
             if (result != Result.SUCCESS) {
                 return result;
             }
         }
 
         if (operation.getRequestOptions() != null) {
-            TransactionalBatchItemRequestOptions options = operation.getRequestOptions();
+
+            /*TransactionalBatchItem*/RequestOptions options = operation.getRequestOptions();
+
             if (options.getIndexingDirective() != null) {
-                String indexingDirectiveString =
-                    IndexingDirectiveStrings.FromIndexingDirective(options.getIndexingDirective().getValue());
-                result = writer.writeString("indexingDirective", indexingDirectiveString);
+                String indexingDirectiveString = options.getIndexingDirective().toString();
+                result = writer.writeString(INDEXING_DIRECTIVE, indexingDirectiveString);
                 if (result != Result.SUCCESS) {
                     return result;
                 }
             }
 
-            if (options.IfMatchEtag != null) {
-                result = writer.writeString("ifMatch", options.IfMatchEtag);
-                if (result != Result.SUCCESS) {
-                    return result;
-                }
-            } else if (options.IfNoneMatchEtag != null) {
-                result = writer.writeString("ifNoneMatch", options.IfNoneMatchEtag);
-                if (result != Result.SUCCESS) {
-                    return result;
-                }
+            final AccessCondition accessCondition = options.getAccessCondition();
+
+            switch (accessCondition.getType()) {
+                case IF_MATCH:
+                    result = writer.writeString(IF_MATCH, accessCondition.getCondition());
+                    if (result != Result.SUCCESS) {
+                        return result;
+                    }
+                    break;
+                case IF_NONE_MATCH:
+                    result = writer.writeString(IF_NONE_MATCH, accessCondition.getCondition());
+                    if (result != Result.SUCCESS) {
+                        return result;
+                    }
+                    break;
+                default:
+                    assert false : "Unexpected value: " + accessCondition.getType();
             }
 
-            if (options.Properties != null) {
-                Object binaryIdObj;
-                //C# TO JAVA CONVERTER TODO TASK: The following method call contained an unresolved 'out' keyword -
-                // these cannot be converted using the 'OutObject' helper class unless the method is within the code
-                // being modified:
-                if (options.Properties.TryGetValue(BackendHeaders.BINARY_ID, out binaryIdObj)) {
-                    //C# TO JAVA CONVERTER WARNING: Unsigned integer types have no direct equivalent in Java:
-                    //ORIGINAL LINE: byte[] binaryId = binaryIdObj instanceof byte[] ? (byte[])binaryIdObj : null;
-                    byte[] binaryId = binaryIdObj instanceof byte[] ? (byte[]) binaryIdObj : null;
-                    if (binaryId != null) {
-                        result = writer.writeBinary("binaryId", binaryId);
-                        if (result != Result.SUCCESS) {
-                            return result;
-                        }
+            final Map<String, Object> properties = options.getProperties();
+
+            if (properties != null) {
+
+                byte[] binaryId = (byte[]) properties.computeIfPresent(BackendHeaders.BINARY_ID, (k, v) ->
+                    v instanceof byte[] ? v : null);
+
+                if (binaryId != null) {
+                    result = writer.writeBinary(BINARY_ID, binaryId);
+                    if (result != Result.SUCCESS) {
+                        return result;
                     }
                 }
 
-                Object epkObj;
-                //C# TO JAVA CONVERTER TODO TASK: The following method call contained an unresolved 'out' keyword -
-                // these cannot be converted using the 'OutObject' helper class unless the method is within the code
-                // being modified:
-                if (options.Properties.TryGetValue(BackendHeaders.EFFECTIVE_PARTITION_KEY, out epkObj)) {
-                    //C# TO JAVA CONVERTER WARNING: Unsigned integer types have no direct equivalent in Java:
-                    //ORIGINAL LINE: byte[] epk = epkObj instanceof byte[] ? (byte[])epkObj : null;
-                    byte[] epk = epkObj instanceof byte[] ? (byte[]) epkObj : null;
-                    if (epk != null) {
-                        result = writer.writeBinary("effectivePartitionKey", epk);
-                        if (result != Result.SUCCESS) {
-                            return result;
-                        }
+                byte[] epk = (byte[]) properties.computeIfPresent(BackendHeaders.EFFECTIVE_PARTITION_KEY, (k, v) ->
+                    v instanceof byte[] ? v : null);
+
+                if (epk != null) {
+                    result = writer.writeBinary(BINARY_ID, epk);
+                    if (result != Result.SUCCESS) {
+                        return result;
                     }
                 }
 
-                Object pkStrObj;
-                //C# TO JAVA CONVERTER TODO TASK: The following method call contained an unresolved 'out' keyword -
-                // these cannot be converted using the 'OutObject' helper class unless the method is within the code
-                // being modified:
-                if (!pkWritten && options.Properties.TryGetValue(HttpHeaders.PARTITION_KEY,
-                    out pkStrObj)) {
-                    String pkString = pkStrObj instanceof String ? (String) pkStrObj : null;
-                    if (pkString != null) {
-                        result = writer.writeString("partitionKey", pkString);
-                        if (result != Result.SUCCESS) {
-                            return result;
-                        }
+                final String pk = (String) properties.computeIfPresent(HttpHeaders.PARTITION_KEY, (k, v) ->
+                    v instanceof String ? v : null);
+
+                if (pk != null) {
+                    result = writer.writeString(PARTITION_KEY, pk);
+                    if (result != Result.SUCCESS) {
+                        return result;
                     }
                 }
 
-                Object ttlObj;
-                //C# TO JAVA CONVERTER TODO TASK: The following method call contained an unresolved 'out' keyword -
-                // these cannot be converted using the 'OutObject' helper class unless the method is within the code
-                // being modified:
-                if (options.Properties.TryGetValue(BackendHeaders.TIME_TO_LIVE_IN_SECONDS, out ttlObj)) {
-                    String ttlStr = ttlObj instanceof String ? (String) ttlObj : null;
-                    int ttl;
-                    tangible.OutObject<Integer> tempOut_ttl = new tangible.OutObject<Integer>();
-                    if (ttlStr != null && tangible.TryParseHelper.tryParseInt(ttlStr, tempOut_ttl)) {
-                        ttl = tempOut_ttl.argValue;
-                        result = writer.writeInt32("timeToLiveInSeconds", ttl);
-                        if (result != Result.SUCCESS) {
-                            return result;
-                        }
-                    } else {
-                        ttl = tempOut_ttl.argValue;
+                final String ttl = (String) properties.computeIfPresent(BackendHeaders.TIME_TO_LIVE_IN_SECONDS,
+                    (k, v) -> v instanceof String ? v : null);
+
+                if (ttl != null) {
+                    Integer value;
+                    try {
+                        value = Integer.parseInt(ttl);
+                    } catch (NumberFormatException error) {
+                        value = null;
+                    }
+                    if (value != null) {
+                        result = writer.writeInt32(TIME_TO_LIVE_IN_SECONDS, value);
                     }
                 }
             }
@@ -414,8 +429,10 @@ public class ItemBatchOperation<TResource> implements AutoCloseable {
 
     /**
      * Closes this {@link ItemBatchOperation}.
+     *
+     * @throws Exception if the close fails.
      */
-    public final void close() throws Exception {
+    public void close() throws Exception {
         if (this.resource instanceof AutoCloseable) {
             ((AutoCloseable) this.resource).close();  // assumes an idempotent close implementation
         }

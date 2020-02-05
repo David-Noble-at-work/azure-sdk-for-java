@@ -6,6 +6,7 @@ package com.azure.cosmos.batch;
 import com.azure.cosmos.CosmosContainer;
 import com.azure.cosmos.PartitionKey;
 import com.azure.cosmos.implementation.RequestOptions;
+import com.azure.cosmos.serializer.CosmosSerializer;
 import io.netty.handler.codec.http.HttpResponseStatus;
 
 import javax.annotation.Nonnull;
