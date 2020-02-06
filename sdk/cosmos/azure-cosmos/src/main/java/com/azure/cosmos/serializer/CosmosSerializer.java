@@ -5,6 +5,7 @@ package com.azure.cosmos.serializer;
 
 import com.azure.cosmos.CosmosContainer;
 
+import javax.annotation.Nonnull;
 import java.io.IOException;
 import java.io.InputStream;
 
@@ -24,6 +25,7 @@ public interface CosmosSerializer {
      *
      * @return an object deserialized from the {@code inputStream}.
      */
+    @Nonnull
     <T> T fromStream(InputStream inputStream, Class<T> type) throws IOException;
 
     /**
@@ -36,5 +38,6 @@ public interface CosmosSerializer {
      *
      * @return an {@link InputStream input stream} containing a JSON representation of the {@code input} object.
      */
+    @Nonnull
     <T> InputStream toStream(T input) throws IOException;
 }

@@ -3,50 +3,53 @@
 
 package com.azure.cosmos.serializer;
 
+import javax.annotation.Nonnull;
+import java.io.IOException;
 import java.io.InputStream;
 
-public class CosmosJsonSerializerWrapper extends CosmosSerializer {
-    private CosmosSerializer InternalJsonSerializer;
+import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.base.Preconditions.checkState;
 
-    public CosmosJsonSerializerWrapper(CosmosSerializer cosmosJsonSerializer) {
-        //C# TO JAVA CONVERTER TODO TASK: Throw expressions are not converted by C# to Java Converter:
-        //ORIGINAL LINE: this.InternalJsonSerializer = cosmosJsonSerializer ?? throw new ArgumentNullException(nameof
-        // (cosmosJsonSerializer));
-        this.InternalJsonSerializer = cosmosJsonSerializer != null ? cosmosJsonSerializer :
-        throw new NullPointerException("cosmosJsonSerializer");
+public class CosmosJsonSerializerWrapper implements CosmosSerializer {
+
+    private final CosmosSerializer serializer;
+
+    public CosmosJsonSerializerWrapper(CosmosSerializer serializer) {
+        checkNotNull(serializer, "expected non-null serializer");
+        this.serializer = serializer;
     }
 
-    public final CosmosSerializer getInternalJsonSerializer() {
-        return InternalJsonSerializer;
+    public final CosmosSerializer getSerializer() {
+        return serializer;
     }
 
-    //C# TO JAVA CONVERTER TODO TASK: C# to Java Converter cannot determine whether this System.IO.Stream is input or
-    // output:
     @Override
-    public <T> T fromStream(InputStream inputStream, Class<T> type) {
-        T item = this.getInternalJsonSerializer().fromStream(inputStream, );
-        if (inputStream.CanRead) {
-            throw new IllegalStateException("Json Serializer left an open stream.");
+    public <T> T fromStream(@Nonnull final InputStream inputStream, @Nonnull final Class<T> type) throws IOException {
+
+        checkNotNull(inputStream, "expected non-null inputStream");
+        checkNotNull(type, "expected non-null type");
+
+        final T object;
+
+        try {
+            object = this.getSerializer().fromStream(inputStream, type);
+            checkState(inputStream.available() == 0, "expected closed inputStream");
+        } finally {
+            inputStream.close();
         }
 
-        return item;
+        return object;
     }
 
-    //C# TO JAVA CONVERTER TODO TASK: C# to Java Converter cannot determine whether this System.IO.Stream is input or
-    // output:
     @Override
-    public <T> InputStream toStream(T input) {
-        //C# TO JAVA CONVERTER TODO TASK: C# to Java Converter cannot determine whether this System.IO.Stream is
-        // input or output:
-        Stream stream = this.getInternalJsonSerializer().toStream(input);
-        if (stream == null) {
-            throw new IllegalStateException("Json Serializer returned a null stream.");
-        }
+    public <T> InputStream toStream(T object) throws IOException {
 
-        if (!stream.CanRead) {
-            throw new IllegalStateException("Json Serializer returned a closed stream.");
-        }
+        checkNotNull(object, "expected non-null object");
 
-        return stream;
+        InputStream inputStream = this.getSerializer().toStream(object);
+        checkState(inputStream != null, "expected non-null inputStream");
+        checkState(inputStream.available() > 0, "expected readable inputStream");
+
+        return inputStream;
     }
 }
