@@ -17,8 +17,6 @@ import com.azure.cosmos.implementation.query.PartitionedQueryExecutionInfo;
 
 import javax.annotation.Nonnull;
 import java.io.InputStream;
-import java.lang.reflect.ParameterizedType;
-import java.lang.reflect.Type;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -30,7 +28,7 @@ import static com.google.common.base.Preconditions.checkState;
 public class CosmosSerializerCore {
 
     private static final CosmosSerializer DEFAULT_SERIALIZER = new CosmosJsonSerializerWrapper(
-        new CosmosJsonDotNetSerializer());
+        new CosmosJacksonSerializer());
 
     private final CosmosSerializer serializer;
     private final CosmosSerializer sqlQuerySpecSerializer;
@@ -50,7 +48,7 @@ public class CosmosSerializerCore {
     }
 
     public static CosmosSerializerCore Create(final CosmosSerializationOptions options) {
-        return new CosmosSerializerCore(new CosmosJsonSerializerWrapper(new CosmosJsonDotNetSerializer(options)));
+        return new CosmosSerializerCore(new CosmosJsonSerializerWrapper(new CosmosJacksonSerializer(options)));
     }
 
     public static CosmosSerializerCore Create(final CosmosSerializer serializer) {
@@ -64,12 +62,12 @@ public class CosmosSerializerCore {
 
     public final <T> T FromStream(InputStream inputStream, Class<T> type) {
         final CosmosSerializer serializer = this.<T>getSerializer(type);
-        return serializer.<T>FromStream(inputStream);
+        return serializer.<T>fromStream(inputStream, );
     }
 
     public final <T> InputStream ToStream(T input) {
         final CosmosSerializer serializer = this.<T>getSerializer((Class<T>) input.getClass());
-        return serializer.ToStream(input);
+        return serializer.toStream(input);
     }
 
     public final InputStream ToStreamSqlQuerySpec(SqlQuerySpec input, ResourceType resourceType) {
@@ -89,7 +87,7 @@ public class CosmosSerializerCore {
             ? this.sqlQuerySpecSerializer
             : DEFAULT_SERIALIZER;
 
-        return serializer.ToStream(input);
+        return serializer.toStream(input);
     }
 
     private <T> CosmosSerializer getSerializer(@Nonnull final Class<T> type) {

@@ -3,63 +3,98 @@
 
 package com.azure.cosmos.serializer;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 /**
  * This class provides a way to configure basic serializer settings.
  */
 public final class CosmosSerializationOptions {
-    /**
-     * Gets or sets if the serializer should ignore null properties
-     * <p>
-     * <p>
-     * The default value is false
-     */
-    private boolean IgnoreNullValues;
-    /**
-     * Gets or sets if the serializer should use indentation
-     * <p>
-     * <p>
-     * The default value is false
-     */
-    private boolean Indented;
-    /**
-     * Gets or sets whether the naming policy used to convert a string-based name to another format, such as a
-     * camel-casing format.
-     * <p>
-     * <p>
-     * The default value is CosmosPropertyNamingPolicy.Default
-     */
-    private CosmosPropertyNamingPolicy PropertyNamingPolicy = CosmosPropertyNamingPolicy.values()[0];
 
-    /**
-     * Create an instance of CosmosSerializationOptions with the default values for the Cosmos SDK
-     */
-    public CosmosSerializationOptions() {
-        this.setIgnoreNullValues(false);
-        this.setIndented(false);
-        this.setPropertyNamingPolicy(CosmosPropertyNamingPolicy.Default);
+    private static final CosmosSerializationOptions DEFAULT = new CosmosSerializationOptions();
+
+    private final boolean ignoreNullValues;
+    private final boolean indented;
+    private final CosmosPropertyNamingPolicy propertyNamingPolicy;
+
+    private CosmosSerializationOptions(Builder builder) {
+        this.indented = builder.indented;
+        this.ignoreNullValues = builder.ignoreNullValues;
+        this.propertyNamingPolicy = builder.propertyNamingPolicy;
     }
 
+    private CosmosSerializationOptions() {
+        this.ignoreNullValues = false;
+        this.indented = false;
+        this.propertyNamingPolicy = CosmosPropertyNamingPolicy.DEFAULT;
+    }
+
+    public Builder builder() {
+        return new Builder();
+    }
+
+    /**
+     * {@code true} if the serializer should ignore null properties.
+     * <p>
+     * The default value is false.
+     *
+     * @return {@code true} if the serializer should ignore null properties.
+     */
     public boolean getIgnoreNullValues() {
-        return IgnoreNullValues;
+        return ignoreNullValues;
     }
 
-    public void setIgnoreNullValues(boolean value) {
-        IgnoreNullValues = value;
-    }
-
+    /**
+     * {@code true} if the serializer should use indentation.
+     * <p>
+     * The default value is false.
+     *
+     * @return {@code true} if the serializer should use indentation.
+     */
     public boolean getIndented() {
-        return Indented;
+        return indented;
     }
 
-    public void setIndented(boolean value) {
-        Indented = value;
-    }
-
+    /**
+     * Gets the naming policy used to convert a string-based name to another format, such as a camel-casing format.
+     * <p>
+     * The default value is {@link CosmosPropertyNamingPolicy#DEFAULT}.
+     *
+     * @return {@code }
+     */
     public CosmosPropertyNamingPolicy getPropertyNamingPolicy() {
-        return PropertyNamingPolicy;
+        return propertyNamingPolicy;
     }
 
-    public void setPropertyNamingPolicy(CosmosPropertyNamingPolicy value) {
-        PropertyNamingPolicy = value;
+    public final class Builder {
+
+        private boolean ignoreNullValues;
+        private boolean indented;
+        private CosmosPropertyNamingPolicy propertyNamingPolicy;
+
+        private Builder() {
+            this.ignoreNullValues = DEFAULT.ignoreNullValues;
+            this.indented = DEFAULT.indented;
+            this.propertyNamingPolicy = DEFAULT.propertyNamingPolicy;
+        }
+
+        public CosmosSerializationOptions build() {
+            return new CosmosSerializationOptions(this);
+        }
+
+        public Builder ignoreNullValues(boolean value) {
+            this.ignoreNullValues = value;
+            return this;
+        }
+
+        public Builder indented(boolean value) {
+            this.indented = value;
+            return this;
+        }
+
+        public Builder propertyNamingPolicy(CosmosPropertyNamingPolicy value) {
+            checkNotNull(value, "expected non-null value");
+            this.propertyNamingPolicy = value;
+            return this;
+        }
     }
 }

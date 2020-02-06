@@ -5,6 +5,7 @@ package com.azure.cosmos.serializer;
 
 import com.azure.cosmos.CosmosContainer;
 
+import java.io.IOException;
 import java.io.InputStream;
 
 /**
@@ -19,10 +20,11 @@ public interface CosmosSerializer {
      *
      * @param <T> type of object to deserialize from the {@link InputStream input stream}.
      * @param inputStream response containing JSON from Cosmos DB.
+     * @param type a class representing the object to deserialize from the {@link InputStream input stream}.
      *
      * @return an object deserialized from the {@code inputStream}.
      */
-    <T> T FromStream(InputStream inputStream);
+    <T> T fromStream(InputStream inputStream, Class<T> type) throws IOException;
 
     /**
      * Serialize a JSON representation of an input object to a stream.
@@ -34,5 +36,5 @@ public interface CosmosSerializer {
      *
      * @return an {@link InputStream input stream} containing a JSON representation of the {@code input} object.
      */
-    <T> InputStream ToStream(T input);
+    <T> InputStream toStream(T input) throws IOException;
 }

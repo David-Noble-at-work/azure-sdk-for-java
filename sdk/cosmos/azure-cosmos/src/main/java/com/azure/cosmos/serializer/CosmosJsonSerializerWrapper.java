@@ -23,8 +23,8 @@ public class CosmosJsonSerializerWrapper extends CosmosSerializer {
     //C# TO JAVA CONVERTER TODO TASK: C# to Java Converter cannot determine whether this System.IO.Stream is input or
     // output:
     @Override
-    public <T> T FromStream(InputStream inputStream) {
-        T item = this.getInternalJsonSerializer().FromStream(inputStream);
+    public <T> T fromStream(InputStream inputStream, Class<T> type) {
+        T item = this.getInternalJsonSerializer().fromStream(inputStream, );
         if (inputStream.CanRead) {
             throw new IllegalStateException("Json Serializer left an open stream.");
         }
@@ -35,10 +35,10 @@ public class CosmosJsonSerializerWrapper extends CosmosSerializer {
     //C# TO JAVA CONVERTER TODO TASK: C# to Java Converter cannot determine whether this System.IO.Stream is input or
     // output:
     @Override
-    public <T> InputStream ToStream(T input) {
+    public <T> InputStream toStream(T input) {
         //C# TO JAVA CONVERTER TODO TASK: C# to Java Converter cannot determine whether this System.IO.Stream is
         // input or output:
-        Stream stream = this.getInternalJsonSerializer().ToStream(input);
+        Stream stream = this.getInternalJsonSerializer().toStream(input);
         if (stream == null) {
             throw new IllegalStateException("Json Serializer returned a null stream.");
         }

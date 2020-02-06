@@ -59,7 +59,7 @@ final class PartitionKeyRangeServerBatchRequest extends ServerBatchRequest {
      * @return A newly created instance of {@link PartitionKeyRangeServerBatchRequest} and the overflow
      * ItemBatchOperation not being processed.
      */
-    public static CompletableFuture<ServerBatchOperationsRequest> createAsync(
+    public static CompletableFuture<ServerOperationBatchRequest> createAsync(
         final String partitionKeyRangeId,
         final List<ItemBatchOperation> operations,
         final int maxBodyLength,
@@ -74,6 +74,6 @@ final class PartitionKeyRangeServerBatchRequest extends ServerBatchRequest {
             serializerCore);
 
         List<ItemBatchOperation> pendingOperations = /*await*/request.CreateBodyStreamAsync(operations, ensureContinuousOperationIndexes);
-        return new ServerBatchOperationsRequest(request, pendingOperations);
+        return new ServerOperationBatchRequest(request, pendingOperations);
     }
 }

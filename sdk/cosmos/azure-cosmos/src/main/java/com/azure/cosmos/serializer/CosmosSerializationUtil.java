@@ -7,7 +7,7 @@ public final class CosmosSerializationUtil {
     private static CamelCaseNamingStrategy camelCaseNamingStrategy = new CamelCaseNamingStrategy();
 
     public static String GetStringWithPropertyNamingPolicy(CosmosSerializationOptions options, String name) {
-        if (options != null && options.getPropertyNamingPolicy() == CosmosPropertyNamingPolicy.CamelCase) {
+        if (options != null && options.getPropertyNamingPolicy() == CosmosPropertyNamingPolicy.CAMEL_CASE) {
             return CosmosSerializationUtil.ToCamelCase(name);
         }
 

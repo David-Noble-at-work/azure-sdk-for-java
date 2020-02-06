@@ -3,55 +3,53 @@
 
 package com.azure.cosmos.batch;
 
+import javax.annotation.Nonnull;
 import java.io.IOException;
-import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import static com.azure.cosmos.implementation.Constants.MAX_DIRECT_MODE_BATCH_REQUEST_BODY_SIZE_IN_BYTES;
 import static com.azure.cosmos.implementation.Constants.MAX_OPERATIONS_IN_DIRECT_MODE_BATCH_REQUEST;
+import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.base.Preconditions.checkState;
 
 /**
  * Cache to create and share Executor instances across the client's lifetime.
  */
-public class BatchAsyncContainerExecutorCache implements AutoCloseable {
+public final class BatchAsyncContainerExecutorCache implements AutoCloseable {
 
-    private ConcurrentHashMap<String, BatchAsyncContainerExecutor> executorsPerContainer = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<String, BatchAsyncContainerExecutor> executors = new ConcurrentHashMap<>();
+    private final AtomicBoolean closed = new AtomicBoolean();
 
-    public final BatchAsyncContainerExecutor GetExecutorForContainer(
-        ContainerCore container,
-        CosmosClientContext clientContext) {
+    public BatchAsyncContainerExecutor getExecutorForContainer(
+        @Nonnull final ContainerCore container,
+        @Nonnull final CosmosClientContext clientContext) {
 
-        if (!clientContext.ClientOptions.AllowBulkExecution) {
-            throw new IllegalStateException("AllowBulkExecution is not currently enabled.");
-        }
+        checkState(!this.closed.get(), "cache closed");
+        checkNotNull(container, "expected non-null container");
+        checkNotNull(clientContext, "expected non-null clientContext");
+        checkState(clientContext.ClientOptions.AllowBulkExecution, "expected AllowBulkExecution to be enabled");
 
-        String containerLink = container.LinkUri.toString();
-        BatchAsyncContainerExecutor executor;
-        //C# TO JAVA CONVERTER TODO TASK: There is no Java ConcurrentHashMap equivalent to this .NET
-        // ConcurrentDictionary method:
-        //C# TO JAVA CONVERTER TODO TASK: The following method call contained an unresolved 'out' keyword - these
-        // cannot be converted using the 'OutObject' helper class unless the method is within the code being modified:
-        if (this.executorsPerContainer.TryGetValue(containerLink, out executor)) {
-            return executor;
-        }
-
-        BatchAsyncContainerExecutor newExecutor = new BatchAsyncContainerExecutor(
-            container, clientContext, MAX_OPERATIONS_IN_DIRECT_MODE_BATCH_REQUEST,
-            MAX_DIRECT_MODE_BATCH_REQUEST_BODY_SIZE_IN_BYTES);
-
-        //C# TO JAVA CONVERTER TODO TASK: There is no Java ConcurrentHashMap equivalent to this .NET
-        // ConcurrentDictionary method:
-
-        if (!this.executorsPerContainer.TryAdd(containerLink, newExecutor)) {
-            newExecutor.close();
-        }
-
-        return this.executorsPerContainer.get(containerLink);
+        return this.executors.computeIfAbsent(container.LinkUri.toString(), k ->
+            new BatchAsyncContainerExecutor(
+                container,
+                clientContext,
+                MAX_OPERATIONS_IN_DIRECT_MODE_BATCH_REQUEST,
+                MAX_DIRECT_MODE_BATCH_REQUEST_BODY_SIZE_IN_BYTES)
+        );
     }
 
-    public final void close() throws IOException {
-        for (Map.Entry<String, BatchAsyncContainerExecutor> cacheEntry : this.executorsPerContainer.entrySet()) {
-            cacheEntry.getValue().Dispose();
+    /**
+     * Closes this {@link BatchAsyncContainerExecutorCache} instance.
+     *
+     * @throws IOException if the close fails due to an input/output error.
+     */
+    public void close() throws IOException {
+        if (this.closed.compareAndSet(false, true)) {
+            for (BatchAsyncContainerExecutor executor : this.executors.values()) {
+                executor.close();
+            }
+            this.executors.clear();
         }
     }
 }

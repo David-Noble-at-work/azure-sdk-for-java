@@ -12,8 +12,7 @@ public final class CosmosSerializationFormatOptions {
      *          Creates a navigator that can navigate a JSON in the specified ContentSerializationFormat
      */
     private CreateCustomNavigator CreateCustomNavigatorCallback;
-
-        
+    
     /**
      *          Creates a writer to use to write out the stream.
      */

@@ -9,7 +9,7 @@ import java.util.List;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-class ServerBatchOperationsRequest implements Serializable {
+final class ServerOperationBatchRequest implements Serializable {
 
     private static final long serialVersionUID = 1899495696133611673L;
     private final PartitionKeyRangeServerBatchRequest batchRequest;
@@ -36,7 +36,7 @@ class ServerBatchOperationsRequest implements Serializable {
      * @param batchRequest the {@link ServerBatchRequest batch request}
      * @param operations the {@link List list} of {@link ItemBatchOperation operations} for the batch request.
      */
-    ServerBatchOperationsRequest(
+    ServerOperationBatchRequest(
         @Nonnull final PartitionKeyRangeServerBatchRequest batchRequest,
         @Nonnull final List<ItemBatchOperation> operations) {
 
@@ -47,9 +47,9 @@ class ServerBatchOperationsRequest implements Serializable {
     }
 
     /**
-     * {@link String} representation of this {@link ServerBatchOperationsRequest}.
+     * {@link String} representation of this {@link ServerOperationBatchRequest}.
      *
-     *  @return {@link String} representation of this {@link ServerBatchOperationsRequest}.
+     *  @return {@link String} representation of this {@link ServerOperationBatchRequest}.
      */
     @Override
     public String toString() {
@@ -57,9 +57,9 @@ class ServerBatchOperationsRequest implements Serializable {
     }
 
     /**
-     * Calculates a hash code for this {@link ServerBatchOperationsRequest}.
+     * Calculates a hash code for this {@link ServerOperationBatchRequest}.
      *
-     * @return hash code for this {@link ServerBatchOperationsRequest}.
+     * @return hash code for this {@link ServerOperationBatchRequest}.
      */
     @Override
     public int hashCode() {
@@ -70,14 +70,14 @@ class ServerBatchOperationsRequest implements Serializable {
     }
 
     /**
-     * Tests this {@link ServerBatchOperationsRequest} for equality with another {@link Object}.
+     * Tests this {@link ServerOperationBatchRequest} for equality with another {@link Object}.
      * <p>
-     * Two {@link ServerBatchOperationsRequest} instances are considered equal if and only if both the batch request and
+     * Two {@link ServerOperationBatchRequest} instances are considered equal if and only if both the batch request and
      * operation lists are equal.
      *
-     * @param other the {@link Object} to test for equality with this {@link ServerBatchOperationsRequest}.
+     * @param other the {@link Object} to test for equality with this {@link ServerOperationBatchRequest}.
      *
-     * @return {@code true} if the given {@link Object} is equal to this {@link ServerBatchOperationsRequest};
+     * @return {@code true} if the given {@link Object} is equal to this {@link ServerOperationBatchRequest};
      * {@code false} otherwise.
      */
     @Override
@@ -91,7 +91,7 @@ class ServerBatchOperationsRequest implements Serializable {
             return false;
         }
 
-        ServerBatchOperationsRequest that = (ServerBatchOperationsRequest) other;
+        ServerOperationBatchRequest that = (ServerOperationBatchRequest) other;
 
         if (!batchRequest.equals(that.batchRequest)) {
             return false;

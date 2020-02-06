@@ -79,7 +79,7 @@ public class BatchAsyncBatcher {
         return this.batchOperations.isEmpty();
     }
 
-    public CompletableFuture<ServerBatchOperationsRequest> CreateServerRequestAsync() {
+    public CompletableFuture<ServerOperationBatchRequest> CreateServerRequestAsync() {
 
         // All operations must be for the same partition key range
 
@@ -107,7 +107,7 @@ public class BatchAsyncBatcher {
             try {
                 // HybridRow serialization might leave some pending operations out of the batch
 
-                ServerBatchOperationsRequest request = /*await*/this.CreateServerRequestAsync();
+                ServerOperationBatchRequest request = /*await*/this.CreateServerRequestAsync();
                 serverRequest = request.getBatchRequest();
                 pendingOperations = request.getOperations();
 
