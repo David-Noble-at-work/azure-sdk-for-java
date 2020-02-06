@@ -3,67 +3,61 @@
 
 package com.azure.cosmos.serializer;
 
+import io.netty.buffer.ByteBuf;
+
+import javax.annotation.Nonnull;
+
+import static com.google.common.base.Preconditions.checkNotNull;
+
 public final class CosmosSerializationFormatOptions {
-    /**
-     *          What serialization format to request the response in from the backend
-     */
-    private String ContentSerializationFormat;
-    /**
-     *          Creates a navigator that can navigate a JSON in the specified ContentSerializationFormat
-     */
-    private CreateCustomNavigator CreateCustomNavigatorCallback;
-    
-    /**
-     *          Creates a writer to use to write out the stream.
-     */
-    private CreateCustomWriter CreateCustomWriterCallback;
 
-    public CosmosSerializationFormatOptions(String contentSerializationFormat,
-                                            CreateCustomNavigator createCustomNavigator,
-                                            CreateCustomWriter createCustomWriter) {
-        if (contentSerializationFormat == null) {
-            throw new NullPointerException("contentSerializationFormat");
-        }
+    private final String contentSerializationFormat;
+    private final Function<ByteBuf, IJsonNavigator> createCustomNavigator;
+    private final Supplier<IJsonWriter> createCustomWriter;
 
-        if (createCustomNavigator == null) {
-            throw new NullPointerException("createCustomNavigator");
-        }
+    public CosmosSerializationFormatOptions(
+        @Nonnull final String contentSerializationFormat,
+        @Nonnull final Function<ByteBuf, IJsonNavigator> createCustomNavigator,
+        @Nonnull final Supplier<IJsonWriter> createCustomWriter) {
 
-        if (createCustomWriter == null) {
-            throw new NullPointerException("createCustomWriter");
-        }
+        checkNotNull(contentSerializationFormat, "expected non-null contentSerializationFormat");
+        checkNotNull(createCustomNavigator, "expected non-null createCustomNavigator");
+        checkNotNull(createCustomWriter, "expected non-null createCustomWriter");
 
-        this.ContentSerializationFormat = contentSerializationFormat;
-        //C# TO JAVA CONVERTER WARNING: Unsigned integer types have no direct equivalent in Java:
-        //ORIGINAL LINE: this.CreateCustomNavigatorCallback = (ReadOnlyMemory<byte> content) -> createCustomNavigator
-        // .invoke(content);
-        this.CreateCustomNavigatorCallback = (ReadOnlyMemory<Byte> content) -> createCustomNavigator.invoke(content);
-        this.CreateCustomWriterCallback = () -> createCustomWriter.invoke();
+        this.contentSerializationFormat = contentSerializationFormat;
+        this.createCustomNavigator = createCustomNavigator;
+        this.createCustomWriter = createCustomWriter;
     }
 
-        
-
+    /**
+     * Gets the content serialization format to request in the response from a Cosmos DB backend.
+     *
+     * @return the content serialization format to request in the response from a Cosmos DB backend.
+     */
     public String getContentSerializationFormat() {
-        return ContentSerializationFormat;
+        return this.contentSerializationFormat;
     }
 
-    public CreateCustomNavigator getCreateCustomNavigatorCallback() {
-        return CreateCustomNavigatorCallback;
+    /**
+     * Gets the function for creating a {@link IJsonNavigator} over the contents of a {@link ByteBuf}.
+     * <p>
+     * Any {@link ByteBuf} provided as input to this function must be in this {@link #getContentSerializationFormat
+     * contentSeralizationFormat}.
+     *
+     * @return the function for creating a {@link IJsonNavigator} over the contents of a {@link ByteBuf}.
+     */
+    public Function<ByteBuf, IJsonNavigator> getCreateCustomNavigator() {
+        return this.createCustomNavigator;
     }
 
-        
-
-    public CreateCustomWriter getCreateCustomWriterCallback() {
-        return CreateCustomWriterCallback;
-    }
-
-    @FunctionalInterface
-    public interface CreateCustomNavigator {
-        IJsonNavigator invoke(ReadOnlyMemory<Byte> content);
-    }
-
-    @FunctionalInterface
-    public interface CreateCustomWriter {
-        IJsonWriter invoke();
+    /**
+     * Get the supplier of a {@link IJsonWriter}.
+     * <p>
+     * The writer produces content in this {@link #getContentSerializationFormat contentSerializationFormat}.
+     *
+     * @return the function for creating a {@link IJsonWriter}.
+     */
+    public Supplier<IJsonWriter> getCreateCustomWriter() {
+        return this.createCustomWriter;
     }
 }
