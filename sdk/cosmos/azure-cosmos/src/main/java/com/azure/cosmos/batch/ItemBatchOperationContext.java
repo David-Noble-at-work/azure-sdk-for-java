@@ -3,13 +3,12 @@
 
 package com.azure.cosmos.batch;
 
-import com.azure.cosmos.implementation.IDocumentClientRetryPolicy;
+import com.azure.cosmos.implementation.DocumentClientRetryPolicy;
 import com.azure.cosmos.implementation.IRetryPolicy.ShouldRetryResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nonnull;
-import java.io.IOException;
 import java.util.concurrent.CompletableFuture;
 
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -21,28 +20,28 @@ public class ItemBatchOperationContext implements AutoCloseable {
 
     private static final Logger logger = LoggerFactory.getLogger(ItemBatchOperationContext.class);
 
-    private BatchAsyncBatcher CurrentBatcher;
-    private final String PartitionKeyRangeId;
-    private final IDocumentClientRetryPolicy retryPolicy;
+    private BatchAsyncBatcher currentBatcher;
+    private final String partitionKeyRangeId;
+    private final DocumentClientRetryPolicy retryPolicy;
 
     public ItemBatchOperationContext(@Nonnull final String partitionKeyRangeId) {
         this(partitionKeyRangeId, null);
     }
 
     public ItemBatchOperationContext(
-        @Nonnull final String partitionKeyRangeId, final IDocumentClientRetryPolicy retryPolicy) {
+        @Nonnull final String partitionKeyRangeId, final DocumentClientRetryPolicy retryPolicy) {
 
         checkNotNull(partitionKeyRangeId, "expected non-null partitionKeyRangeId");
-        this.PartitionKeyRangeId = partitionKeyRangeId;
+        this.partitionKeyRangeId = partitionKeyRangeId;
         this.retryPolicy = retryPolicy;
     }
 
     public final BatchAsyncBatcher getCurrentBatcher() {
-        return CurrentBatcher;
+        return currentBatcher;
     }
 
     public final void setCurrentBatcher(BatchAsyncBatcher value) {
-        CurrentBatcher = value;
+        currentBatcher = value;
     }
 
     public final CompletableFuture<TransactionalBatchOperationResult> getOperationTask() {
@@ -50,14 +49,13 @@ public class ItemBatchOperationContext implements AutoCloseable {
     }
 
     public final String getPartitionKeyRangeId() {
-        return PartitionKeyRangeId;
+        return partitionKeyRangeId;
     }
 
     public final void Complete(BatchAsyncBatcher completer, TransactionalBatchOperationResult result) {
         if (this.AssertBatcher(completer)) {
             this.taskCompletionSource.SetResult(result);
         }
-
         this.close();
     }
 
@@ -65,28 +63,30 @@ public class ItemBatchOperationContext implements AutoCloseable {
         if (this.AssertBatcher(completer, exception)) {
             this.taskCompletionSource.SetException(exception);
         }
-
         this.close();
     }
 
     /**
      * Based on the Retry Policy, if a failed response should retry.
+     *
+     * @param result result of batch operation.
      */
     public final CompletableFuture<ShouldRetryResult> ShouldRetryAsync(
-        @Nonnull final TransactionalBatchOperationResult batchOperationResult) {
+        @Nonnull final TransactionalBatchOperationResult<?> result) {
 
-        if (this.retryPolicy == null || batchOperationResult.isSuccessStatusCode()) {
+        checkNotNull(result, "expected non-null result");
+
+        if (this.retryPolicy == null || result.isSuccessStatusCode()) {
             return CompletableFuture.completedFuture(ShouldRetryResult.noRetry());
         }
 
-        ResponseMessage responseMessage = batchOperationResult.ToResponseMessage();
-        return this.retryPolicy.ShouldRetryAsync(responseMessage, cancellationToken);
+        ResponseMessage responseMessage = result.ToResponseMessage();
+        return this.retryPolicy.ShouldRetryAsync(responseMessage);
     }
 
-    public final void close() throws IOException {
+    public final void close() {
         this.setCurrentBatcher(null);
     }
-
 
     private boolean AssertBatcher(BatchAsyncBatcher completer) {
         return AssertBatcher(completer, null);

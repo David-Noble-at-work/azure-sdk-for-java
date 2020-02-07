@@ -13,7 +13,7 @@ final class ServerOperationBatchRequest implements Serializable {
 
     private static final long serialVersionUID = 1899495696133611673L;
     private final PartitionKeyRangeServerBatchRequest batchRequest;
-    private final List<ItemBatchOperation> operations;
+    private final List<ItemBatchOperation<?>> operations;
 
     /**
      * Gets the key for this pair.
@@ -27,7 +27,7 @@ final class ServerOperationBatchRequest implements Serializable {
      * Gets the value for this pair.
      * @return value for this pair
      */
-    public List<ItemBatchOperation> getBatchOperations() {
+    public List<ItemBatchOperation<?>> getBatchOperations() {
         return this.operations;
     }
 
@@ -38,7 +38,7 @@ final class ServerOperationBatchRequest implements Serializable {
      */
     ServerOperationBatchRequest(
         @Nonnull final PartitionKeyRangeServerBatchRequest batchRequest,
-        @Nonnull final List<ItemBatchOperation> operations) {
+        @Nonnull final List<ItemBatchOperation<?>> operations) {
 
         checkNotNull(batchRequest, "expected non-null batchRequest");
         checkNotNull(operations, "expected non-null operations");

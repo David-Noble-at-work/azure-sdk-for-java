@@ -5,7 +5,7 @@ package com.azure.cosmos.batch;
 
 import com.azure.cosmos.RetryOptions;
 import com.azure.cosmos.implementation.HttpConstants.HttpHeaders;
-import com.azure.cosmos.implementation.IDocumentClientRetryPolicy;
+import com.azure.cosmos.implementation.DocumentClientRetryPolicy;
 import com.azure.cosmos.implementation.OperationType;
 import com.azure.cosmos.implementation.RequestOptions;
 import com.azure.cosmos.implementation.ResourceThrottleRetryPolicy;
@@ -262,7 +262,7 @@ public class BatchAsyncContainerExecutor implements AutoCloseable {
         return operation.getPartitionKey().getValue().InternalKey;
     }
 
-    private static IDocumentClientRetryPolicy GetRetryPolicy(RetryOptions retryOptions) {
+    private static DocumentClientRetryPolicy GetRetryPolicy(RetryOptions retryOptions) {
         return new BulkPartitionKeyRangeGoneRetryPolicy(
             new ResourceThrottleRetryPolicy(
                 retryOptions.getMaxRetryAttemptsOnThrottledRequests(),

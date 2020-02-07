@@ -80,7 +80,7 @@ public class BatchAsyncBatcher {
         return this.batchOperations.isEmpty();
     }
 
-    public CompletableFuture<ServerOperationBatchRequest> CreateServerRequestAsync() {
+    public CompletableFuture<ServerOperationBatchRequest> createServerRequestAsync() {
 
         // All operations must be for the same partition key range
 
@@ -102,22 +102,21 @@ public class BatchAsyncBatcher {
 
         checkState(interlockIncrementCheck.tryAcquire(), "failed to acquire dispatch permit");
         final CompletableFuture<Void> dispatchFuture = new CompletableFuture<>();
-        ArrayList<ItemBatchOperation> pendingOperations;
 
-        this.CreateServerRequestAsync().whenComplete((batchRequest, creationError) -> {
+        this.createServerRequestAsync().whenComplete((batchRequest, creationError) -> {
 
             if (creationError != null) {
                 dispatchFuture.completeExceptionally(creationError);
                 return;
             }
 
-            final List<ItemBatchOperation> batchOperations = batchRequest.getBatchOperations();
-            final CompletableFuture<Void>[] futures = new CompletableFuture[batchOperations.size()];
+            final List<ItemBatchOperation<?>> batchOperations = batchRequest.getBatchOperations();
+            final CompletableFuture<?>[] futures = new CompletableFuture[batchOperations.size()];
             int i = -1;
 
             final AtomicReference<RuntimeException> aggregateExceptionReference = new AtomicReference<>();
 
-            for (ItemBatchOperation batchOperation : batchOperations) {
+            for (ItemBatchOperation<?> batchOperation : batchOperations) {
                 futures[++i] = this.retrier.apply(batchOperation).whenComplete((r, e) -> {
                     if (e != null) {
                         aggregateExceptionReference.accumulateAndGet(null, (current, x) ->
@@ -134,7 +133,7 @@ public class BatchAsyncBatcher {
 
             if (aggregateException != null) {
 
-                for (ItemBatchOperation batchOperation : batchOperations) {
+                for (ItemBatchOperation<?> batchOperation : batchOperations) {
                     batchOperation.getContext().Fail(this, aggregateException);
                 }
 
@@ -150,7 +149,7 @@ public class BatchAsyncBatcher {
                     return;
                 }
 
-                try (final PartitionKeyRangeBatchResponse response = new PartitionKeyRangeBatchResponse(
+                try (PartitionKeyRangeBatchResponse response = new PartitionKeyRangeBatchResponse(
                     request.getBatchOperations().size(),
                     executionResult.getServerResponse(),
                     this.serializerCore)) {
@@ -171,11 +170,9 @@ public class BatchAsyncBatcher {
                         }
 
                         if (!result.isSuccessStatusCode()) {
-                            ShouldRetryResult shouldRetry = /*await
-                             */operation.getContext().ShouldRetryAsync(result);
+                            ShouldRetryResult shouldRetry = /*await*/operation.getContext().ShouldRetryAsync(result);
                             if (shouldRetry.shouldRetry) {
-                                /*await*/
-                                this.retrier.apply(operation);
+                                /*await*/this.retrier.apply(operation);
                                 continue;
                             }
                         }
@@ -183,7 +180,7 @@ public class BatchAsyncBatcher {
                         operation.getContext().Complete(this, result);
                     }
                 } catch (final Exception error) {
-                    for (ItemBatchOperation itemBatchOperation : request.getBatchOperations()) {
+                    for (ItemBatchOperation<?> itemBatchOperation : request.getBatchOperations()) {
                         itemBatchOperation.getContext().Fail(this, error);
                     }
                     dispatchFuture.completeExceptionally(error);
