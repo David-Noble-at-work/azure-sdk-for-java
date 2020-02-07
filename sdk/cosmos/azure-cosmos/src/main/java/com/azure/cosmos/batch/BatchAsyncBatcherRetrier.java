@@ -4,11 +4,11 @@
 package com.azure.cosmos.batch;
 
 import java.util.concurrent.CompletableFuture;
+import java.util.function.Function;
 
 /**
  * Delegate to process a request for retry an operation
  */
 @FunctionalInterface
-public interface BatchAsyncBatcherRetryDelegate {
-    CompletableFuture<Void> invoke(ItemBatchOperation<?> operation);
+public interface BatchAsyncBatcherRetrier extends Function<ItemBatchOperation<?>, CompletableFuture<Void>> {
 }

@@ -51,7 +51,7 @@ public class PartitionKeyRangeBatchResponse extends TransactionalBatchResponse {
             serverResponse.getRetryAfter(),
             serverResponse.getActivityId(),
             serverResponse.getDiagnosticsContext(),
-            new ArrayList<>(serverResponse.getOperations()),
+            new ArrayList<>(serverResponse.getBatchOperations()),
             serializer);
 
         this.serverResponse = serverResponse;
@@ -60,9 +60,9 @@ public class PartitionKeyRangeBatchResponse extends TransactionalBatchResponse {
 
         this.resultsByOperationIndex = new TransactionalBatchOperationResult[originalOperationsCount];
 
-        for (int index = 0; index < serverResponse.getOperations().size(); index++) {
+        for (int index = 0; index < serverResponse.getBatchOperations().size(); index++) {
 
-            final int operationIndex = serverResponse.getOperations().get(index).getOperationIndex();
+            final int operationIndex = serverResponse.getBatchOperations().get(index).getOperationIndex();
             final TransactionalBatchOperationResult result = this.resultsByOperationIndex[operationIndex];
 
             if (result == null || result.getResponseStatus() == HttpResponseStatus.TOO_MANY_REQUESTS) {
@@ -117,7 +117,7 @@ public class PartitionKeyRangeBatchResponse extends TransactionalBatchResponse {
         T resource = null;
 
         if (result.getResourceStream() != null) {
-            resource = this.getSerializer().<T>FromStream(result.getResourceStream(), type);
+            resource = this.getSerializer().<T>fromStream(result.getResourceStream(), type);
         }
 
         return new TransactionalBatchOperationResult<T>(result, resource);

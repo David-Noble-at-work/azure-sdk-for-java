@@ -10,11 +10,11 @@ import java.io.InputStream;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 
-public class CosmosJsonSerializerWrapper implements CosmosSerializer {
+public class CosmosSerializerWrapper implements CosmosSerializer {
 
     private final CosmosSerializer serializer;
 
-    public CosmosJsonSerializerWrapper(CosmosSerializer serializer) {
+    public CosmosSerializerWrapper(CosmosSerializer serializer) {
         checkNotNull(serializer, "expected non-null serializer");
         this.serializer = serializer;
     }

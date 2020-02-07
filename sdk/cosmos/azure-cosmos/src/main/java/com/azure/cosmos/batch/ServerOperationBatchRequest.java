@@ -27,7 +27,7 @@ final class ServerOperationBatchRequest implements Serializable {
      * Gets the value for this pair.
      * @return value for this pair
      */
-    public List<ItemBatchOperation> getOperations() {
+    public List<ItemBatchOperation> getBatchOperations() {
         return this.operations;
     }
 

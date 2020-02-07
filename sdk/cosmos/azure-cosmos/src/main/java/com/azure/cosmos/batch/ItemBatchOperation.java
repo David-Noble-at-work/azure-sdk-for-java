@@ -112,28 +112,28 @@ public final class ItemBatchOperation<TResource> implements AutoCloseable {
     }
 
     public CosmosDiagnosticsContext getDiagnosticsContext() {
-        return diagnosticsContext;
+        return this.diagnosticsContext;
     }
 
     public String getId() {
-        return id;
+        return this.id;
     }
 
     public int getOperationIndex() {
-        return operationIndex;
+        return this.operationIndex;
     }
 
     public ItemBatchOperation<TResource> setOperationIndex(final int value) {
-        operationIndex = value;
+        this.operationIndex = value;
         return this;
     }
 
     public OperationType getOperationType() {
-        return operationType;
+        return this.operationType;
     }
 
     public Documents.PartitionKey getParsedPartitionKey() {
-        return parsedPartitionKey;
+        return this.parsedPartitionKey;
     }
 
     public ItemBatchOperation<TResource> setParsedPartitionKey(Documents.PartitionKey value) {
@@ -287,7 +287,7 @@ public final class ItemBatchOperation<TResource> implements AutoCloseable {
 
                 try (InputStream inputStream = this.resource instanceof InputStream
                     ? (InputStream) resource
-                    : serializerCore.ToStream(this.resource)) {
+                    : serializerCore.toStream(this.resource)) {
                     this.body = BatchExecUtils.readAll(inputStream);
                 } catch (Throwable error) {
                     future.completeExceptionally(error);

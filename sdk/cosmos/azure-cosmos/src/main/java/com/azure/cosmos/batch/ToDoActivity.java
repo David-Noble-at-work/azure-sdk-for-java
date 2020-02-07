@@ -14,5 +14,6 @@ package com.azure.cosmos.batch;
  * This example atomically modifies a set of documents as a batch.
  * <code language="c#">
  * <![CDATA[ public class ToDoActivity { public string type { get; set; } public string id { get; set; } public string
- * status { get; set; }
+ * status { get; set;
+ *
  }

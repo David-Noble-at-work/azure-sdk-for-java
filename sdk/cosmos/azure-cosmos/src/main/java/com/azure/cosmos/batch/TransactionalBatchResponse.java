@@ -173,7 +173,7 @@ public class TransactionalBatchResponse implements AutoCloseable, List<Transacti
         return statusCode >= 200 && statusCode <= 299;
     }
 
-    public final List<ItemBatchOperation> getOperations() {
+    public final List<ItemBatchOperation> getBatchOperations() {
         return this.operations;
     }
 
@@ -324,7 +324,7 @@ public class TransactionalBatchResponse implements AutoCloseable, List<Transacti
         T resource = null;
 
         if (result.getResourceStream() != null) {
-            resource = this.getSerializer().<T>FromStream(result.getResourceStream(), type);
+            resource = this.getSerializer().<T>fromStream(result.getResourceStream(), type);
         }
 
         return new TransactionalBatchOperationResult<T>(result, resource);

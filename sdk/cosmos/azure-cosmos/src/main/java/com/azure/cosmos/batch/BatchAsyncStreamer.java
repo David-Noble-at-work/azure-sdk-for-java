@@ -25,10 +25,10 @@ public class BatchAsyncStreamer implements AutoCloseable {
 
     private final Object dispatchLimiter = new Object();
     private final int dispatchTimerInSeconds;
-    private final BatchAsyncBatcherExecuteDelegate executor;
+    private final BatchAsyncBatcherExecutor executor;
     private final int maxBatchByteSize;
     private final int maxBatchOperationCount;
-    private final BatchAsyncBatcherRetryDelegate retrier;
+    private final BatchAsyncBatcherRetrier retrier;
     private final CosmosSerializerCore serializerCore;
     private final TimerPool timerPool;
     private volatile BatchAsyncBatcher currentBatcher;
@@ -41,8 +41,8 @@ public class BatchAsyncStreamer implements AutoCloseable {
         int dispatchTimerInSeconds,
         TimerPool timerPool,
         CosmosSerializerCore serializerCore,
-        BatchAsyncBatcherExecuteDelegate executor,
-        BatchAsyncBatcherRetryDelegate retrier) {
+        BatchAsyncBatcherExecutor executor,
+        BatchAsyncBatcherRetrier retrier) {
 
         checkArgument(maxBatchOperationCount > 0,
             "expected maxBatchOperationCount > 0, not %s",
@@ -82,7 +82,7 @@ public class BatchAsyncStreamer implements AutoCloseable {
         }
 
         if (toDispatch != null) {
-            toDispatch.DispatchAsync();  // result discarded for fire and forget
+            toDispatch.dispatchAsync();  // result discarded for fire and forget
         }
     }
 
@@ -106,7 +106,7 @@ public class BatchAsyncStreamer implements AutoCloseable {
         }
 
         if (toDispatch != null) {
-            toDispatch.DispatchAsync();  // discarded for fire and forget
+            toDispatch.dispatchAsync();  // discarded for fire and forget
         }
 
         this.ResetTimer();

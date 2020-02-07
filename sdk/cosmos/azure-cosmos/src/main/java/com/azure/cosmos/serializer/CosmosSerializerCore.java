@@ -16,18 +16,18 @@ import com.azure.cosmos.implementation.ResourceType;
 import com.azure.cosmos.implementation.query.PartitionedQueryExecutionInfo;
 
 import javax.annotation.Nonnull;
+import java.io.IOException;
 import java.io.InputStream;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
-import static com.google.common.base.Preconditions.checkState;
 
 /**
  * This is an interface to allow a custom serializer to be used by the CosmosClient
  */
 public class CosmosSerializerCore {
 
-    private static final CosmosSerializer DEFAULT_SERIALIZER = new CosmosJsonSerializerWrapper(
+    private static final CosmosSerializer DEFAULT_SERIALIZER = new CosmosSerializerWrapper(
         new CosmosJacksonSerializer());
 
     private final CosmosSerializer serializer;
@@ -40,7 +40,7 @@ public class CosmosSerializerCore {
 
     public CosmosSerializerCore(final CosmosSerializer serializer) {
 
-        this.serializer = new CosmosJsonSerializerWrapper(serializer);
+        this.serializer = new CosmosSerializerWrapper(serializer);
 
         this.sqlQuerySpecSerializer = CosmosSqlQuerySpecJsonConverter.CreateSqlQuerySpecSerializer(
             this.serializer,
@@ -48,11 +48,11 @@ public class CosmosSerializerCore {
     }
 
     public static CosmosSerializerCore Create(final CosmosSerializationOptions options) {
-        return new CosmosSerializerCore(new CosmosJsonSerializerWrapper(new CosmosJacksonSerializer(options)));
+        return new CosmosSerializerCore(new CosmosSerializerWrapper(new CosmosJacksonSerializer(options)));
     }
 
     public static CosmosSerializerCore Create(final CosmosSerializer serializer) {
-        return new CosmosSerializerCore(new CosmosJsonSerializerWrapper(serializer));
+        return new CosmosSerializerCore(new CosmosSerializerWrapper(serializer));
     }
 
     public final <T> Iterable<T> FromFeedResponseStream(InputStream inputStream, ResourceType resourceType) {
@@ -60,14 +60,18 @@ public class CosmosSerializerCore {
         return CosmosElementSerializer.<T>GetResources(cosmosArray, this);
     }
 
-    public final <T> T FromStream(InputStream inputStream, Class<T> type) {
-        final CosmosSerializer serializer = this.<T>getSerializer(type);
-        return serializer.<T>fromStream(inputStream, );
+    public final <T> T fromStream(
+        @Nonnull final InputStream inputStream, @Nonnull final Class<T> type) throws IOException {
+
+        checkNotNull(inputStream, "expected non-null inputStream");
+        checkNotNull(type, "expected non-null type");
+
+        return this.getSerializer(type).fromStream(inputStream, type);
     }
 
-    public final <T> InputStream ToStream(T input) {
-        final CosmosSerializer serializer = this.<T>getSerializer((Class<T>) input.getClass());
-        return serializer.toStream(input);
+    public final <T> InputStream toStream(@Nonnull final T object) throws IOException {
+        checkNotNull(object, "expected non-null object");
+        return this.getSerializer(object.getClass()).toStream(object);
     }
 
     public final InputStream ToStreamSqlQuerySpec(SqlQuerySpec input, ResourceType resourceType) {

@@ -4,7 +4,6 @@
 package com.azure.cosmos.batch;
 
 import com.azure.cosmos.implementation.IDocumentClientRetryPolicy;
-import com.azure.cosmos.implementation.IRetryPolicy;
 import com.azure.cosmos.implementation.IRetryPolicy.ShouldRetryResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -62,7 +61,7 @@ public class ItemBatchOperationContext implements AutoCloseable {
         this.close();
     }
 
-    public final void Fail(BatchAsyncBatcher completer, RuntimeException exception) {
+    public final void Fail(BatchAsyncBatcher completer, Exception exception) {
         if (this.AssertBatcher(completer, exception)) {
             this.taskCompletionSource.SetException(exception);
         }
@@ -93,7 +92,7 @@ public class ItemBatchOperationContext implements AutoCloseable {
         return AssertBatcher(completer, null);
     }
 
-    private boolean AssertBatcher(BatchAsyncBatcher completer, RuntimeException innerException) {
+    private boolean AssertBatcher(BatchAsyncBatcher completer, Exception innerException) {
         if (completer != this.getCurrentBatcher()) {
             logger.error("Operation was completed by incorrect batcher");
             this.taskCompletionSource.SetException(
