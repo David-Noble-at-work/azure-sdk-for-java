@@ -13,7 +13,7 @@ import com.azure.cosmos.core.Out;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
-import static com.google.common.base.Preconditions.checkNotNull;
+import static com.azure.cosmos.base.Preconditions.checkNotNull;
 
 public abstract class LayoutUniqueScope extends LayoutIndexedScope implements ILayoutType {
 

@@ -3,6 +3,9 @@
 
 package com.azure.cosmos.serialization.hybridrow.io;
 
+import com.azure.cosmos.base.Strings;
+import com.azure.cosmos.core.Out;
+import com.azure.cosmos.core.Utf8String;
 import com.azure.cosmos.serialization.hybridrow.HybridRowVersion;
 import com.azure.cosmos.serialization.hybridrow.Result;
 import com.azure.cosmos.serialization.hybridrow.RowBuffer;
@@ -10,15 +13,12 @@ import com.azure.cosmos.serialization.hybridrow.layouts.LayoutResolver;
 import com.azure.cosmos.serialization.hybridrow.layouts.LayoutResolverNamespace;
 import com.azure.cosmos.serialization.hybridrow.layouts.LayoutType;
 import com.azure.cosmos.serialization.hybridrow.schemas.Namespace;
-import com.azure.cosmos.core.Out;
-import com.azure.cosmos.core.Utf8String;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufUtil;
 import io.netty.buffer.Unpooled;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Factory;
 import org.testng.annotations.Test;
-import org.testng.util.Strings;
 
 import java.io.File;
 import java.io.IOException;
@@ -27,7 +27,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
-import static com.google.common.base.Strings.lenientFormat;
+import static com.azure.cosmos.base.Strings.lenientFormat;
 import static java.lang.System.out;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNull;

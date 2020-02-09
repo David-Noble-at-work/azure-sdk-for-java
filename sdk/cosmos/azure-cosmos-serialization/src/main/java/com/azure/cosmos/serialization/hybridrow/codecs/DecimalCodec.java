@@ -13,9 +13,9 @@ import java.math.BigInteger;
 import java.math.MathContext;
 import java.math.RoundingMode;
 
-import static com.google.common.base.Preconditions.checkArgument;
-import static com.google.common.base.Preconditions.checkNotNull;
-import static com.google.common.base.Preconditions.checkState;
+import static com.azure.cosmos.base.Preconditions.checkArgument;
+import static com.azure.cosmos.base.Preconditions.checkNotNull;
+import static com.azure.cosmos.base.Preconditions.checkState;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 

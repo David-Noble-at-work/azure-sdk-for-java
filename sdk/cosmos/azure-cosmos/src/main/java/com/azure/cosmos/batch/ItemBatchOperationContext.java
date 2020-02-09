@@ -59,9 +59,9 @@ public class ItemBatchOperationContext implements AutoCloseable {
         this.close();
     }
 
-    public final void Fail(BatchAsyncBatcher completer, Exception exception) {
-        if (this.AssertBatcher(completer, exception)) {
-            this.taskCompletionSource.SetException(exception);
+    public final void Fail(BatchAsyncBatcher completer, Throwable error) {
+        if (this.AssertBatcher(completer, error)) {
+            this.taskCompletionSource.SetException(error);
         }
         this.close();
     }
@@ -92,12 +92,12 @@ public class ItemBatchOperationContext implements AutoCloseable {
         return AssertBatcher(completer, null);
     }
 
-    private boolean AssertBatcher(BatchAsyncBatcher completer, Exception innerException) {
+    private boolean AssertBatcher(BatchAsyncBatcher completer, Throwable error) {
         if (completer != this.getCurrentBatcher()) {
             logger.error("Operation was completed by incorrect batcher");
             this.taskCompletionSource.SetException(
                 new RuntimeException("Operation was completed by incorrect batcher."),
-                innerException);
+                error);
             return false;
         }
         return true;

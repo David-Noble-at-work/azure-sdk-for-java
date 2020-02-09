@@ -3,13 +3,13 @@
 
 package com.azure.cosmos.batch;
 
-import com.azure.cosmos.implementation.IRetryPolicy.ShouldRetryResult;
 import com.azure.cosmos.serializer.CosmosSerializerCore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nonnull;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
@@ -149,41 +149,78 @@ public class BatchAsyncBatcher {
                     return;
                 }
 
+                final TransactionalBatchResponse batchResponse = executionResult.getServerResponse();
+                final int operationCount = request.getBatchOperations().size();
+                final CompletableFuture<?>[] futures = new CompletableFuture<?>[operationCount];
+
+                Arrays.setAll(futures, future -> new CompletableFuture<Void>());
+
+                CompletableFuture.allOf(futures).whenComplete((voidResult, error) -> {
+                    if (error == null) {
+                        dispatchFuture.complete(null);
+                    } else {
+                        for (ItemBatchOperation<?> itemBatchOperation : request.getBatchOperations()) {
+                            itemBatchOperation.getContext().Fail(this, error);
+                        }
+                        dispatchFuture.completeExceptionally(error);
+                    }
+                });
+
                 try (PartitionKeyRangeBatchResponse response = new PartitionKeyRangeBatchResponse(
-                    request.getBatchOperations().size(),
-                    executionResult.getServerResponse(),
-                    this.serializerCore)) {
+                    operationCount, batchResponse, this.serializerCore)) {
+
+                    // TODO (DANOBLE) Is it OK to auto-close a PartitionKeyRangeBatchResponse before all responses are
+                    //  complete or should we close at some point in the future? What should happen when
+                    //  PartitionKeyRangeBatchResponse.close throws?
+
+                    int i = -1;
 
                     for (ItemBatchOperation<?> operation : response.getBatchOperations()) {
 
+                        final CompletableFuture<?> future = futures[++i];
                         final int operationIndex = operation.getOperationIndex();
                         final TransactionalBatchOperationResult<?> result = response.get(operationIndex);
 
+                        // TODO (DANOBLE) wire up diagnostics
                         // Bulk has diagnostics per item operation.
                         // Batch has a single diagnostics for the execute operation
+//
+//                        if (operation.getDiagnosticsContext() != null) {
+//                            result.setDiagnosticsContext(operation.getDiagnosticsContext());
+//                            result.getDiagnosticsContext().Append(result.getDiagnosticsContext());
+//                        } else {
+//                            result.setDiagnosticsContext(result.getDiagnosticsContext());
+//                        }
 
-                        if (operation.getDiagnosticsContext() != null) {
-                            result.setDiagnosticsContext(operation.getDiagnosticsContext());
-                            result.getDiagnosticsContext().Append(result.getDiagnosticsContext());
+                        final ItemBatchOperationContext context = operation.getContext();
+
+                        if (result.isSuccessStatusCode()) {
+
+                            context.Complete(this, result);
+                            future.complete(null);
+
                         } else {
-                            result.setDiagnosticsContext(result.getDiagnosticsContext());
-                        }
 
-                        if (!result.isSuccessStatusCode()) {
-                            ShouldRetryResult shouldRetry = /*await*/operation.getContext().ShouldRetryAsync(result);
-                            if (shouldRetry.shouldRetry) {
-                                /*await*/this.retrier.apply(operation);
-                                continue;
-                            }
+                            context.ShouldRetryAsync(result).whenComplete((shouldRetry, error) -> {
+                                if (error != null) {
+                                    future.completeExceptionally(error);
+                                }
+                            }).thenApply(shouldRetry -> {
+                                if (shouldRetry.shouldRetry) {
+                                    this.retrier.apply(operation).whenComplete((voidResult, error) -> {
+                                        if (error == null) {
+                                            context.Complete(this, result);
+                                            future.complete(null);
+                                        } else {
+                                            future.completeExceptionally(error);
+                                        }
+                                    });
+                                }
+                            });
                         }
-
-                        operation.getContext().Complete(this, result);
                     }
+
                 } catch (final Exception error) {
-                    for (ItemBatchOperation<?> itemBatchOperation : request.getBatchOperations()) {
-                        itemBatchOperation.getContext().Fail(this, error);
-                    }
-                    dispatchFuture.completeExceptionally(error);
                 }
             }));
 

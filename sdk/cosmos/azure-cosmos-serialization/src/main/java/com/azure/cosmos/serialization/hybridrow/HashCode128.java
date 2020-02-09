@@ -9,8 +9,8 @@ import io.netty.buffer.Unpooled;
 import javax.annotation.Nonnull;
 import javax.annotation.concurrent.Immutable;
 
-import static com.google.common.base.Preconditions.checkArgument;
-import static com.google.common.base.Preconditions.checkNotNull;
+import static com.azure.cosmos.base.Preconditions.checkArgument;
+import static com.azure.cosmos.base.Preconditions.checkNotNull;
 
 /**
  * An immutable 128-bit hash code.

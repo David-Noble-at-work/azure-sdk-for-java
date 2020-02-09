@@ -19,15 +19,15 @@ import com.azure.cosmos.serialization.hybridrow.schemas.TaggedPropertyType;
 import com.azure.cosmos.serialization.hybridrow.schemas.TuplePropertyType;
 import com.azure.cosmos.serialization.hybridrow.schemas.TypeKind;
 import com.azure.cosmos.serialization.hybridrow.schemas.UdtPropertyType;
-import com.google.common.base.Strings;
+import com.azure.cosmos.base.Strings;
 
 import javax.annotation.Nonnull;
 import java.util.List;
 import java.util.Optional;
 
-import static com.google.common.base.Preconditions.checkArgument;
-import static com.google.common.base.Preconditions.checkNotNull;
-import static com.google.common.base.Strings.lenientFormat;
+import static com.azure.cosmos.base.Preconditions.checkArgument;
+import static com.azure.cosmos.base.Preconditions.checkNotNull;
+import static com.azure.cosmos.base.Strings.lenientFormat;
 
 /**
  * Converts a logical schema into a physical layout.

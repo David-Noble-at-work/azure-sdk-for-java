@@ -10,7 +10,7 @@ import com.azure.cosmos.core.Out;
 
 import javax.annotation.Nonnull;
 
-import static com.google.common.base.Preconditions.checkArgument;
+import static com.azure.cosmos.base.Preconditions.checkArgument;
 
 public final class LayoutInt32 extends LayoutTypePrimitive<Integer> {
 

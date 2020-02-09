@@ -8,7 +8,7 @@ import com.azure.cosmos.serialization.hybridrow.SchemaId;
 import javax.annotation.Nonnull;
 import java.util.function.Function;
 
-import static com.google.common.base.Preconditions.checkNotNull;
+import static com.azure.cosmos.base.Preconditions.checkNotNull;
 
 public final class LayoutResolverSimple extends LayoutResolver {
 

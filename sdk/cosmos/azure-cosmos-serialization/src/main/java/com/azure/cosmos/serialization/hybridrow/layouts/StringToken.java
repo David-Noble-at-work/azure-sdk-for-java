@@ -9,7 +9,7 @@ import io.netty.buffer.Unpooled;
 
 import javax.annotation.Nonnull;
 
-import static com.google.common.base.Preconditions.checkNotNull;
+import static com.azure.cosmos.base.Preconditions.checkNotNull;
 
 public final class StringToken implements Cloneable {
 

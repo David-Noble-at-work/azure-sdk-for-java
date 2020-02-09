@@ -5,7 +5,7 @@ package com.azure.cosmos.serialization.hybridrow.schemas;
 
 import com.azure.cosmos.serialization.hybridrow.SchemaId;
 import com.azure.cosmos.core.Json;
-import com.google.common.base.Strings;
+import com.azure.cosmos.base.Strings;
 import org.checkerframework.checker.nullness.qual.NonNull;
 
 import javax.annotation.Nonnull;
@@ -13,8 +13,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 
-import static com.google.common.base.Preconditions.checkNotNull;
-import static com.google.common.base.Strings.lenientFormat;
+import static com.azure.cosmos.base.Preconditions.checkNotNull;
+import static com.azure.cosmos.base.Strings.lenientFormat;
 
 public final class SchemaValidator {
 

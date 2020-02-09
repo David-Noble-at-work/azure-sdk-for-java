@@ -62,8 +62,8 @@ public class BatchAsyncStreamer implements AutoCloseable {
 
         this.maxBatchOperationCount = maxBatchOperationCount;
         this.maxBatchByteSize = maxBatchByteSize;
-        this.executor = (PartitionKeyRangeServerBatchRequest request) -> executor.invoke(request);
-        this.retrier = (ItemBatchOperation operation) -> retrier.invoke(operation);
+        this.executor = executor::apply;
+        this.retrier = retrier::apply;
         this.dispatchTimerInSeconds = dispatchTimerInSeconds;
         this.timerPool = timerPool;
         this.serializerCore = serializerCore;

@@ -9,13 +9,18 @@ import com.azure.cosmos.serialization.hybridrow.Result;
 import com.azure.cosmos.serialization.hybridrow.RowBuffer;
 import com.azure.cosmos.serialization.hybridrow.io.RowWriter;
 import com.azure.cosmos.serializer.CosmosSerializerCore;
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.Unpooled;
 
 import javax.annotation.Nonnull;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
 public abstract class ServerBatchRequest {
+
+    static final int OPERATION_SERIALIZATION_OVERHEAD_OVER_ESTIMATE_IN_BYTES = 200;
 
     private final int maxBodyLength;
     private final int maxOperationCount;
@@ -50,7 +55,7 @@ public abstract class ServerBatchRequest {
      *
      * @return Body stream.
      */
-    public final MemoryStream TransferBodyStream() {
+    public final InputStream TransferBodyStream() {
         MemoryStream bodyStream = this.bodyStream;
         this.bodyStream = null;
         return bodyStream;
@@ -85,27 +90,30 @@ public abstract class ServerBatchRequest {
         final boolean ensureContinuousOperationIndexes) {
 
         int estimatedMaxOperationLength = 0;
-        int approximateTotalLength = 0;
+        int approximateTotalSerializedLength = 0;
+        int materializedCount = 0;
 
         int previousOperationIndex = -1;
-        int materializedCount = 0;
 
         for (ItemBatchOperation operation : operations) {
 
-            if (ensureContinuousOperationIndexes && previousOperationIndex != -1 && operation.getOperationIndex() != previousOperationIndex + 1) {
-                break;
+            if (ensureContinuousOperationIndexes) {
+                final int operationIndex = operation.getOperationIndex();
+                if (previousOperationIndex != -1 && operationIndex != previousOperationIndex + 1) {
+                    break;
+                }
+                previousOperationIndex = operationIndex;
             }
 
             /*await*/ operation.materializeResource(this.serializerCore);
+
+            final int approximateSerializedLength = operation.GetApproximateSerializedLength();
+
+            estimatedMaxOperationLength = Math.max(approximateSerializedLength, estimatedMaxOperationLength);
+            approximateTotalSerializedLength += approximateSerializedLength;
             materializedCount++;
 
-            previousOperationIndex = operation.getOperationIndex();
-
-            int currentLength = operation.GetApproximateSerializedLength();
-            estimatedMaxOperationLength = Math.max(currentLength, estimatedMaxOperationLength);
-
-            approximateTotalLength += currentLength;
-            if (approximateTotalLength > this.maxBodyLength) {
+            if (approximateTotalSerializedLength > this.maxBodyLength) {
                 break;
             }
 
@@ -114,17 +122,19 @@ public abstract class ServerBatchRequest {
             }
         }
 
+        approximateTotalSerializedLength += materializedCount * OPERATION_SERIALIZATION_OVERHEAD_OVER_ESTIMATE_IN_BYTES;
         this.operations = new List<ItemBatchOperation>(operations.Array, operations.Offset, materializedCount);
+        ByteBuf buffer = Unpooled.buffer(approximateTotalSerializedLength);
 
-        final int operationSerializationOverheadOverEstimateInBytes = 200;
-
+        ////
+        
         this.bodyStream = new MemoryStream(
-            approximateTotalLength + (operationSerializationOverheadOverEstimateInBytes * materializedCount));
+            approximateTotalSerializedLength + (OPERATION_SERIALIZATION_OVERHEAD_OVER_ESTIMATE_IN_BYTES * materializedCount));
 
         this.operationResizableWriteBuffer = new MemorySpanResizer<Byte>(
-            estimatedMaxOperationLength + operationSerializationOverheadOverEstimateInBytes);
+            estimatedMaxOperationLength + OPERATION_SERIALIZATION_OVERHEAD_OVER_ESTIMATE_IN_BYTES);
 
-        Result r = /*await*/ this.bodyStream.WriteRecordIOAsync(null, this.WriteOperation);
+        Result r = /*await*/ this.bodyStream.WriteRecordIOAsync(null, this::WriteOperation);
         assert r == Result.SUCCESS : "Failed to serialize batch request";
 
         this.bodyStream.Position = 0;

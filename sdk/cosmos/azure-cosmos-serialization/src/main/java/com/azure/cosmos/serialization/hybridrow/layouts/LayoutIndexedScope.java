@@ -8,7 +8,7 @@ import com.azure.cosmos.serialization.hybridrow.RowCursor;
 
 import javax.annotation.Nonnull;
 
-import static com.google.common.base.Preconditions.checkNotNull;
+import static com.azure.cosmos.base.Preconditions.checkNotNull;
 
 public abstract class LayoutIndexedScope extends LayoutTypeScope {
 

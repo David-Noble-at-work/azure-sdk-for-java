@@ -56,9 +56,9 @@ import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.UUID;
 
-import static com.google.common.base.Preconditions.checkNotNull;
-import static com.google.common.base.Preconditions.checkState;
-import static com.google.common.base.Strings.lenientFormat;
+import static com.azure.cosmos.base.Preconditions.checkNotNull;
+import static com.azure.cosmos.base.Preconditions.checkState;
+import static com.azure.cosmos.base.Strings.lenientFormat;
 
 /**
  * A forward-only, streaming, field reader for {@link RowBuffer}.

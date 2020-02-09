@@ -8,8 +8,8 @@ import com.azure.cosmos.serialization.hybridrow.schemas.StorageKind;
 
 import javax.annotation.Nonnull;
 
-import static com.google.common.base.Preconditions.checkNotNull;
-import static com.google.common.base.Strings.lenientFormat;
+import static com.azure.cosmos.base.Preconditions.checkNotNull;
+import static com.azure.cosmos.base.Strings.lenientFormat;
 
 public final class LayoutColumn {
 

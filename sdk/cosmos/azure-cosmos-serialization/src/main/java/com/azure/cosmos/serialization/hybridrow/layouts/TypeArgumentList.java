@@ -18,7 +18,7 @@ import java.util.List;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
-import static com.google.common.base.Preconditions.checkNotNull;
+import static com.azure.cosmos.base.Preconditions.checkNotNull;
 
 @JsonSerialize(using = TypeArgumentList.JsonSerializer.class)
 public final class TypeArgumentList {

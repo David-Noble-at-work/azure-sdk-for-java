@@ -9,8 +9,8 @@ import io.netty.buffer.Unpooled;
 import javax.annotation.Nonnull;
 import java.util.UUID;
 
-import static com.google.common.base.Preconditions.checkArgument;
-import static com.google.common.base.Preconditions.checkNotNull;
+import static com.azure.cosmos.base.Preconditions.checkArgument;
+import static com.azure.cosmos.base.Preconditions.checkNotNull;
 
 /**
  * Provides static methods for encoding and decoding {@link UUID}s serialized as {@code System.Guid}s

@@ -5,7 +5,7 @@ package com.azure.cosmos.serialization.hybridrow.schemas;
 
 import com.azure.cosmos.core.Json;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.base.Preconditions;
+import com.azure.cosmos.base.Preconditions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

@@ -5,7 +5,7 @@ package com.azure.cosmos.serialization.hybridrow.layouts;
 
 import com.azure.cosmos.serialization.hybridrow.SchemaId;
 import com.azure.cosmos.serialization.hybridrow.schemas.Namespace;
-import com.google.common.base.Suppliers;
+import com.azure.cosmos.base.Suppliers;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -13,7 +13,7 @@ import java.io.InputStream;
 import java.util.Optional;
 import java.util.function.Supplier;
 
-import static com.google.common.base.Strings.lenientFormat;
+import static com.azure.cosmos.base.Strings.lenientFormat;
 
 public final class SystemSchema {
 

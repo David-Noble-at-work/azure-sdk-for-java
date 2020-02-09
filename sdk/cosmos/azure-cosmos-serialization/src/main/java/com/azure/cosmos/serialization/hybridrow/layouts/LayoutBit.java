@@ -3,7 +3,7 @@
 
 package com.azure.cosmos.serialization.hybridrow.layouts;
 
-import static com.google.common.base.Preconditions.checkArgument;
+import static com.azure.cosmos.base.Preconditions.checkArgument;
 
 public final class LayoutBit {
     /**

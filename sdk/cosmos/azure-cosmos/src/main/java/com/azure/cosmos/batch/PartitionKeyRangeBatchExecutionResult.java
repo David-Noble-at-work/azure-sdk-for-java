@@ -22,7 +22,7 @@ public final class PartitionKeyRangeBatchExecutionResult {
         this.operations = operations;
     }
 
-    public Iterable<ItemBatchOperation> getOperations() {
+    public Iterable<ItemBatchOperation> getBatchOperations() {
         return operations;
     }
 

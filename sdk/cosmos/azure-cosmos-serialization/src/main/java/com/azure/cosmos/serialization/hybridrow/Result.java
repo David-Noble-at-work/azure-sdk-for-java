@@ -3,7 +3,7 @@
 
 package com.azure.cosmos.serialization.hybridrow;
 
-import com.google.common.base.Suppliers;
+import com.azure.cosmos.base.Suppliers;
 import it.unimi.dsi.fastutil.ints.Int2ReferenceMap;
 import it.unimi.dsi.fastutil.ints.Int2ReferenceOpenHashMap;
 

@@ -301,7 +301,7 @@ public final class ItemBatchOperation<TResource> implements AutoCloseable {
         return future;
     }
 
-    public static Result WriteOperation(
+    public static Result writeOperation(
         @Nonnull RowWriter writer,
         @Nonnull TypeArgument typeArg,
         @Nonnull ItemBatchOperation operation) {
