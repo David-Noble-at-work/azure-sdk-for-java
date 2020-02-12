@@ -314,15 +314,14 @@ public final class RowBuffer {
 
     /**
      * Initializes a row to the minimal size for the given layout.
-     *
-     * @param version The version of the Hybrid Row format to use for encoding this row.
+     *  @param version The version of the Hybrid Row format to use for encoding this row.
      * @param layout The layout that describes the column layout of the row.
      * @param resolver The resolver for UDTs.
-     * <p>
-     * The row is initialized to default row for the given layout.  All fixed columns have their default values. All
-     * variable columns are null.  No sparse columns are present. The row is valid.
+ * <p>
+ * The row is initialized to default row for the given layout.  All fixed columns have their default values. All
+     * @return
      */
-    public void initLayout(HybridRowVersion version, Layout layout, LayoutResolver resolver) {
+    public RowBuffer initLayout(HybridRowVersion version, Layout layout, LayoutResolver resolver) {
 
         checkNotNull(version, "expected non-null version");
         checkNotNull(layout, "expected non-null layout");
@@ -331,6 +330,8 @@ public final class RowBuffer {
         this.writeHeader(new HybridRowHeader(version, layout.schemaId()));
         this.buffer.writeZero(layout.size());
         this.resolver = resolver;
+
+        return this;
     }
 
     /**

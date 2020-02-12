@@ -30,7 +30,7 @@ public abstract class ServerBatchRequest {
     private long bodyStreamPositionBeforeWritingCurrentRecord;
     private int lastWrittenOperationIndex;
     private MemorySpanResizer<Byte> operationResizableWriteBuffer;
-    private ArrayList<ItemBatchOperation> operations = new ArrayList<>();
+    private List<ItemBatchOperation> operations;
     private boolean shouldDeleteLastWrittenRecord;
 
     /**
@@ -123,11 +123,11 @@ public abstract class ServerBatchRequest {
         }
 
         approximateTotalSerializedLength += materializedCount * OPERATION_SERIALIZATION_OVERHEAD_OVER_ESTIMATE_IN_BYTES;
-        this.operations = new List<ItemBatchOperation>(operations.Array, operations.Offset, materializedCount);
         ByteBuf buffer = Unpooled.buffer(approximateTotalSerializedLength);
+        this.operations = operations.subList(0, materializedCount);
 
         ////
-        
+
         this.bodyStream = new MemoryStream(
             approximateTotalSerializedLength + (OPERATION_SERIALIZATION_OVERHEAD_OVER_ESTIMATE_IN_BYTES * materializedCount));
 
@@ -148,10 +148,9 @@ public abstract class ServerBatchRequest {
                 operations.Array, operations.Offset, this.lastWrittenOperationIndex + 1);
         }
 
-        int overflowOperations = operations.Count - this.operations.Count;
+        ////
 
-        return new ArrayList<ItemBatchOperation>(
-            operations.Array, this.operations.Count + operations.Offset, overflowOperations);
+        return operations.subList(materializedCount, operations.size());
     }
 
     private Result WriteOperation(long index, Out<ReadOnlyMemory<Byte>> buffer) {
