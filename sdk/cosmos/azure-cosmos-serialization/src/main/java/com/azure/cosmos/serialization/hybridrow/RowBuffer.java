@@ -155,6 +155,15 @@ public final class RowBuffer {
     }
 
     /**
+     * Returns the {@link ByteBuf buffer} backing this {@link RowBuffer row buffer}.
+     *
+     * @return the {@link ByteBuf buffer} backing this {@link RowBuffer row buffer}.
+     */
+    public ByteBuf buffer() {
+        return this.buffer;
+    }
+
+    /**
      * Compute the byte offset from the beginning of the row for a given variable's value.
      *
      * @param layout The (optional) layout of the current scope.

@@ -13,11 +13,11 @@ public final class ReturnValue<T> {
         this.value = value;
     }
 
-    private Result getResult() {
+    public Result getResult() {
         return this.result;
     }
 
-    private T getValue() {
+    public T getValue() {
         return this.value;
     }
 }

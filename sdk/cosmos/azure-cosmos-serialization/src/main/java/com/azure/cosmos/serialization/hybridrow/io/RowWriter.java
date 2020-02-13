@@ -158,7 +158,7 @@ public final class RowWriter {
         RowWriter writer = new RowWriter(buffer, scope);
         TypeArgument typeArg = new TypeArgument(LayoutTypes.UDT, new TypeArgumentList(scope.layout().schemaId()));
 
-        return func.apply(writer, typeArg, context);
+        return func.apply(writer, context, typeArg);
     }
 
     /**
@@ -416,7 +416,7 @@ public final class RowWriter {
         }
 
         RowWriter nestedWriter = new RowWriter(this.row, nestedScope);
-        result = func == null ? null : func.apply(nestedWriter, typeArg, context);
+        result = func == null ? null : func.apply(nestedWriter, context, typeArg);
 
         if (result == null) {
             result = Result.SUCCESS;
@@ -838,11 +838,11 @@ public final class RowWriter {
          * Write content using the specified writer, type argument, and context.
          *
          * @param writer writes content.
-         * @param typeArgument specifies a type argument.
          * @param context provides context for the write operation.
          *
+         * @param typeArgument specifies a type argument.
          * @return a result code
          */
-        Result apply(RowWriter writer, TypeArgument typeArgument, TContext context);
+        Result apply(RowWriter writer, TContext context, TypeArgument typeArgument);
     }
 }

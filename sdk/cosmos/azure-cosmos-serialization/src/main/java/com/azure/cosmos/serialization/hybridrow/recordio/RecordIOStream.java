@@ -190,8 +190,8 @@ public final class RecordIOStream {
     public static CompletableFuture<Result> WriteRecordIOAsync(
         @Nonnull final OutputStream outputStream,
         @Nonnull final Segment segment,
-        final ProduceFunc produce,
-        ByteBuf buffer) {
+        @Nonnull final ProduceFunc produce,
+        @Nonnull ByteBuf buffer) {
 
         return RecordIOStream.WriteRecordIOAsync(
             outputStream, segment, index -> {
@@ -239,26 +239,32 @@ public final class RecordIOStream {
         checkNotNull(buffer, "expected non-null buffer");
 
         // Write a RecordIO stream.
-        Memory<Byte> metadata;
-        Out<Memory<Byte>> tempOut_metadata = new Out<Memory<Byte>>();
-        Result r = RecordIOStream.FormatSegment(segment, buffer, tempOut_metadata);
-        metadata = tempOut_metadata.get();
-        if (r != Result.SUCCESS) {
-            return r;
+
+        Out<ByteBuf> metadata;
+        Result result = RecordIOStream.FormatSegment(segment, metadata);
+
+        if (result != Result.SUCCESS) {
+            return CompletableFuture.completedFuture(result);
         }
 
-        // TODO: C# TO JAVA CONVERTER: There is no equivalent to 'await' in Java:
-        await stm.WriteAsync(metadata);
+        try {
+            metadata.get().readBytes(outputStream, metadata.get().readableBytes());
+        } catch (IOException error) {
+            CompletableFuture<Result> future = new CompletableFuture<>();
+            future.completeExceptionally(error);
+            return future;
+        }
 
+        CompletableFuture<Result> resultFuture = new CompletableFuture<>();
         long index = 0;
+
         while (true) {
-            //C# TO JAVA CONVERTER WARNING: Unsigned integer types have no direct equivalent in Java:
-            //ORIGINAL LINE: ReadOnlyMemory<byte> body;
-            ReadOnlyMemory<Byte> body;
-            // TODO: C# TO JAVA CONVERTER: Java has no equivalent to the C# deconstruction assignments:
-            (r, body) =await produce (index++);
-            if (r != Result.SUCCESS) {
-                return r;
+
+            CompletableFuture<ReturnValue<ByteBuf>> rv = produce.apply(index++);
+            Result result = rv.getResult();
+
+            if (rv.getResult() != Result.SUCCESS) {
+                return CompletableFuture.completedFuture(rv.getResult());
             }
 
             if (body.IsEmpty) {
@@ -268,10 +274,10 @@ public final class RecordIOStream {
             Out<Memory<Byte>> tempOut_metadata2 = new Out<Memory<Byte>>();
             //C# TO JAVA CONVERTER WARNING: Unsigned integer types have no direct equivalent in Java:
             //ORIGINAL LINE: r = RecordIOStream.FormatRow(body, buffer, out metadata);
-            r = RecordIOStream.FormatRow(body, buffer, tempOut_metadata2);
+            result = RecordIOStream.FormatRow(body, buffer, tempOut_metadata2);
             metadata = tempOut_metadata2.get();
-            if (r != Result.SUCCESS) {
-                return r;
+            if (result != Result.SUCCESS) {
+                return result;
             }
 
             // Metadata and Body memory blocks should not overlap since they are both in
@@ -293,26 +299,21 @@ public final class RecordIOStream {
      * Compute and format a record header for the given record body.
      *
      * @param body The body whose record header should be formatted.
-     * @param resizer The resizer to use in allocating a buffer for the record header.
-     * @param block The byte sequence of the written row buffer.
+     * @param buffer The byte sequence of the written row buffer.
      *
      * @return Success if the write completes without error, the error code otherwise.
      */
-    //C# TO JAVA CONVERTER WARNING: Unsigned integer types have no direct equivalent in Java:
-    //ORIGINAL LINE: private static Result FormatRow(ReadOnlyMemory<byte> body, MemorySpanResizer<byte> resizer, out
-    // Memory<byte> block)
-    private static Result FormatRow(ReadOnlyMemory<Byte> body, MemorySpanResizer<Byte> resizer,
-                                    Out<Memory<Byte>> block) {
-        RowBuffer row;
-        Out<RowBuffer> tempOut_row = new Out<RowBuffer>();
-        Result r = RecordIOFormatter.FormatRecord(body, tempOut_row);
-        row = tempOut_row.get();
-        if (r != Result.SUCCESS) {
-            block.setAndGet(null);
-            return r;
+    private static Result FormatRow(ByteBuf body, Out<ByteBuf> buffer) {
+
+        Out<RowBuffer> rowBuffer = new Out<>();
+        Result result = RecordIOFormatter.FormatRecord(body, rowBuffer);
+
+        if (result != Result.SUCCESS) {
+            buffer.set(null);
+            return result;
         }
 
-        block.setAndGet(resizer.getMemory().Slice(0, row.Length));
+        buffer.setAndGet(rowBuffer.get().buffer());
         return Result.SUCCESS;
     }
 
@@ -320,42 +321,36 @@ public final class RecordIOStream {
      * Format a segment.
      *
      * @param segment The segment to format.
-     * @param resizer The resizer to use in allocating a buffer for the segment.
-     * @param block The byte sequence of the written row buffer.
+     * @param buffer The byte sequence of the written row buffer.
      *
      * @return Success if the write completes without error, the error code otherwise.
      */
     private static Result FormatSegment(
         @Nonnull final Segment segment,
-        @Nonnull final ByteBuf buffer,
-        Out<Memory<Byte>> block) {
+        @Nonnull final Out<ByteBuf> buffer) {
 
-        RowBuffer row;
-        Out<RowBuffer> tempOut_row =
-            new Out<RowBuffer>();
-        Result r = RecordIOFormatter.FormatSegment(segment, tempOut_row, resizer);
-        row = tempOut_row.get();
-        if (r != Result.SUCCESS) {
-            block.setAndGet(null);
-            return r;
+        Out<RowBuffer> rowBuffer = new Out<>();
+        Result result = RecordIOFormatter.FormatSegment(segment, rowBuffer);
+
+        if (result != Result.SUCCESS) {
+            buffer.set(null);
+            return result;
         }
 
-        block.setAndGet(resizer.getMemory().Slice(0, row.Length));
+        // TODO (DANOBLE) ensure the returned ByteBuf does not leak memory
+        buffer.setAndGet(rowBuffer.get().buffer());
         return Result.SUCCESS;
     }
 
     /**
-     * A function that produces RecordIO record bodies.
+     * A function that produces record bodies.
      * <p>
      * Record bodies are returned as memory blocks. It is expected that each block is a HybridRow, but any binary data
-     * is allowed.
-     *
-     * @param index The 0-based index of the record within the segment to be produced.
-     * @param buffer The byte sequence of the record body's row buffer.
+     * is allowed. The argument to {#apply} is the 0based index of the reord within the segment to be produced. The
+     * {#apply} method produces a {@link ReturnValue} of type {@link ByteBuf}}.
      */
     @FunctionalInterface
-    public interface ProduceFunc {
-        Result invoke(long index, Out<ReadOnlyMemory<Byte>> buffer);
+    public interface ProduceFunc extends Function<Long, ReturnValue<ByteBuf>> {
     }
 
     /**
@@ -363,8 +358,8 @@ public final class RecordIOStream {
      * <p>
      * Record bodies are returned as memory blocks. It is expected that each block is a HybridRow, but any binary data
      * is allowed. The argument to {#apply} is the 0-based index of the record within the segment to be produced. The
-     * {#apply} method produces a {@link ReturnValue} of type {@code byte[]}.
+     * {#apply} method produces a {@link CompletableFuture} of type {@link ReturnValue} of type {@code ByteBuf}.
      */
-    public interface ValueTask extends Function<Long, ReturnValue<byte[]>> {
+    public interface ProduceFuncAsync extends Function<Long, CompletableFuture<ReturnValue<ByteBuf>>> {
     }
 }

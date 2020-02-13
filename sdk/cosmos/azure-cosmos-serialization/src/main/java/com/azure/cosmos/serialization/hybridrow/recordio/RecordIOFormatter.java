@@ -17,14 +17,16 @@ import io.netty.buffer.ByteBuf;
 import javax.annotation.Nonnull;
 import java.util.zip.CRC32;
 
+import static com.azure.cosmos.base.Preconditions.checkNotNull;
+
 public final class RecordIOFormatter {
 
     public static final Layout RECORD_LAYOUT = SystemSchema.layoutResolver().resolve(SystemSchema.RECORD_SCHEMA_ID);
     public static final Layout SEGMENT_LAYOUT = SystemSchema.layoutResolver().resolve(SystemSchema.SEGMENT_SCHEMA_ID);
 
     public static Result FormatRecord(
-        @Nonnull ByteBuf body,
-        RowBuffer rowBuffer) {
+        @Nonnull final ByteBuf body,
+        @Nonnull final Out<RowBuffer> rowBuffer) {
 
         final int readableBytes = body.readableBytes();
         final CRC32 crc32 = new CRC32();
@@ -39,51 +41,46 @@ public final class RecordIOFormatter {
         }
 
         Record record = new Record(readableBytes, crc32.getValue());
-        final int estimatedSize = HybridRowHeader.BYTES + RecordIOFormatter.RECORD_LAYOUT.size() + readableBytes;
+        final int initialCapacity = HybridRowHeader.BYTES + RecordIOFormatter.RECORD_LAYOUT.size() + readableBytes;
 
         return RecordIOFormatter.FormatObject(
             body,
-            estimatedSize,
+            initialCapacity,
             RecordIOFormatter.RECORD_LAYOUT,
             record,
             RecordSerializer::write,
             rowBuffer);
     }
 
-    public static Result FormatSegment(Segment segment, RowBuffer rowBuffer) {
-        return FormatSegment(segment, rowBuffer);
-    }
+    public static Result FormatSegment(@Nonnull final Segment segment, @Nonnull final Out<RowBuffer> rowBuffer) {
 
-    public static Result FormatSegment(Segment segment, Out<RowBuffer> row, ISpanResizer<Byte> resizer) {
-        //C# TO JAVA CONVERTER WARNING: Unsigned integer types have no direct equivalent in Java:
-        //ORIGINAL LINE: resizer = resizer != null ? resizer : DefaultSpanResizer<byte>.Default;
-        resizer = resizer != null ? resizer : DefaultSpanResizer < Byte >.Default;
-        int estimatedSize =
-            HybridRowHeader.BYTES + RecordIOFormatter.SEGMENT_LAYOUT.getSize() + segment.comment() == null ? null :
-                segment.comment().length() != null ? segment.comment().length() : 0 + segment.sdl() == null ? null :
-                    segment.sdl().length() != null ? segment.sdl().length() : 0 + 20;
+        checkNotNull(segment, "expected non-null segment");
+        checkNotNull(rowBuffer, "expected non-null rowBuffer");
 
-        return RecordIOFormatter.FormatObject(resizer, estimatedSize, RecordIOFormatter.SEGMENT_LAYOUT,
-            segment.clone(), SegmentSerializer.Write, row.clone());
+        final String comment = segment.comment();
+        final String sdl = segment.sdl();
+
+        int initialCapacity = HybridRowHeader.BYTES + SEGMENT_LAYOUT.size()
+            + (comment == null ? 0 : comment.length())
+            + (sdl == null ? 0 : sdl.length())
+            + 20;
+
+        return FormatObject(SegmentSerializer::write, segment, SEGMENT_LAYOUT, new RowBuffer(initialCapacity));
     }
 
     private static <T> Result FormatObject(
-        RowWriter.WriterFunc<T> writer,
-        int initialCapacity,
-        Layout layout,
-        T object,
-        Out<RowBuffer> rowBuffer) {
+        @Nonnull final RowWriter.WriterFunc<T> writer,
+        @Nonnull final T object,
+        @Nonnull final Layout layout,
+        @Nonnull final RowBuffer rowBuffer) {
 
         Result result = RowWriter.writeBuffer(
-            rowBuffer.setAndGet(new RowBuffer(initialCapacity)).initLayout(
-                HybridRowVersion.V1,
-                layout,
-                SystemSchema.layoutResolver()),
-            object, writer);
+            rowBuffer.initLayout(HybridRowVersion.V1, layout, SystemSchema.layoutResolver()),
+            object,
+            writer);
 
         if (result != Result.SUCCESS) {
             // TODO (DANOBLE) ensure that ByteBuf does not leak memory
-            rowBuffer.set(null);
             return result;
         }
 
