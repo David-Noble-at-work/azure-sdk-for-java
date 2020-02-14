@@ -3,12 +3,12 @@
 
 package com.azure.cosmos.serialization.hybridrow;
 
-public final class ReturnValue<T> {
+public final class ResultValue<T> {
 
     private final Result result;
     private final T value;
 
-    public ReturnValue(Result result, T value) {
+    public ResultValue(Result result, T value) {
         this.result = result;
         this.value = value;
     }

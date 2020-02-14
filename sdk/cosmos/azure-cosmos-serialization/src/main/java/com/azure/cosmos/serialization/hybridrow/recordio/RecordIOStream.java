@@ -5,7 +5,7 @@ package com.azure.cosmos.serialization.hybridrow.recordio;
 
 import com.azure.cosmos.core.Out;
 import com.azure.cosmos.serialization.hybridrow.Result;
-import com.azure.cosmos.serialization.hybridrow.ReturnValue;
+import com.azure.cosmos.serialization.hybridrow.ResultValue;
 import com.azure.cosmos.serialization.hybridrow.RowBuffer;
 import com.azure.cosmos.serialization.hybridrow.io.Segment;
 import com.azure.cosmos.serialization.hybridrow.recordio.RecordIOParser.ProductionType;
@@ -41,10 +41,10 @@ public final class RecordIOStream {
      * result} otherwise.
      */
     public static @Nonnull
-    CompletableFuture<Result> ReadRecordIOAsync(
+    CompletableFuture<Result> readRecordIOAsync(
         @Nonnull InputStream inputStream,
         @Nonnull Function<ByteBuf, Result> visitRecord) {
-        return ReadRecordIOAsync(inputStream, visitRecord, null, null);
+        return readRecordIOAsync(inputStream, visitRecord, null, null);
     }
 
     /**
@@ -65,15 +65,15 @@ public final class RecordIOStream {
      * result} otherwise.
      */
     public static @Nonnull
-    CompletableFuture<Result> ReadRecordIOAsync(
+    CompletableFuture<Result> readRecordIOAsync(
         @Nonnull final InputStream inputStream,
         @Nonnull final Function<ByteBuf, Result> visitRecord,
         @Nullable final Function<ByteBuf, Result> visitSegment) {
-        return ReadRecordIOAsync(inputStream, visitRecord, visitSegment, null);
+        return readRecordIOAsync(inputStream, visitRecord, visitSegment, null);
     }
 
     public static @Nonnull
-    CompletableFuture<Result> ReadRecordIOAsync(
+    CompletableFuture<Result> readRecordIOAsync(
         @Nonnull InputStream inputStream,
         @Nonnull Function<ByteBuf, Result> visitRecord,
         @Nullable Function<ByteBuf, Result> visitSegment,
@@ -143,43 +143,17 @@ public final class RecordIOStream {
         return CompletableFuture.completedFuture(Result.SUCCESS);
     }
 
-    /**
-     * Writes a {@link Segment segment header} to an {@link OutputStream output stream}.
-     *
-     * @param outputStream The {@link OutputStream output stream}.
-     * @param segment The {@link Segment segment header} to write.
-     * @param produce A function that produces the bodies for the {@code segment}.
-     * <p>
-     * The {@code produce} function is called until either an error is encountered or the function produces an empty
-     * body. An empty body terminates the {@code segment}.
-     * <p>
-     * If the {@code produce} function returns an error then the sequence is aborted.
-     * <p>
-     * <h4>Note:</h4>
-     * The {@code buffer} provided should <em>not</em> be the same buffer used to process any rows as both blocks of
-     * memory are used concurrently.
-     *
-     * @return Success if the stream is written without error, the error code otherwise.
-     */
-    public static CompletableFuture<Result> WriteRecordIOAsync(
-        @Nonnull final OutputStream outputStream,
-        @Nonnull final Segment segment,
-        final ProduceFunc produce) {
-        return WriteRecordIOAsync(outputStream, segment, produce, Unpooled.buffer());
-    }
-
      /**
      * Writes a {@link Segment segment header} to an {@link OutputStream output stream}.
      *
      * @param outputStream The {@link OutputStream output stream}.
      * @param segment The {@link Segment segment header} to write.
-     * @param produce A function that produces the bodies for the {@code segment}.
-     * @param buffer
+     * @param producer A function that produces the bodies for the {@code segment}.
      * <p>
-     * The {@code produce} function is called until either an error is encountered or the function produces an empty
+     * The {@code producer} function is called until either an error is encountered or the function produces an empty
      * body. An empty body terminates the {@code segment}.
      * <p>
-     * If the {@code produce} function returns an error then the sequence is aborted.
+     * If the {@code producer} function returns an error then the sequence is aborted.
      * <p>
      * <h4>Note:</h4>
      * The {@code buffer} provided should <em>not</em> be the same buffer used to process any rows as both blocks of
@@ -187,19 +161,15 @@ public final class RecordIOStream {
      *
      * @return Success if the stream is written without error, the error code otherwise.
      */
-    public static CompletableFuture<Result> WriteRecordIOAsync(
+    public static CompletableFuture<Result> writeRecordIOAsync(
         @Nonnull final OutputStream outputStream,
         @Nonnull final Segment segment,
-        @Nonnull final ProduceFunc produce,
-        @Nonnull ByteBuf buffer) {
+        @Nonnull final Producer producer) {
 
-        return RecordIOStream.WriteRecordIOAsync(
-            outputStream, segment, index -> {
-                ReadOnlyMemory<Byte> buffer;
-                Out<ReadOnlyMemory<Byte>> tempOut_buffer = new Out<ReadOnlyMemory<Byte>>();
-                buffer = tempOut_buffer.get();
-                return new ValueTask<(Result, ReadOnlyMemory < Byte >) > ((r,buffer))
-            }, buffer);
+        checkNotNull(producer, "expected non-null producer");
+        AsyncProducer asyncProducer = (Long index) -> CompletableFuture.completedFuture(producer.apply(index));
+
+        return writeRecordIOAsync(outputStream, segment, asyncProducer);
     }
 
     /**
@@ -207,12 +177,12 @@ public final class RecordIOStream {
      *
      * @param outputStream The {@link OutputStream output stream}.
      * @param segment The {@link Segment segment header} to write.
-     * @param produce A function that produces the bodies for the {@code segment}.
+     * @param producer A function that produces the bodies for the {@code segment}.
      * <p>
-     * The {@code produce} function is called until either an error is encountered or the function produces an empty
+     * The {@code producer} function is called until either an error is encountered or the function produces an empty
      * body. An empty body terminates the {@code segment}.
      * <p>
-     * If the {@code produce} function returns an error then the sequence is aborted.
+     * If the {@code producer} function returns an error then the sequence is aborted.
      * <p>
      * <h4>Note:</h4>
      * The {@code buffer} provided should <em>not</em> be the same buffer used to process any rows as both blocks of
@@ -220,27 +190,16 @@ public final class RecordIOStream {
      *
      * @return Success if the stream is written without error, the error code otherwise.
      */
-    public static CompletableFuture<Result> WriteRecordIOAsync(
+    public static CompletableFuture<Result> writeRecordIOAsync(
         @Nonnull final OutputStream outputStream,
         @Nonnull final Segment segment,
-        @Nonnull final ProduceFuncAsync produce) {
-        return WriteRecordIOAsync(outputStream, segment, produce, Unpooled.buffer());
-    }
-
-    public static CompletableFuture<Result> WriteRecordIOAsync(
-        @Nonnull final OutputStream outputStream,
-        @Nonnull final Segment segment,
-        @Nonnull final ProduceFuncAsync produce,
-        @Nonnull final ByteBuf buffer) {
+        @Nonnull final AsyncProducer producer) {
 
         checkNotNull(outputStream, "expected non-null outputStream");
         checkNotNull(segment, "expected non-null segment");
-        checkNotNull(produce, "expected non-null produce");
-        checkNotNull(buffer, "expected non-null buffer");
+        checkNotNull(producer, "expected non-null producer");
 
-        // Write a RecordIO stream.
-
-        Out<ByteBuf> metadata;
+        Out<ByteBuf> metadata = new Out<>();
         Result result = RecordIOStream.FormatSegment(segment, metadata);
 
         if (result != Result.SUCCESS) {
@@ -255,44 +214,62 @@ public final class RecordIOStream {
             return future;
         }
 
-        CompletableFuture<Result> resultFuture = new CompletableFuture<>();
+        CompletableFuture<?> future = null;
         long index = 0;
+
+        // TODO (DANOBLE) figure out how to terminate this loop
+        //  Do we need another producer to tell us in advance when the body is empty?
 
         while (true) {
 
-            CompletableFuture<ReturnValue<ByteBuf>> rv = produce.apply(index++);
-            Result result = rv.getResult();
+            final long column = index;
 
-            if (rv.getResult() != Result.SUCCESS) {
-                return CompletableFuture.completedFuture(rv.getResult());
-            }
+            future = future == null
+                ? writeResultValue(outputStream, producer.apply(column))
+                : future.thenApplyAsync(
+                    r1 -> writeResultValue(outputStream, producer.apply(column)).thenApplyAsync((Result r2) -> r2));
 
-            if (body.IsEmpty) {
-                break;
-            }
+            index++;
+        }
 
-            Out<Memory<Byte>> tempOut_metadata2 = new Out<Memory<Byte>>();
-            //C# TO JAVA CONVERTER WARNING: Unsigned integer types have no direct equivalent in Java:
-            //ORIGINAL LINE: r = RecordIOStream.FormatRow(body, buffer, out metadata);
-            result = RecordIOStream.FormatRow(body, buffer, tempOut_metadata2);
-            metadata = tempOut_metadata2.get();
+        return (CompletableFuture<Result>) future;
+    }
+
+    private static CompletableFuture<Result> writeResultValue(
+        @Nonnull final OutputStream outputStream,
+        @Nonnull final CompletableFuture<ResultValue<ByteBuf>> future) {
+
+        return future.thenApplyAsync(resultValue -> {
+            Result result = resultValue.getResult();
+
             if (result != Result.SUCCESS) {
                 return result;
             }
 
-            // Metadata and Body memory blocks should not overlap since they are both in
-            // play at the same time. If they do this usually means that the same buffer
-            // was incorrectly used for both. Check the buffer parameter passed to
-            // WriteRecordIOAsync for metadata.
-            checkState(!metadata.Span.Overlaps(body.Span));
+            final ByteBuf body = resultValue.getValue();
 
-            // TODO: C# TO JAVA CONVERTER: There is no equivalent to 'await' in Java:
-            await stm.WriteAsync(metadata);
-            // TODO: C# TO JAVA CONVERTER: There is no equivalent to 'await' in Java:
-            await stm.WriteAsync(body);
-        }
+            if (body.readableBytes() == 0) {
+                return result;
+            }
 
-        return Result.SUCCESS;
+            final Out<ByteBuf> buffer = new Out<>();
+
+            result = FormatRow(body, buffer);
+
+            if (result != Result.SUCCESS) {
+                return result;
+            }
+
+            try {
+                buffer.get().readBytes(outputStream, buffer.get().readableBytes());
+                body.readBytes(outputStream, body.readableBytes());
+            } catch (IOException cause) {
+
+            }
+
+            return result;
+
+        });
     }
 
     /**
@@ -347,10 +324,10 @@ public final class RecordIOStream {
      * <p>
      * Record bodies are returned as memory blocks. It is expected that each block is a HybridRow, but any binary data
      * is allowed. The argument to {#apply} is the 0based index of the reord within the segment to be produced. The
-     * {#apply} method produces a {@link ReturnValue} of type {@link ByteBuf}}.
+     * {#apply} method produces a {@link ResultValue} of type {@link ByteBuf}}.
      */
     @FunctionalInterface
-    public interface ProduceFunc extends Function<Long, ReturnValue<ByteBuf>> {
+    public interface Producer extends Function<Long, ResultValue<ByteBuf>> {
     }
 
     /**
@@ -358,8 +335,8 @@ public final class RecordIOStream {
      * <p>
      * Record bodies are returned as memory blocks. It is expected that each block is a HybridRow, but any binary data
      * is allowed. The argument to {#apply} is the 0-based index of the record within the segment to be produced. The
-     * {#apply} method produces a {@link CompletableFuture} of type {@link ReturnValue} of type {@code ByteBuf}.
+     * {#apply} method produces a {@link CompletableFuture} of type {@link ResultValue} of type {@code ByteBuf}.
      */
-    public interface ProduceFuncAsync extends Function<Long, CompletableFuture<ReturnValue<ByteBuf>>> {
+    public interface AsyncProducer extends Function<Long, CompletableFuture<ResultValue<ByteBuf>>> {
     }
 }
