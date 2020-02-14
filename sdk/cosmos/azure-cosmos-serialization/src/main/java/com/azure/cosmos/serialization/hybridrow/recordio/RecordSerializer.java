@@ -78,8 +78,7 @@ public final class RecordSerializer {
     @Nonnull
     public static Result write(
         @Nonnull final RowWriter writer,
-        @Nullable final TypeArgument typeArg,
-        @Nonnull final Record record) {
+        @Nonnull final Record record, @Nullable final TypeArgument typeArgument) {
 
         checkNotNull(writer, "expected non-null writer");
         checkNotNull(record, "expected non-null record");

@@ -24,7 +24,7 @@ public final class RecordIOFormatter {
     public static final Layout RECORD_LAYOUT = SystemSchema.layoutResolver().resolve(SystemSchema.RECORD_SCHEMA_ID);
     public static final Layout SEGMENT_LAYOUT = SystemSchema.layoutResolver().resolve(SystemSchema.SEGMENT_SCHEMA_ID);
 
-    public static Result FormatRecord(
+    public static Result formatRecord(
         @Nonnull final ByteBuf body,
         @Nonnull final Out<RowBuffer> rowBuffer) {
 
@@ -40,19 +40,17 @@ public final class RecordIOFormatter {
             });
         }
 
-        Record record = new Record(readableBytes, crc32.getValue());
         final int initialCapacity = HybridRowHeader.BYTES + RecordIOFormatter.RECORD_LAYOUT.size() + readableBytes;
+        final Record record = new Record(readableBytes, crc32.getValue());
 
-        return RecordIOFormatter.FormatObject(
-            body,
-            initialCapacity,
-            RecordIOFormatter.RECORD_LAYOUT,
-            record,
+        return formatObject(
             RecordSerializer::write,
-            rowBuffer);
+            record,
+            RecordIOFormatter.RECORD_LAYOUT,
+            rowBuffer.setAndGet(new RowBuffer(initialCapacity)));
     }
 
-    public static Result FormatSegment(@Nonnull final Segment segment, @Nonnull final Out<RowBuffer> rowBuffer) {
+    public static Result formatSegment(@Nonnull final Segment segment, @Nonnull final Out<RowBuffer> rowBuffer) {
 
         checkNotNull(segment, "expected non-null segment");
         checkNotNull(rowBuffer, "expected non-null rowBuffer");
@@ -65,11 +63,15 @@ public final class RecordIOFormatter {
             + (sdl == null ? 0 : sdl.length())
             + 20;
 
-        return FormatObject(SegmentSerializer::write, segment, SEGMENT_LAYOUT, new RowBuffer(initialCapacity));
+        return formatObject(
+            SegmentSerializer::write,
+            segment,
+            SEGMENT_LAYOUT,
+            rowBuffer.setAndGet(new RowBuffer(initialCapacity)));
     }
 
-    private static <T> Result FormatObject(
-        @Nonnull final RowWriter.WriterFunc<T> writer,
+    private static <T> Result formatObject(
+        @Nonnull final RowWriter.Writer<T> writer,
         @Nonnull final T object,
         @Nonnull final Layout layout,
         @Nonnull final RowBuffer rowBuffer) {

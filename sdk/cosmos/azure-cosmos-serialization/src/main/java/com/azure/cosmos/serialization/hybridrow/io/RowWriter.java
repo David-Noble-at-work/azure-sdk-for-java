@@ -148,7 +148,7 @@ public final class RowWriter {
      * @return {@link Result#SUCCESS} if the write is successful, an error {@link Result} otherwise.
      */
     public static <TContext> Result writeBuffer(
-        @Nonnull final RowBuffer buffer, final @Nonnull TContext context, @Nonnull final WriterFunc<TContext> func) {
+        @Nonnull final RowBuffer buffer, final @Nonnull TContext context, @Nonnull final Writer<TContext> func) {
 
         checkNotNull(buffer, "expected non-null buffer");
         checkNotNull(context, "expected non-null context");
@@ -344,7 +344,7 @@ public final class RowWriter {
         @Nonnull final UtfAnyString path,
         @Nonnull final TypeArgument typeArg,
         @Nullable final TContext context,
-        @Nullable final WriterFunc<TContext> func) {
+        @Nullable final Writer<TContext> func) {
 
         checkNotNull(path, "expected non-null path");
         checkNotNull(typeArg, "expected non-null typeArg");
@@ -833,9 +833,9 @@ public final class RowWriter {
      * Functional interface for writing content to a {@link RowBuffer}.
      */
     @FunctionalInterface
-    public interface WriterFunc<TContext> {
+    public interface Writer<TContext> {
         /**
-         * Write content using the specified writer, type argument, and context.
+         * Write content using the specified writer, context, and type argument.
          *
          * @param writer writes content.
          * @param context provides context for the write operation.

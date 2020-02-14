@@ -283,7 +283,7 @@ public final class RecordIOStream {
     private static Result FormatRow(ByteBuf body, Out<ByteBuf> buffer) {
 
         Out<RowBuffer> rowBuffer = new Out<>();
-        Result result = RecordIOFormatter.FormatRecord(body, rowBuffer);
+        Result result = RecordIOFormatter.formatRecord(body, rowBuffer);
 
         if (result != Result.SUCCESS) {
             buffer.set(null);
@@ -307,7 +307,7 @@ public final class RecordIOStream {
         @Nonnull final Out<ByteBuf> buffer) {
 
         Out<RowBuffer> rowBuffer = new Out<>();
-        Result result = RecordIOFormatter.FormatSegment(segment, rowBuffer);
+        Result result = RecordIOFormatter.formatSegment(segment, rowBuffer);
 
         if (result != Result.SUCCESS) {
             buffer.set(null);

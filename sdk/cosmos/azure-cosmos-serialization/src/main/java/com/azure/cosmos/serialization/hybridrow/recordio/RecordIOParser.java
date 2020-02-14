@@ -21,13 +21,14 @@ import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 
 import javax.annotation.Nonnull;
 
+import static com.azure.cosmos.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 
 public final class RecordIOParser {
 
     private Record record;
     private Segment segment;
-    private State state = State.values()[0];
+    private State state = State.START;
 
     /**
      * Processes one buffers worth of data possibly advancing the parser state
@@ -53,6 +54,12 @@ public final class RecordIOParser {
         @Nonnull final Out<Integer> need,
         @Nonnull final Out<Integer> consumed) {
 
+        checkNotNull(buffer, "expected non-null buffer");
+        checkNotNull(type, "expected non-null type");
+        checkNotNull(record, "expected non-null record");
+        checkNotNull(need, "expected non-null need");
+        checkNotNull(consumed, "expected non-null consumed");
+
         Result result = Result.FAILURE;
         type.set(ProductionType.NONE);
         record.set(null);
@@ -61,7 +68,7 @@ public final class RecordIOParser {
 
         switch (this.state) {
 
-            case STATE:
+            case START:
                 this.state = State.NEED_SEGMENT_LENGTH;
                 // TODO: C# TO JAVA CONVERTER: There is no 'goto' in Java:
                 //  goto case State.NeedSegmentLength;
@@ -77,7 +84,7 @@ public final class RecordIOParser {
                 }
 
                 ByteBuf span = buffer.slice(buffer.readerIndex(), minimalSegmentRowSize);
-                RowBuffer row = new RowBuffer(span, HybridRowVersion.V1, SystemSchema.layoutResolver);
+                RowBuffer row = new RowBuffer(span, HybridRowVersion.V1, SystemSchema.layoutResolver());
                 Reference<RowBuffer> tempReference_row =
                     new Reference<RowBuffer>(row);
                 RowReader reader = new RowReader(tempReference_row);
@@ -299,20 +306,13 @@ public final class RecordIOParser {
      * Note: numerical ordering of these states matters.
      */
     private enum State {
-        STATE(
-            (byte) 0, "Start: no buffers have yet been provided to the parser"),
-        ERROR(
-            (byte) 1, "Unrecoverable parse error encountered"),
-        NEED_SEGMENT_LENGTH(
-            (byte) 2, "Parsing segment header length"),
-        NEED_SEGMENT(
-            (byte) 3, "Parsing segment header"),
-        NEED_HEADER(
-            (byte) 4, "Parsing HybridRow header"),
-        NEED_RECORD(
-            (byte) 5, "Parsing record header"),
-        NEED_ROW(
-            (byte) 6, "Parsing row body");
+        START((byte) 0, "Start: no buffers have yet been provided to the parser"),
+        ERROR((byte) 1, "Unrecoverable parse error encountered"),
+        NEED_SEGMENT_LENGTH((byte) 2, "Parsing segment header length"),
+        NEED_SEGMENT((byte) 3, "Parsing segment header"),
+        NEED_HEADER((byte) 4, "Parsing HybridRow header"),
+        NEED_RECORD((byte) 5, "Parsing record header"),
+        NEED_ROW((byte) 6, "Parsing row body");
 
         public static final int BYTES = Byte.SIZE;
 
