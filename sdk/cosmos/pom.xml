@@ -13,7 +13,7 @@ Licensed under the MIT License.
 
   <groupId>com.azure</groupId>
   <artifactId>azure-cosmos-parent</artifactId>
-  <version>4.0.0-SNAPSHOT</version>
+  <version>4.0.0-preview.2</version>
   <packaging>pom</packaging>
 
   <name>Microsoft Azure Cosmos DB SQL API</name>
@@ -50,7 +50,8 @@ Licensed under the MIT License.
     <reactor-core.version>3.3.2.RELEASE</reactor-core.version>
     <netty.version>4.1.45.Final</netty.version>
     <reactor-netty.version>0.9.4.RELEASE</reactor-netty.version>
-    <azure.core.version>1.3.0-beta.1.dev.20200120.1</azure.core.version>
+    <azure.core.version>1.3.0-beta.1.dev.20200207.1</azure.core.version>
+    <jackson-version>2.10.1</jackson-version>
     <test.groups>unit</test.groups>
     <collectedArtifactsForReleaseLocation>${project.basedir}/target/collectedArtifactsForRelease</collectedArtifactsForReleaseLocation>
     <javadoc.opts/>
@@ -58,6 +59,36 @@ Licensed under the MIT License.
 
   <dependencyManagement>
     <dependencies>
+
+      <dependency>
+        <groupId>com.fasterxml.jackson.core</groupId>
+        <artifactId>jackson-core</artifactId>
+        <version>${jackson-version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>com.fasterxml.jackson.core</groupId>
+        <artifactId>jackson-databind</artifactId>
+        <version>${jackson-version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>com.fasterxml.jackson.core</groupId>
+        <artifactId>jackson-annotations</artifactId>
+        <version>${jackson-version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>com.fasterxml.jackson.module</groupId>
+        <artifactId>jackson-module-afterburner</artifactId>
+        <version>${jackson-version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>com.fasterxml.jackson.datatype</groupId>
+        <artifactId>jackson-datatype-jsr310</artifactId>
+        <version>${jackson-version}</version>
+      </dependency>
 
       <dependency>
         <groupId>io.netty</groupId>
@@ -99,7 +130,7 @@ Licensed under the MIT License.
       <dependency>
         <groupId>com.azure</groupId>
         <artifactId>azure-cosmos</artifactId>
-        <version>4.0.0-SNAPSHOT</version>
+        <version>4.0.0-preview.2</version>
       </dependency>
 
       <dependency>
@@ -146,6 +177,14 @@ Licensed under the MIT License.
           </exclusion>
           <exclusion>
         <groupId>io.netty</groupId>
+            <artifactId>*</artifactId>
+          </exclusion>
+          <exclusion>
+              <groupId>com.fasterxml.jackson.core</groupId>
+              <artifactId>*</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>com.fasterxml.jackson.dataformat</groupId>
             <artifactId>*</artifactId>
           </exclusion>
         </exclusions>

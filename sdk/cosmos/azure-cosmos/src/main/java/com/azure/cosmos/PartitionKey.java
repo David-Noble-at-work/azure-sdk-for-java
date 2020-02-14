@@ -5,7 +5,6 @@ package com.azure.cosmos;
 
 import com.azure.cosmos.implementation.Utils;
 import com.azure.cosmos.implementation.routing.PartitionKeyInternal;
-import com.azure.cosmos.implementation.routing.PartitionKeyInternalHelper;
 
 /**
  * Represents a partition key value in the Azure Cosmos DB database service. A
@@ -13,8 +12,8 @@ import com.azure.cosmos.implementation.routing.PartitionKeyInternalHelper;
  */
 public class PartitionKey {
 
-    public static final PartitionKey NONE = new PartitionKey(PartitionKeyInternal.None);
     private final PartitionKeyInternal internalPartitionKey;
+    private Object keyObject;
 
     PartitionKey(PartitionKeyInternal partitionKeyInternal) {
         this.internalPartitionKey = partitionKeyInternal;
@@ -27,7 +26,43 @@ public class PartitionKey {
      */
     @SuppressWarnings("serial")
     public PartitionKey(final Object key) {
+        this.keyObject = key;
         this.internalPartitionKey = PartitionKeyInternal.fromObjectArray(new Object[] {key}, true);
+    }
+
+    /**
+     * Gets the object used to create partition key
+     * @return the partition key object
+     */
+    Object getKeyObject(){
+        return keyObject;
+    }
+    
+    /**
+     * Create a new instance of the PartitionKey object from a serialized JSON
+     * partition key.
+     *
+     * @param jsonString the JSON string representation of this PartitionKey object.
+     * @return the PartitionKey instance.
+     */
+    static PartitionKey fromJsonString(String jsonString) {
+        return new PartitionKey(PartitionKeyInternal.fromJsonString(jsonString));
+    }
+
+    public static final PartitionKey NONE = new PartitionKey(PartitionKeyInternal.None);
+
+    /**
+     * Serialize the PartitionKey object to a JSON string.
+     *
+     * @return the string representation of this PartitionKey object.
+     */
+    public String toString() {
+        return this.internalPartitionKey.toJson();
+    }
+
+    // TODO: make private
+    PartitionKeyInternal getInternalPartitionKey() {
+        return internalPartitionKey;
     }
 
     /**
@@ -51,38 +86,9 @@ public class PartitionKey {
         return otherKey != null && this.internalPartitionKey.equals(otherKey.internalPartitionKey);
     }
 
-    public String getEffectivePartitionKeyString(PartitionKeyDefinition definition) {
-        return PartitionKeyInternalHelper.getEffectivePartitionKeyString(this.internalPartitionKey, definition);
-    }
-
-    /**
-     * Create a new instance of the PartitionKey object from a serialized JSON
-     * partition key.
-     *
-     * @param jsonString the JSON string representation of this PartitionKey object.
-     * @return the PartitionKey instance.
-     */
-    public static PartitionKey fromJsonString(String jsonString) {
-        return new PartitionKey(PartitionKeyInternal.fromJsonString(jsonString));
-    }
-
     @Override
     public int hashCode() {
         return super.hashCode();
-    }
-
-    /**
-     * Serialize the PartitionKey object to a JSON string.
-     *
-     * @return the string representation of this PartitionKey object.
-     */
-    public String toString() {
-        return this.internalPartitionKey.toJson();
-    }
-
-    // TODO: make private
-    PartitionKeyInternal getInternalPartitionKey() {
-        return internalPartitionKey;
     }
 
 }

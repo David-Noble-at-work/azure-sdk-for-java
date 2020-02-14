@@ -9,9 +9,11 @@ import com.azure.cosmos.CosmosKeyCredential;
 import com.azure.cosmos.DatabaseAccount;
 import com.azure.cosmos.FeedOptions;
 import com.azure.cosmos.FeedResponse;
+import com.azure.cosmos.PartitionKey;
 import com.azure.cosmos.SqlQuerySpec;
 import com.azure.cosmos.TokenResolver;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.tuple.Pair;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -76,6 +78,7 @@ public interface AsyncDocumentClient {
         URI serviceEndpoint;
         TokenResolver tokenResolver;
         CosmosKeyCredential cosmosKeyCredential;
+        boolean sessionCapturingOverride;
 
         public Builder withServiceEndpoint(String serviceEndpoint) {
             try {
@@ -134,6 +137,11 @@ public interface AsyncDocumentClient {
             return this;
         }
 
+        public Builder withSessionCapturingOverride(boolean sessionCapturingOverride) {
+            this.sessionCapturingOverride = sessionCapturingOverride;
+            return this;
+        }
+
         public Builder withConnectionPolicy(ConnectionPolicy connectionPolicy) {
             this.connectionPolicy = connectionPolicy;
             return this;
@@ -182,7 +190,8 @@ public interface AsyncDocumentClient {
                                                                    desiredConsistencyLevel,
                                                                    configs,
                                                                    tokenResolver,
-                                                                    cosmosKeyCredential);
+                                                                   cosmosKeyCredential,
+                                                                   sessionCapturingOverride);
             client.init();
             return client;
         }
@@ -573,7 +582,7 @@ public interface AsyncDocumentClient {
      * @param options        the feed options.
      * @return a {@link Flux} containing one or several feed response pages of the obtained documents or an error.
      */
-    <T> Flux<FeedResponse<T>> queryDocuments(String collectionLink, SqlQuerySpec querySpec, FeedOptions options);
+    Flux<FeedResponse<Document>> queryDocuments(String collectionLink, SqlQuerySpec querySpec, FeedOptions options);
 
     /**
      * Query for documents change feed in a document collection.
@@ -1314,6 +1323,20 @@ public interface AsyncDocumentClient {
      * @return a {@link Mono} containing the single resource response with the database account or an error.
      */
     Mono<DatabaseAccount> getDatabaseAccount();
+
+    /**
+     * Reads many documents at once
+     * @param itemKeyList document id and partition key pair that needs to be read
+     * @param collectionLink link for the documentcollection/container to be queried
+     * @param options the feed options
+     * @param klass class type
+     * @return a Mono with feed response of documents
+     */
+    <T> Mono<FeedResponse<T>> readMany(
+        List<Pair<String, PartitionKey>> itemKeyList,
+        String collectionLink,
+        FeedOptions options,
+        Class<T> klass);
 
     /**
      * Close this {@link AsyncDocumentClient} instance and cleans up the resources.

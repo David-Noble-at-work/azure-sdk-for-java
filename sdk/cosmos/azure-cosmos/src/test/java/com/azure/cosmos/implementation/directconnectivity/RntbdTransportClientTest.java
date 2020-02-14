@@ -6,6 +6,7 @@ package com.azure.cosmos.implementation.directconnectivity;
 import com.azure.cosmos.BadRequestException;
 import com.azure.cosmos.ConflictException;
 import com.azure.cosmos.CosmosClientException;
+import com.azure.cosmos.CosmosKeyCredential;
 import com.azure.cosmos.ForbiddenException;
 import com.azure.cosmos.GoneException;
 import com.azure.cosmos.InternalServerErrorException;
@@ -20,19 +21,24 @@ import com.azure.cosmos.PreconditionFailedException;
 import com.azure.cosmos.RequestEntityTooLargeException;
 import com.azure.cosmos.RequestRateTooLargeException;
 import com.azure.cosmos.RequestTimeoutException;
+import com.azure.cosmos.RequestVerb;
 import com.azure.cosmos.RetryWithException;
 import com.azure.cosmos.ServiceUnavailableException;
 import com.azure.cosmos.UnauthorizedException;
+import com.azure.cosmos.implementation.BaseAuthorizationTokenProvider;
 import com.azure.cosmos.implementation.FailureValidator;
 import com.azure.cosmos.implementation.OperationType;
+import com.azure.cosmos.implementation.Paths;
 import com.azure.cosmos.implementation.ResourceType;
 import com.azure.cosmos.implementation.RxDocumentServiceRequest;
 import com.azure.cosmos.implementation.UserAgentContainer;
+import com.azure.cosmos.implementation.Utils;
 import com.azure.cosmos.implementation.directconnectivity.rntbd.RntbdClientChannelHealthChecker;
 import com.azure.cosmos.implementation.directconnectivity.rntbd.RntbdContext;
 import com.azure.cosmos.implementation.directconnectivity.rntbd.RntbdContextNegotiator;
 import com.azure.cosmos.implementation.directconnectivity.rntbd.RntbdContextRequest;
 import com.azure.cosmos.implementation.directconnectivity.rntbd.RntbdEndpoint;
+import com.azure.cosmos.implementation.directconnectivity.rntbd.RntbdRequest;
 import com.azure.cosmos.implementation.directconnectivity.rntbd.RntbdRequestArgs;
 import com.azure.cosmos.implementation.directconnectivity.rntbd.RntbdRequestEncoder;
 import com.azure.cosmos.implementation.directconnectivity.rntbd.RntbdRequestManager;
@@ -41,461 +47,616 @@ import com.azure.cosmos.implementation.directconnectivity.rntbd.RntbdRequestTime
 import com.azure.cosmos.implementation.directconnectivity.rntbd.RntbdResponse;
 import com.azure.cosmos.implementation.directconnectivity.rntbd.RntbdResponseDecoder;
 import com.azure.cosmos.implementation.directconnectivity.rntbd.RntbdUUID;
+import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableMap;
 import io.micrometer.core.instrument.Tag;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
-import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.embedded.EmbeddedChannel;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.netty.handler.logging.LogLevel;
 import io.netty.handler.ssl.SslContext;
 import io.netty.handler.ssl.SslContextBuilder;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import io.reactivex.subscribers.TestSubscriber;
+import org.apache.commons.lang3.StringUtils;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 import reactor.core.publisher.Mono;
-import reactor.test.StepVerifier;
 
+import java.net.ConnectException;
 import java.net.SocketAddress;
 import java.net.URI;
 import java.time.Duration;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicReference;
+import java.util.Arrays;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
 
 import static com.azure.cosmos.implementation.HttpConstants.HttpHeaders;
+import static com.azure.cosmos.implementation.HttpConstants.HttpMethods;
 import static com.azure.cosmos.implementation.HttpConstants.SubStatusCodes;
-import static com.google.common.base.Strings.lenientFormat;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertTrue;
+import static org.testng.Assert.fail;
 
 public final class RntbdTransportClientTest {
 
-    private static final int LSN = 5;
-    private static final ByteBuf NO_CONTENT = Unpooled.EMPTY_BUFFER;
-    private static final String PARTITION_KEY_RANGE_ID = "3";
-    private static final Uri PHYSICAL_ADDRESS = new Uri("rntbd://host:10251/replica-path/");
-    private static final Duration REQUEST_TIMEOUT = Duration.ofSeconds(5);
+    private static final int lsn = 5;
+    private static final ByteBuf noContent = Unpooled.wrappedBuffer(new byte[0]);
+    private static final String partitionKeyRangeId = "3";
+    private static final Uri physicalAddress = new Uri("rntbd://host:10251/replica-path/");
+    private static final Duration requestTimeout = Duration.ofSeconds(1000);
 
-    private static final Logger logger = LoggerFactory.getLogger(RntbdTransportClientTest.class);
-
-    @DataProvider(name = "fromMockedNetworkFailureToExpectedCosmosClientException")
-    public Object[][] fromMockedNetworkFailureToExpectedCosmosClientException() {
+    @DataProvider(name = "fromMockedNetworkFailureToExpectedDocumentClientException")
+    public Object[][] fromMockedNetworkFailureToExpectedDocumentClientException() {
 
         return new Object[][] {
         };
     }
 
-    @DataProvider(name = "fromMockedRntbdResponseToExpectedCosmosClientException")
-    public Object[][] fromMockedRntbdResponseToExpectedCosmosClientException() {
+    @DataProvider(name = "fromMockedRntbdResponseToExpectedDocumentClientException")
+    public Object[][] fromMockedRntbdResponseToExpectedDocumentClientException() {
 
         return new Object[][] {
             {
                 // 1 BadRequestException
 
-                BadRequestException.class, RxDocumentServiceRequest.create(
-                OperationType.Read,
-                ResourceType.DocumentCollection,
-                "/dbs/db/colls/col",
-                ImmutableMap.of(
-                    HttpHeaders.LSN, Integer.toString(LSN),
-                    HttpHeaders.PARTITION_KEY_RANGE_ID, PARTITION_KEY_RANGE_ID
-                )),
+                FailureValidator.builder()
+                    .instanceOf(BadRequestException.class)
+                    .lsn(lsn)
+                    .partitionKeyRangeId(partitionKeyRangeId)
+                    .resourceAddress(null),
+                RxDocumentServiceRequest.create(
+                    OperationType.Read,
+                    ResourceType.DocumentCollection,
+                    "/dbs/db/colls/col",
+                    ImmutableMap.of(
+                        HttpHeaders.LSN, Integer.toString(lsn),
+                        HttpHeaders.PARTITION_KEY_RANGE_ID, partitionKeyRangeId
+                    )),
                 new RntbdResponse(
                     RntbdUUID.EMPTY,
                     400,
                     ImmutableMap.of(
-                        HttpHeaders.LSN, Integer.toString(LSN),
-                        HttpHeaders.PARTITION_KEY_RANGE_ID, PARTITION_KEY_RANGE_ID,
+                        HttpHeaders.LSN, Integer.toString(lsn),
+                        HttpHeaders.PARTITION_KEY_RANGE_ID, partitionKeyRangeId,
                         HttpHeaders.TRANSPORT_REQUEST_ID, Long.toString(1L)
                     ),
-                    NO_CONTENT)
+                    noContent)
             },
             {
                 // 2 UnauthorizedException
 
-                UnauthorizedException.class, RxDocumentServiceRequest.create(
-                OperationType.Read,
-                ResourceType.DocumentCollection,
-                "/dbs/db/colls/col",
-                ImmutableMap.of(
-                    HttpHeaders.LSN, Integer.toString(LSN),
-                    HttpHeaders.PARTITION_KEY_RANGE_ID, PARTITION_KEY_RANGE_ID
-                )),
+                FailureValidator.builder()
+                    .instanceOf(UnauthorizedException.class)
+                    .lsn(lsn)
+                    .partitionKeyRangeId(partitionKeyRangeId)
+                    .resourceAddress(null),
+                RxDocumentServiceRequest.create(
+                    OperationType.Read,
+                    ResourceType.DocumentCollection,
+                    "/dbs/db/colls/col",
+                    ImmutableMap.of(
+                        HttpHeaders.LSN, Integer.toString(lsn),
+                        HttpHeaders.PARTITION_KEY_RANGE_ID, partitionKeyRangeId
+                    )),
                 new RntbdResponse(
                     RntbdUUID.EMPTY,
                     401,
                     ImmutableMap.of(
-                        HttpHeaders.LSN, Integer.toString(LSN),
-                        HttpHeaders.PARTITION_KEY_RANGE_ID, PARTITION_KEY_RANGE_ID,
+                        HttpHeaders.LSN, Integer.toString(lsn),
+                        HttpHeaders.PARTITION_KEY_RANGE_ID, partitionKeyRangeId,
                         HttpHeaders.TRANSPORT_REQUEST_ID, Long.toString(2L)
                     ),
-                    NO_CONTENT)
+                    noContent)
             },
             {
                 // 3 ForbiddenException
 
-                ForbiddenException.class, RxDocumentServiceRequest.create(
-                OperationType.Read,
-                ResourceType.DocumentCollection,
-                "/dbs/db/colls/col",
-                ImmutableMap.of(
-                    HttpHeaders.LSN, Integer.toString(LSN),
-                    HttpHeaders.PARTITION_KEY_RANGE_ID, PARTITION_KEY_RANGE_ID
-                )),
+                FailureValidator.builder()
+                    .instanceOf(ForbiddenException.class)
+                    .lsn(lsn)
+                    .partitionKeyRangeId(partitionKeyRangeId)
+                    .resourceAddress(null),
+                RxDocumentServiceRequest.create(
+                    OperationType.Read,
+                    ResourceType.DocumentCollection,
+                    "/dbs/db/colls/col",
+                    ImmutableMap.of(
+                        HttpHeaders.LSN, Integer.toString(lsn),
+                        HttpHeaders.PARTITION_KEY_RANGE_ID, partitionKeyRangeId
+                    )),
                 new RntbdResponse(
                     RntbdUUID.EMPTY,
                     403,
                     ImmutableMap.of(
-                        HttpHeaders.LSN, Integer.toString(LSN),
-                        HttpHeaders.PARTITION_KEY_RANGE_ID, PARTITION_KEY_RANGE_ID,
+                        HttpHeaders.LSN, Integer.toString(lsn),
+                        HttpHeaders.PARTITION_KEY_RANGE_ID, partitionKeyRangeId,
                         HttpHeaders.TRANSPORT_REQUEST_ID, Long.toString(3L)
                     ),
-                    NO_CONTENT)
+                    noContent)
             },
             {
                 // 4 NotFoundException
 
-                NotFoundException.class, RxDocumentServiceRequest.create(
-                OperationType.Read,
-                ResourceType.DocumentCollection,
-                "/dbs/db/colls/col",
-                ImmutableMap.of(
-                    HttpHeaders.LSN, Integer.toString(LSN),
-                    HttpHeaders.PARTITION_KEY_RANGE_ID, PARTITION_KEY_RANGE_ID
-                )),
+                FailureValidator.builder()
+                    .instanceOf(NotFoundException.class)
+                    .lsn(lsn)
+                    .partitionKeyRangeId(partitionKeyRangeId)
+                    .resourceAddress(null),
+                RxDocumentServiceRequest.create(
+                    OperationType.Read,
+                    ResourceType.DocumentCollection,
+                    "/dbs/db/colls/col",
+                    ImmutableMap.of(
+                        HttpHeaders.LSN, Integer.toString(lsn),
+                        HttpHeaders.PARTITION_KEY_RANGE_ID, partitionKeyRangeId
+                    )),
                 new RntbdResponse(
                     RntbdUUID.EMPTY,
                     404,
                     ImmutableMap.of(
-                        HttpHeaders.LSN, Integer.toString(LSN),
-                        HttpHeaders.PARTITION_KEY_RANGE_ID, PARTITION_KEY_RANGE_ID,
+                        HttpHeaders.LSN, Integer.toString(lsn),
+                        HttpHeaders.PARTITION_KEY_RANGE_ID, partitionKeyRangeId,
                         HttpHeaders.TRANSPORT_REQUEST_ID, Long.toString(4L)
                     ),
-                    NO_CONTENT)
-            }, {
-            // 5 MethodNotAllowedException
+                    noContent)
+            },
+            {
+                // 5 MethodNotAllowedException
 
-            MethodNotAllowedException.class, RxDocumentServiceRequest.create(
-            OperationType.Read,
-            ResourceType.DocumentCollection,
-            "/dbs/db/colls/col",
-            ImmutableMap.of(
-                HttpHeaders.LSN, Integer.toString(LSN),
-                HttpHeaders.PARTITION_KEY_RANGE_ID, PARTITION_KEY_RANGE_ID
-            )),
-            new RntbdResponse(
-                RntbdUUID.EMPTY,
-                405,
-                ImmutableMap.of(
-                    HttpHeaders.LSN, Integer.toString(LSN),
-                    HttpHeaders.PARTITION_KEY_RANGE_ID, PARTITION_KEY_RANGE_ID,
-                    HttpHeaders.TRANSPORT_REQUEST_ID, Long.toString(5L)
-                ),
-                NO_CONTENT)
+                FailureValidator.builder()
+                    .instanceOf(MethodNotAllowedException.class)
+                    .lsn(lsn)
+                    .partitionKeyRangeId(partitionKeyRangeId)
+                    .resourceAddress(null),
+                RxDocumentServiceRequest.create(
+                    OperationType.Read,
+                    ResourceType.DocumentCollection,
+                    "/dbs/db/colls/col",
+                    ImmutableMap.of(
+                        HttpHeaders.LSN, Integer.toString(lsn),
+                        HttpHeaders.PARTITION_KEY_RANGE_ID, partitionKeyRangeId
+                    )),
+                new RntbdResponse(
+                    RntbdUUID.EMPTY,
+                    405,
+                    ImmutableMap.of(
+                        HttpHeaders.LSN, Integer.toString(lsn),
+                        HttpHeaders.PARTITION_KEY_RANGE_ID, partitionKeyRangeId,
+                        HttpHeaders.TRANSPORT_REQUEST_ID, Long.toString(5L)
+                    ),
+                    noContent)
             },
             {
                 // 6 RequestTimeoutException
-                RequestTimeoutException.class, RxDocumentServiceRequest.create(
-                OperationType.Read,
-                ResourceType.DocumentCollection,
-                "/dbs/db/colls/col",
-                ImmutableMap.of(
-                    HttpHeaders.LSN, Integer.toString(LSN),
-                    HttpHeaders.PARTITION_KEY_RANGE_ID, PARTITION_KEY_RANGE_ID
-                )),
+
+                FailureValidator.builder()
+                    .instanceOf(RequestTimeoutException.class)
+                    .lsn(lsn)
+                    .partitionKeyRangeId(partitionKeyRangeId)
+                    .resourceAddress(null),
+                RxDocumentServiceRequest.create(
+                    OperationType.Read,
+                    ResourceType.DocumentCollection,
+                    "/dbs/db/colls/col",
+                    ImmutableMap.of(
+                        HttpHeaders.LSN, Integer.toString(lsn),
+                        HttpHeaders.PARTITION_KEY_RANGE_ID, partitionKeyRangeId
+                    )),
                 new RntbdResponse(
                     RntbdUUID.EMPTY,
                     408,
                     ImmutableMap.of(
-                        HttpHeaders.LSN, Integer.toString(LSN),
-                        HttpHeaders.PARTITION_KEY_RANGE_ID, PARTITION_KEY_RANGE_ID,
+                        HttpHeaders.LSN, Integer.toString(lsn),
+                        HttpHeaders.PARTITION_KEY_RANGE_ID, partitionKeyRangeId,
                         HttpHeaders.TRANSPORT_REQUEST_ID, Long.toString(6L)
                     ),
-                    NO_CONTENT)
+                    noContent)
             },
             {
                 // 7 ConflictException
-                ConflictException.class, RxDocumentServiceRequest.create(
-                OperationType.Read,
-                ResourceType.DocumentCollection,
-                "/dbs/db/colls/col",
-                ImmutableMap.of(
-                    HttpHeaders.LSN, Integer.toString(LSN),
-                    HttpHeaders.PARTITION_KEY_RANGE_ID, PARTITION_KEY_RANGE_ID
-                )),
+
+                FailureValidator.builder()
+                    .instanceOf(ConflictException.class)
+                    .lsn(lsn)
+                    .partitionKeyRangeId(partitionKeyRangeId)
+                    .resourceAddress(null),
+                RxDocumentServiceRequest.create(
+                    OperationType.Read,
+                    ResourceType.DocumentCollection,
+                    "/dbs/db/colls/col",
+                    ImmutableMap.of(
+                        HttpHeaders.LSN, Integer.toString(lsn),
+                        HttpHeaders.PARTITION_KEY_RANGE_ID, partitionKeyRangeId
+                    )),
                 new RntbdResponse(
                     RntbdUUID.EMPTY,
                     409,
                     ImmutableMap.of(
-                        HttpHeaders.LSN, Integer.toString(LSN),
-                        HttpHeaders.PARTITION_KEY_RANGE_ID, PARTITION_KEY_RANGE_ID,
+                        HttpHeaders.LSN, Integer.toString(lsn),
+                        HttpHeaders.PARTITION_KEY_RANGE_ID, partitionKeyRangeId,
                         HttpHeaders.TRANSPORT_REQUEST_ID, Long.toString(7L)
                     ),
-                    NO_CONTENT)
+                    noContent)
             },
             {
                 // 8 InvalidPartitionException
 
-                InvalidPartitionException.class, RxDocumentServiceRequest.create(
-                OperationType.Read,
-                ResourceType.DocumentCollection,
-                "/dbs/db/colls/col",
-                ImmutableMap.of(
-                    HttpHeaders.LSN, Integer.toString(LSN),
-                    HttpHeaders.PARTITION_KEY_RANGE_ID, PARTITION_KEY_RANGE_ID
-                )),
+                FailureValidator.builder()
+                    .instanceOf(InvalidPartitionException.class)
+                    .lsn(lsn)
+                    .partitionKeyRangeId(partitionKeyRangeId)
+                    .resourceAddress(null),
+                RxDocumentServiceRequest.create(
+                    OperationType.Read,
+                    ResourceType.DocumentCollection,
+                    "/dbs/db/colls/col",
+                    ImmutableMap.of(
+                        HttpHeaders.LSN, Integer.toString(lsn),
+                        HttpHeaders.PARTITION_KEY_RANGE_ID, partitionKeyRangeId
+                    )),
                 new RntbdResponse(
                     RntbdUUID.EMPTY,
                     410,
                     ImmutableMap.of(
-                        HttpHeaders.LSN, Integer.toString(LSN),
-                        HttpHeaders.PARTITION_KEY_RANGE_ID, PARTITION_KEY_RANGE_ID,
+                        HttpHeaders.LSN, Integer.toString(lsn),
+                        HttpHeaders.PARTITION_KEY_RANGE_ID, partitionKeyRangeId,
                         HttpHeaders.SUB_STATUS, Integer.toString(SubStatusCodes.NAME_CACHE_IS_STALE),
                         HttpHeaders.TRANSPORT_REQUEST_ID, Long.toString(8L)
                     ),
-                    NO_CONTENT)
+                    noContent)
             },
             {
                 // 9 PartitionKeyRangeGoneException
 
-                PartitionKeyRangeGoneException.class, RxDocumentServiceRequest.create(
-                OperationType.Read,
-                ResourceType.DocumentCollection,
-                "/dbs/db/colls/col",
-                ImmutableMap.of(
-                    HttpHeaders.LSN, Integer.toString(LSN),
-                    HttpHeaders.PARTITION_KEY_RANGE_ID, PARTITION_KEY_RANGE_ID
-                )),
+                FailureValidator.builder()
+                    .instanceOf(PartitionKeyRangeGoneException.class)
+                    .lsn(lsn)
+                    .partitionKeyRangeId(partitionKeyRangeId)
+                    .resourceAddress(null),
+                RxDocumentServiceRequest.create(
+                    OperationType.Read,
+                    ResourceType.DocumentCollection,
+                    "/dbs/db/colls/col",
+                    ImmutableMap.of(
+                        HttpHeaders.LSN, Integer.toString(lsn),
+                        HttpHeaders.PARTITION_KEY_RANGE_ID, partitionKeyRangeId
+                    )),
                 new RntbdResponse(
                     RntbdUUID.EMPTY,
                     410,
                     ImmutableMap.of(
-                        HttpHeaders.LSN, Integer.toString(LSN),
-                        HttpHeaders.PARTITION_KEY_RANGE_ID, PARTITION_KEY_RANGE_ID,
+                        HttpHeaders.LSN, Integer.toString(lsn),
+                        HttpHeaders.PARTITION_KEY_RANGE_ID, partitionKeyRangeId,
                         HttpHeaders.SUB_STATUS, Integer.toString(SubStatusCodes.PARTITION_KEY_RANGE_GONE),
                         HttpHeaders.TRANSPORT_REQUEST_ID, Long.toString(9L)
                     ),
-                    NO_CONTENT)
+                    noContent)
             },
             {
                 // 10 PartitionKeyRangeIsSplittingException
 
-                PartitionKeyRangeIsSplittingException.class, RxDocumentServiceRequest.create(
-                OperationType.Read,
-                ResourceType.DocumentCollection,
-                "/dbs/db/colls/col",
-                ImmutableMap.of(
-                    HttpHeaders.LSN, Integer.toString(LSN),
-                    HttpHeaders.PARTITION_KEY_RANGE_ID, PARTITION_KEY_RANGE_ID
-                )),
+                FailureValidator.builder()
+                    .instanceOf(PartitionKeyRangeIsSplittingException.class)
+                    .lsn(lsn)
+                    .partitionKeyRangeId(partitionKeyRangeId)
+                    .resourceAddress(null),
+                RxDocumentServiceRequest.create(
+                    OperationType.Read,
+                    ResourceType.DocumentCollection,
+                    "/dbs/db/colls/col",
+                    ImmutableMap.of(
+                        HttpHeaders.LSN, Integer.toString(lsn),
+                        HttpHeaders.PARTITION_KEY_RANGE_ID, partitionKeyRangeId
+                    )),
                 new RntbdResponse(
                     RntbdUUID.EMPTY,
                     410,
                     ImmutableMap.of(
-                        HttpHeaders.LSN, Integer.toString(LSN),
-                        HttpHeaders.PARTITION_KEY_RANGE_ID, PARTITION_KEY_RANGE_ID,
+                        HttpHeaders.LSN, Integer.toString(lsn),
+                        HttpHeaders.PARTITION_KEY_RANGE_ID, partitionKeyRangeId,
                         HttpHeaders.SUB_STATUS, Integer.toString(SubStatusCodes.COMPLETING_SPLIT),
                         HttpHeaders.TRANSPORT_REQUEST_ID, Long.toString(10L)
                     ),
-                    NO_CONTENT)
+                    noContent)
             },
             {
                 // 11 PartitionIsMigratingException
 
-                PartitionIsMigratingException.class, RxDocumentServiceRequest.create(
-                OperationType.Read,
-                ResourceType.DocumentCollection,
-                "/dbs/db/colls/col",
-                ImmutableMap.of(
-                    HttpHeaders.LSN, Integer.toString(LSN),
-                    HttpHeaders.PARTITION_KEY_RANGE_ID, PARTITION_KEY_RANGE_ID
-                )),
+                FailureValidator.builder()
+                    .instanceOf(PartitionIsMigratingException.class)
+                    .lsn(lsn)
+                    .partitionKeyRangeId(partitionKeyRangeId)
+                    .resourceAddress(null),
+                RxDocumentServiceRequest.create(
+                    OperationType.Read,
+                    ResourceType.DocumentCollection,
+                    "/dbs/db/colls/col",
+                    ImmutableMap.of(
+                        HttpHeaders.LSN, Integer.toString(lsn),
+                        HttpHeaders.PARTITION_KEY_RANGE_ID, partitionKeyRangeId
+                    )),
                 new RntbdResponse(
                     RntbdUUID.EMPTY,
                     410,
                     ImmutableMap.of(
-                        HttpHeaders.LSN, Integer.toString(LSN),
-                        HttpHeaders.PARTITION_KEY_RANGE_ID, PARTITION_KEY_RANGE_ID,
+                        HttpHeaders.LSN, Integer.toString(lsn),
+                        HttpHeaders.PARTITION_KEY_RANGE_ID, partitionKeyRangeId,
                         HttpHeaders.SUB_STATUS, Integer.toString(SubStatusCodes.COMPLETING_PARTITION_MIGRATION),
                         HttpHeaders.TRANSPORT_REQUEST_ID, Long.toString(11L)
                     ),
-                    NO_CONTENT)
+                    noContent)
             },
             {
                 // 12 GoneException
 
-                GoneException.class, RxDocumentServiceRequest.create(
-                OperationType.Read,
-                ResourceType.DocumentCollection,
-                "/dbs/db/colls/col",
-                ImmutableMap.of(
-                    HttpHeaders.LSN, Integer.toString(LSN),
-                    HttpHeaders.PARTITION_KEY_RANGE_ID, PARTITION_KEY_RANGE_ID
-                )),
+                FailureValidator.builder()
+                    .instanceOf(GoneException.class)
+                    .lsn(lsn)
+                    .partitionKeyRangeId(partitionKeyRangeId)
+                    .resourceAddress(null),
+                RxDocumentServiceRequest.create(
+                    OperationType.Read,
+                    ResourceType.DocumentCollection,
+                    "/dbs/db/colls/col",
+                    ImmutableMap.of(
+                        HttpHeaders.LSN, Integer.toString(lsn),
+                        HttpHeaders.PARTITION_KEY_RANGE_ID, partitionKeyRangeId
+                    )),
                 new RntbdResponse(
                     RntbdUUID.EMPTY,
                     410,
                     ImmutableMap.of(
-                        HttpHeaders.LSN, Integer.toString(LSN),
-                        HttpHeaders.PARTITION_KEY_RANGE_ID, PARTITION_KEY_RANGE_ID,
+                        HttpHeaders.LSN, Integer.toString(lsn),
+                        HttpHeaders.PARTITION_KEY_RANGE_ID, partitionKeyRangeId,
                         HttpHeaders.SUB_STATUS, String.valueOf(SubStatusCodes.UNKNOWN),
                         HttpHeaders.TRANSPORT_REQUEST_ID, Long.toString(12L)
                     ),
-                    NO_CONTENT)
+                    noContent)
             },
             {
                 // 13 PreconditionFailedException
 
-                PreconditionFailedException.class, RxDocumentServiceRequest.create(
-                OperationType.Read,
-                ResourceType.DocumentCollection,
-                "/dbs/db/colls/col",
-                ImmutableMap.of(
-                    HttpHeaders.LSN, Integer.toString(LSN),
-                    HttpHeaders.PARTITION_KEY_RANGE_ID, PARTITION_KEY_RANGE_ID
-                )),
+                FailureValidator.builder()
+                    .instanceOf(PreconditionFailedException.class)
+                    .lsn(lsn)
+                    .partitionKeyRangeId(partitionKeyRangeId)
+                    .resourceAddress(null),
+                RxDocumentServiceRequest.create(
+                    OperationType.Read,
+                    ResourceType.DocumentCollection,
+                    "/dbs/db/colls/col",
+                    ImmutableMap.of(
+                        HttpHeaders.LSN, Integer.toString(lsn),
+                        HttpHeaders.PARTITION_KEY_RANGE_ID, partitionKeyRangeId
+                    )),
                 new RntbdResponse(
                     RntbdUUID.EMPTY,
                     412,
                     ImmutableMap.of(
-                        HttpHeaders.LSN, Integer.toString(LSN),
-                        HttpHeaders.PARTITION_KEY_RANGE_ID, PARTITION_KEY_RANGE_ID,
+                        HttpHeaders.LSN, Integer.toString(lsn),
+                        HttpHeaders.PARTITION_KEY_RANGE_ID, partitionKeyRangeId,
                         HttpHeaders.TRANSPORT_REQUEST_ID, Long.toString(13L)
                     ),
-                    NO_CONTENT)
+                    noContent)
             },
             {
                 // 14 RequestEntityTooLargeException
 
-                RequestEntityTooLargeException.class, RxDocumentServiceRequest.create(
-                OperationType.Read,
-                ResourceType.DocumentCollection,
-                "/dbs/db/colls/col",
-                ImmutableMap.of(
-                    HttpHeaders.LSN, Integer.toString(LSN),
-                    HttpHeaders.PARTITION_KEY_RANGE_ID, PARTITION_KEY_RANGE_ID
-                )),
+                FailureValidator.builder()
+                    .instanceOf(RequestEntityTooLargeException.class)
+                    .lsn(lsn)
+                    .partitionKeyRangeId(partitionKeyRangeId)
+                    .resourceAddress(null),
+                RxDocumentServiceRequest.create(
+                    OperationType.Read,
+                    ResourceType.DocumentCollection,
+                    "/dbs/db/colls/col",
+                    ImmutableMap.of(
+                        HttpHeaders.LSN, Integer.toString(lsn),
+                        HttpHeaders.PARTITION_KEY_RANGE_ID, partitionKeyRangeId
+                    )),
                 new RntbdResponse(
                     RntbdUUID.EMPTY,
                     413,
                     ImmutableMap.of(
-                        HttpHeaders.LSN, Integer.toString(LSN),
-                        HttpHeaders.PARTITION_KEY_RANGE_ID, PARTITION_KEY_RANGE_ID,
+                        HttpHeaders.LSN, Integer.toString(lsn),
+                        HttpHeaders.PARTITION_KEY_RANGE_ID, partitionKeyRangeId,
                         HttpHeaders.TRANSPORT_REQUEST_ID, Long.toString(14L)
                     ),
-                    NO_CONTENT)
+                    noContent)
             },
             {
                 // 15 LockedException
 
-                LockedException.class, RxDocumentServiceRequest.create(
-                OperationType.Read,
-                ResourceType.DocumentCollection,
-                "/dbs/db/colls/col",
-                ImmutableMap.of(
-                    HttpHeaders.LSN, Integer.toString(LSN),
-                    HttpHeaders.PARTITION_KEY_RANGE_ID, PARTITION_KEY_RANGE_ID
-                )),
+                FailureValidator.builder()
+                    .instanceOf(LockedException.class)
+                    .lsn(lsn)
+                    .partitionKeyRangeId(partitionKeyRangeId)
+                    .resourceAddress(null),
+                RxDocumentServiceRequest.create(
+                    OperationType.Read,
+                    ResourceType.DocumentCollection,
+                    "/dbs/db/colls/col",
+                    ImmutableMap.of(
+                        HttpHeaders.LSN, Integer.toString(lsn),
+                        HttpHeaders.PARTITION_KEY_RANGE_ID, partitionKeyRangeId
+                    )),
                 new RntbdResponse(
                     RntbdUUID.EMPTY,
                     423,
                     ImmutableMap.of(
-                        HttpHeaders.LSN, Integer.toString(LSN),
-                        HttpHeaders.PARTITION_KEY_RANGE_ID, PARTITION_KEY_RANGE_ID,
+                        HttpHeaders.LSN, Integer.toString(lsn),
+                        HttpHeaders.PARTITION_KEY_RANGE_ID, partitionKeyRangeId,
                         HttpHeaders.TRANSPORT_REQUEST_ID, Long.toString(15L)
                     ),
-                    NO_CONTENT)
+                    noContent)
             },
             {
                 // 16 RequestRateTooLargeException
 
-                RequestRateTooLargeException.class, RxDocumentServiceRequest.create(
-                OperationType.Read,
-                ResourceType.DocumentCollection,
-                "/dbs/db/colls/col",
-                ImmutableMap.of(
-                    HttpHeaders.LSN, Integer.toString(LSN),
-                    HttpHeaders.PARTITION_KEY_RANGE_ID, PARTITION_KEY_RANGE_ID
-                )),
+                FailureValidator.builder()
+                    .instanceOf(RequestRateTooLargeException.class)
+                    .lsn(lsn)
+                    .partitionKeyRangeId(partitionKeyRangeId)
+                    .resourceAddress(null),
+                RxDocumentServiceRequest.create(
+                    OperationType.Read,
+                    ResourceType.DocumentCollection,
+                    "/dbs/db/colls/col",
+                    ImmutableMap.of(
+                        HttpHeaders.LSN, Integer.toString(lsn),
+                        HttpHeaders.PARTITION_KEY_RANGE_ID, partitionKeyRangeId
+                    )),
                 new RntbdResponse(
                     RntbdUUID.EMPTY,
                     429,
                     ImmutableMap.of(
-                        HttpHeaders.LSN, Integer.toString(LSN),
-                        HttpHeaders.PARTITION_KEY_RANGE_ID, PARTITION_KEY_RANGE_ID,
+                        HttpHeaders.LSN, Integer.toString(lsn),
+                        HttpHeaders.PARTITION_KEY_RANGE_ID, partitionKeyRangeId,
                         HttpHeaders.TRANSPORT_REQUEST_ID, Long.toString(16L)
                     ),
-                    NO_CONTENT)
+                    noContent)
             },
             {
                 // 17 RetryWithException
 
-                RetryWithException.class, RxDocumentServiceRequest.create(
-                OperationType.Read,
-                ResourceType.DocumentCollection,
-                "/dbs/db/colls/col",
-                ImmutableMap.of(
-                    HttpHeaders.LSN, Integer.toString(LSN),
-                    HttpHeaders.PARTITION_KEY_RANGE_ID, PARTITION_KEY_RANGE_ID
-                )),
+                FailureValidator.builder()
+                    .instanceOf(RetryWithException.class)
+                    .lsn(lsn)
+                    .partitionKeyRangeId(partitionKeyRangeId)
+                    .resourceAddress(null),
+                RxDocumentServiceRequest.create(
+                    OperationType.Read,
+                    ResourceType.DocumentCollection,
+                    "/dbs/db/colls/col",
+                    ImmutableMap.of(
+                        HttpHeaders.LSN, Integer.toString(lsn),
+                        HttpHeaders.PARTITION_KEY_RANGE_ID, partitionKeyRangeId
+                    )),
                 new RntbdResponse(
                     RntbdUUID.EMPTY,
                     449,
                     ImmutableMap.of(
-                        HttpHeaders.LSN, Integer.toString(LSN),
-                        HttpHeaders.PARTITION_KEY_RANGE_ID, PARTITION_KEY_RANGE_ID,
+                        HttpHeaders.LSN, Integer.toString(lsn),
+                        HttpHeaders.PARTITION_KEY_RANGE_ID, partitionKeyRangeId,
                         HttpHeaders.TRANSPORT_REQUEST_ID, Long.toString(17L)
                     ),
-                    NO_CONTENT)
+                    noContent)
             },
             {
                 // 18 InternalServerErrorException
 
-                InternalServerErrorException.class, RxDocumentServiceRequest.create(
-                OperationType.Read,
-                ResourceType.DocumentCollection,
-                "/dbs/db/colls/col",
-                ImmutableMap.of(
-                    HttpHeaders.LSN, Integer.toString(LSN),
-                    HttpHeaders.PARTITION_KEY_RANGE_ID, PARTITION_KEY_RANGE_ID
-                )),
+                FailureValidator.builder()
+                    .instanceOf(InternalServerErrorException.class)
+                    .lsn(lsn)
+                    .partitionKeyRangeId(partitionKeyRangeId)
+                    .resourceAddress(null),
+                RxDocumentServiceRequest.create(
+                    OperationType.Read,
+                    ResourceType.DocumentCollection,
+                    "/dbs/db/colls/col",
+                    ImmutableMap.of(
+                        HttpHeaders.LSN, Integer.toString(lsn),
+                        HttpHeaders.PARTITION_KEY_RANGE_ID, partitionKeyRangeId
+                    )),
                 new RntbdResponse(
                     RntbdUUID.EMPTY,
                     500,
                     ImmutableMap.of(
-                        HttpHeaders.LSN, Integer.toString(LSN),
-                        HttpHeaders.PARTITION_KEY_RANGE_ID, PARTITION_KEY_RANGE_ID,
+                        HttpHeaders.LSN, Integer.toString(lsn),
+                        HttpHeaders.PARTITION_KEY_RANGE_ID, partitionKeyRangeId,
                         HttpHeaders.TRANSPORT_REQUEST_ID, Long.toString(18L)
                     ),
-                    NO_CONTENT)
+                    noContent)
             },
             {
                 // 19 ServiceUnavailableException
 
-                ServiceUnavailableException.class, RxDocumentServiceRequest.create(
-                OperationType.Read,
-                ResourceType.DocumentCollection,
-                "/dbs/db/colls/col",
-                ImmutableMap.of(
-                    HttpHeaders.LSN, Integer.toString(LSN),
-                    HttpHeaders.PARTITION_KEY_RANGE_ID, PARTITION_KEY_RANGE_ID
-                )),
+                FailureValidator.builder()
+                    .instanceOf(ServiceUnavailableException.class)
+                    .lsn(lsn)
+                    .partitionKeyRangeId(partitionKeyRangeId)
+                    .resourceAddress(null),
+                RxDocumentServiceRequest.create(
+                    OperationType.Read,
+                    ResourceType.DocumentCollection,
+                    "/dbs/db/colls/col",
+                    ImmutableMap.of(
+                        HttpHeaders.LSN, Integer.toString(lsn),
+                        HttpHeaders.PARTITION_KEY_RANGE_ID, partitionKeyRangeId
+                    )),
                 new RntbdResponse(
                     RntbdUUID.EMPTY,
                     503,
                     ImmutableMap.of(
-                        HttpHeaders.LSN, Integer.toString(LSN),
-                        HttpHeaders.PARTITION_KEY_RANGE_ID, PARTITION_KEY_RANGE_ID,
+                        HttpHeaders.LSN, Integer.toString(lsn),
+                        HttpHeaders.PARTITION_KEY_RANGE_ID, partitionKeyRangeId,
                         HttpHeaders.TRANSPORT_REQUEST_ID, Long.toString(19L)
                     ),
-                    NO_CONTENT)
+                    noContent)
             },
         };
+    }
+
+    /**
+     * Verifies that a request for a non-existent resource produces a {@link }GoneException}
+     */
+    @Test(enabled = false, groups = "direct")
+    public void verifyGoneResponseMapsToGoneException() throws Exception {
+
+        final RntbdTransportClient.Options options = new RntbdTransportClient.Options.Builder(requestTimeout).build();
+        final SslContext sslContext = SslContextBuilder.forClient().build();
+
+        try (final RntbdTransportClient transportClient = new RntbdTransportClient(options, sslContext)) {
+
+            final BaseAuthorizationTokenProvider authorizationTokenProvider = new BaseAuthorizationTokenProvider(
+                new CosmosKeyCredential(RntbdTestConfiguration.AccountKey)
+            );
+
+            final Uri physicalAddress = new Uri("rntbd://"
+                + RntbdTestConfiguration.RntbdAuthority
+                + "/apps/DocDbApp/services/DocDbMaster0/partitions/780e44f4-38c8-11e6-8106-8cdcd42c33be/replicas/1p/"
+            );
+
+            final ImmutableMap.Builder<String, String> builder = ImmutableMap.builder();
+
+            builder.put(HttpHeaders.X_DATE, Utils.nowAsRFC1123());
+
+            final String token = authorizationTokenProvider.generateKeyAuthorizationSignature(HttpMethods.GET,
+                Paths.DATABASE_ACCOUNT_PATH_SEGMENT,
+                ResourceType.DatabaseAccount,
+                builder.build()
+            );
+
+            builder.put(HttpHeaders.AUTHORIZATION, token);
+
+            final RxDocumentServiceRequest request = RxDocumentServiceRequest.create(OperationType.Read,
+                ResourceType.DatabaseAccount,
+                Paths.DATABASE_ACCOUNT_PATH_SEGMENT,
+                builder.build()
+            );
+
+            final Mono<StoreResponse> responseMono = transportClient.invokeStoreAsync(physicalAddress, request);
+
+            responseMono.subscribe(response -> { }, error -> {
+                final String format = "Expected %s, not %s";
+                assertTrue(error instanceof GoneException, String.format(format, GoneException.class, error.getClass()));
+                final Throwable cause = error.getCause();
+                if (cause != null) {
+                    // assumption: cosmos isn't listening on 10251
+                    assertTrue(cause instanceof ConnectException, String.format(format, ConnectException.class, error.getClass()));
+                }
+            });
+
+        } catch (final Exception error) {
+            final String message = String.format("%s: %s", error.getClass(), error.getMessage());
+            fail(message, error);
+        }
     }
 
     /**
@@ -508,7 +669,7 @@ public final class RntbdTransportClientTest {
      * @param request   An RNTBD request instance
      * @param exception An exception mapping
      */
-    @Test(enabled = false, groups = { "unit" }, dataProvider = "fromMockedNetworkFailureToExpectedCosmosClientException")
+    @Test(enabled = false, groups = { "unit" }, dataProvider = "fromMockedNetworkFailureToExpectedDocumentClientException")
     public void verifyNetworkFailure(
         final FailureValidator.Builder builder,
         final RxDocumentServiceRequest request,
@@ -520,96 +681,41 @@ public final class RntbdTransportClientTest {
         throw new UnsupportedOperationException("TODO: DANOBLE: Implement this test");
     }
 
-    // TODO (DANOBLE) rename this method after addressing this issue:
-    //  Each verifyRequestFailure test times out if run after verifyRequestCancellation.
-    //  Workaround: rename verifyRequestCancellation as xverifyRequestCancellation to ensure the test runs after
-    //  verifyRequestFailure.
-    @Test(enabled = true, groups = "unit")
-    public void xverifyRequestCancellation() {
-
-        final UserAgentContainer userAgent = new UserAgentContainer();
-        final Duration requestTimeout = Duration.ofSeconds(5);
-
-        final RxDocumentServiceRequest request = RxDocumentServiceRequest.create(
-            OperationType.Read,
-            ResourceType.DocumentCollection,
-            "/dbs/db/colls/col",
-            ImmutableMap.of(
-                HttpHeaders.LSN, Integer.toString(LSN),
-                HttpHeaders.PARTITION_KEY_RANGE_ID, PARTITION_KEY_RANGE_ID
-            ));
-
-        final RntbdResponse response = new RntbdResponse(
-            RntbdUUID.EMPTY,
-            400,
-            ImmutableMap.of(
-                HttpHeaders.LSN, Integer.toString(LSN),
-                HttpHeaders.PARTITION_KEY_RANGE_ID, PARTITION_KEY_RANGE_ID,
-                HttpHeaders.TRANSPORT_REQUEST_ID, Long.toString(1L)
-            ),
-            NO_CONTENT);
-
-        try (RntbdTransportClient client = getRntbdTransportClientUnderTest(userAgent, requestTimeout, response)) {
-
-            final AtomicReference<StoreResponse> storeResponse = new AtomicReference<>();
-            final AtomicReference<Throwable> throwable = new AtomicReference<>();
-            final AtomicBoolean cancelled = new AtomicBoolean();
-            final Mono<StoreResponse> storeResponseMono;
-
-            try {
-                storeResponseMono = client.invokeStoreAsync(PHYSICAL_ADDRESS, request).doOnCancel(() -> {
-                    logger.info("verifyRequestCancellation: request cancelled as expected");
-                    cancelled.set(true);
-                }).doOnError(error -> {
-                    logger.info("verifyRequestCancellation: : unexpected {}", error.getClass().getSimpleName());
-                    throwable.set(error);
-                }).doOnSuccess(result -> {
-                    logger.info("verifyRequestCancellation: unexpected {}}", result.getClass().getSimpleName());
-                    storeResponse.set(result);
-                });
-            } catch (final Throwable error) {
-                throw new AssertionError(lenientFormat("%s: %s", error.getClass(), error));
-            }
-
-            StepVerifier.create(storeResponseMono).thenCancel().verify();
-
-            assertThat(cancelled.get()).isTrue();
-            assertThat(throwable.get()).isNull();
-            assertThat(storeResponse.get()).isNull();
-        }
-    }
-
     /**
      * Validates the error handling behavior of the {@link RntbdTransportClient} for HTTP status codes >= 400
-     *  @param expectedError a {@link CosmosClientException} specifying the kind of request failure expected.
-     * @param request an RNTBD request instance
-     * @param response the RNTBD response instance to be returned as a result of the request
+     *
+     * @param builder   A feature validator builder to confirm that response is correctly mapped to an exception
+     * @param request   An RNTBD request instance
+     * @param response  The RNTBD response instance to be returned as a result of the request
      */
-    @Test(enabled = true, groups = "unit", dataProvider = "fromMockedRntbdResponseToExpectedCosmosClientException")
-    public void verifyRequestFailure(
-        final Class<? extends CosmosClientException> expectedError,
+    @Test(enabled = false, groups = "unit", dataProvider = "fromMockedRntbdResponseToExpectedDocumentClientException")
+    public void verifyRequestFailures(
+        final FailureValidator.Builder builder,
         final RxDocumentServiceRequest request,
-        final RntbdResponse response) {
-
+        final RntbdResponse response
+    ) {
         final UserAgentContainer userAgent = new UserAgentContainer();
-        final Duration requestTimeout = Duration.ofSeconds(5);
+        final Duration timeout = Duration.ofMillis(1000);
 
-        try (RntbdTransportClient client = getRntbdTransportClientUnderTest(userAgent, requestTimeout, response)) {
+        try (final RntbdTransportClient client = getRntbdTransportClientUnderTest(userAgent, timeout, response)) {
 
             final Mono<StoreResponse> responseMono;
 
             try {
-                responseMono = client.invokeStoreAsync(PHYSICAL_ADDRESS, request);
+                responseMono = client.invokeStoreAsync(physicalAddress, request);
             } catch (final Exception error) {
                 throw new AssertionError(String.format("%s: %s", error.getClass(), error));
             }
 
-            this.validateFailure(responseMono, expectedError);
+            this.validateFailure(responseMono, builder.build());
         }
     }
 
     private static RntbdTransportClient getRntbdTransportClientUnderTest(
-        final UserAgentContainer userAgent, final Duration requestTimeout, final RntbdResponse expected) {
+        final UserAgentContainer userAgent,
+        final Duration requestTimeout,
+        final RntbdResponse expected
+    ) {
 
         final RntbdTransportClient.Options options = new RntbdTransportClient.Options.Builder(requestTimeout)
             .userAgent(userAgent)
@@ -620,85 +726,79 @@ public final class RntbdTransportClientTest {
         try {
             sslContext = SslContextBuilder.forClient().build();
         } catch (final Exception error) {
-            throw new AssertionError(lenientFormat("%s: %s", error.getClass(), error.getMessage()));
+            throw new AssertionError(String.format("%s: %s", error.getClass(), error.getMessage()));
         }
 
         return new RntbdTransportClient(new FakeEndpoint.Provider(options, sslContext, expected));
     }
 
-    private void validateFailure(
-        final Mono<StoreResponse> responseMono,
-        final Class<? extends CosmosClientException> expectedError) {
-        StepVerifier.create(responseMono).expectErrorMatches(error -> error.getClass().equals(expectedError)).verify();
+    private void validateFailure(final Mono<? extends StoreResponse> responseMono, final FailureValidator validator) {
+        validateFailure(responseMono, validator, requestTimeout.toMillis());
+    }
+
+    private static void validateFailure(
+        final Mono<? extends StoreResponse> mono, final FailureValidator validator, final long timeout
+    ) {
+
+        final TestSubscriber<StoreResponse> subscriber = new TestSubscriber<>();
+        mono.subscribe(subscriber);
+
+        subscriber.awaitTerminalEvent(timeout, TimeUnit.MILLISECONDS);
+        assertThat(subscriber.errorCount()).isEqualTo(1);
+        subscriber.assertSubscribed();
+        subscriber.assertNoValues();
+        validator.validate(subscriber.errors().get(0));
     }
 
     // region Types
 
     private static final class FakeChannel extends EmbeddedChannel {
 
-        private static final ServerProperties SERVER_PROPERTIES = new ServerProperties("agent", "4.0.0");
+        private static final ServerProperties serverProperties = new ServerProperties("agent", "3.0.0");
+        private final BlockingQueue<RntbdResponse> responses;
 
-        FakeChannel(final RntbdResponse[] responses, final ChannelHandler... handlers) {
+        FakeChannel(final BlockingQueue<RntbdResponse> responses, final ChannelHandler... handlers) {
             super(handlers);
-            for (RntbdResponse response : responses) {
-                assertThat(super.inboundMessages().offer(response));
-            }
-        }
-
-        @Override
-        public boolean writeInbound(Object... msgs) {
-            logger.debug("writeInbound");
-            return super.writeInbound(msgs);
-        }
-
-        @Override
-        protected void doClose() throws Exception {
-            logger.debug("doClose");
-            super.doClose();
+            this.responses = responses;
         }
 
         @Override
         protected void handleInboundMessage(final Object message) {
-            logger.debug("handleInboundMessage");
             super.handleInboundMessage(message);
-        }
-
-        @Override
-        public Channel flush() {
-            logger.debug("flush");
-            return super.flush();
+            assertTrue(message instanceof ByteBuf);
         }
 
         @Override
         protected void handleOutboundMessage(final Object message) {
 
-            // This is the end of the outbound pipeline and so we can do what we wish with the outbound message
-
-            logger.debug("handleOutboundMessage");
             assertTrue(message instanceof ByteBuf);
 
-            final ByteBuf out = Unpooled.buffer().retain();
+            final ByteBuf out = Unpooled.buffer();
             final ByteBuf in = (ByteBuf) message;
+
+            // This is the end of the outbound pipeline and so we can do what we wish with the outbound message
 
             if (in.getUnsignedIntLE(4) == 0) {
 
                 final RntbdContextRequest request = RntbdContextRequest.decode(in.copy());
-                final RntbdContext context = RntbdContext.from(request, SERVER_PROPERTIES, HttpResponseStatus.OK);
-                context.encode(out);
-                this.writeInbound(out);
+                final RntbdContext rntbdContext = RntbdContext.from(request, serverProperties, HttpResponseStatus.OK);
+
+                rntbdContext.encode(out);
 
             } else {
 
+                final RntbdRequest rntbdRequest = RntbdRequest.decode(in.copy());
                 final RntbdResponse rntbdResponse;
 
                 try {
-                    rntbdResponse = (RntbdResponse) this.inboundMessages().poll();
+                    rntbdResponse = this.responses.take();
                 } catch (final Exception error) {
                     throw new AssertionError(String.format("%s: %s", error.getClass(), error.getMessage()));
                 }
 
+                assertEquals(rntbdRequest.getTransportRequestId(), rntbdResponse.getTransportRequestId());
                 rntbdResponse.encode(out);
-                out.setBytes(8, in.slice(8, 16));  // to overwrite activityId
+                out.setBytes(8, in.slice(8, 16));  // Overwrite activityId
             }
 
             this.writeInbound(out);
@@ -707,14 +807,19 @@ public final class RntbdTransportClientTest {
 
     private static final class FakeEndpoint implements RntbdEndpoint {
 
+        final RntbdRequestTimer requestTimer;
         final FakeChannel fakeChannel;
         final URI physicalAddress;
-        final RntbdRequestTimer requestTimer;
         final Tag tag;
 
         private FakeEndpoint(
             final Config config, final RntbdRequestTimer timer, final URI physicalAddress,
-            final RntbdResponse... responses) {
+            final RntbdResponse... expected
+        ) {
+
+            final ArrayBlockingQueue<RntbdResponse> responses = new ArrayBlockingQueue<>(
+                expected.length, true, Arrays.asList(expected)
+            );
 
             RntbdRequestManager requestManager = new RntbdRequestManager(new RntbdClientChannelHealthChecker(config), 30);
             this.physicalAddress = physicalAddress;
@@ -794,7 +899,7 @@ public final class RntbdTransportClientTest {
         @Override
         public RntbdRequestRecord request(final RntbdRequestArgs requestArgs) {
             final RntbdRequestRecord requestRecord = new RntbdRequestRecord(requestArgs, this.requestTimer);
-            this.fakeChannel.writeAndFlush(requestRecord.stage(RntbdRequestRecord.Stage.PIPELINED));
+            this.fakeChannel.writeOutbound(requestRecord);
             return requestRecord;
         }
 
@@ -804,15 +909,13 @@ public final class RntbdTransportClientTest {
 
         static class Provider implements RntbdEndpoint.Provider {
 
-            private final Config config;
-            private final RntbdResponse expected;
-            private final ConcurrentHashMap<URI, RntbdEndpoint> fakeEndpoints;
-            private final RntbdRequestTimer requestTimer;
+            final Config config;
+            final RntbdResponse expected;
+            final RntbdRequestTimer timer;
 
             Provider(RntbdTransportClient.Options options, SslContext sslContext, RntbdResponse expected) {
                 this.config = new Config(options, sslContext, LogLevel.WARN);
-                this.fakeEndpoints = new ConcurrentHashMap<>();
-                this.requestTimer = new RntbdRequestTimer(
+                this.timer = new RntbdRequestTimer(
                     config.requestTimeoutInNanos(),
                     config.requestTimerResolutionInNanos());
                 this.expected = expected;
@@ -820,10 +923,7 @@ public final class RntbdTransportClientTest {
 
             @Override
             public void close() throws RuntimeException {
-                this.requestTimer.close();
-                for (RntbdEndpoint fakeEndpoint : this.fakeEndpoints.values()) {
-                    fakeEndpoint.close();
-                }
+                this.timer.close();
             }
 
             @Override
@@ -833,7 +933,7 @@ public final class RntbdTransportClientTest {
 
             @Override
             public int count() {
-                return this.fakeEndpoints.size();
+                return 1;
             }
 
             @Override
@@ -843,18 +943,43 @@ public final class RntbdTransportClientTest {
 
             @Override
             public RntbdEndpoint get(URI physicalAddress) {
-                return this.fakeEndpoints.computeIfAbsent(physicalAddress, address -> {
-                    return new FakeEndpoint(config, requestTimer, physicalAddress, expected);
-                });
+                return new FakeEndpoint(config, timer, physicalAddress, expected);
             }
 
             @Override
             public Stream<RntbdEndpoint> list() {
-                return this.fakeEndpoints.values().stream();
+                return Stream.empty();
             }
         }
 
         // endregion
+    }
+
+    private static final class RntbdTestConfiguration {
+
+        static String AccountHost = System.getProperty("ACCOUNT_HOST",
+            StringUtils.defaultString(
+                Strings.emptyToNull(System.getenv().get("ACCOUNT_HOST")),
+                "https://localhost:8081/"
+            )
+        );
+
+        static String AccountKey = System.getProperty("ACCOUNT_KEY",
+            StringUtils.defaultString(
+                Strings.emptyToNull(System.getenv().get("ACCOUNT_KEY")),
+                "C2y6yDjf5/R+ob0N8A7Cgv30VRDJIWEHLM+4QDU5DE2nQ9nDuVTqobD4b8mGGyPMbIZnqyMsEcaGQy67XIw/Jw=="
+            )
+        );
+
+        static String RntbdAuthority = System.getProperty("rntbd.authority",
+            StringUtils.defaultString(
+                Strings.emptyToNull(System.getenv().get("RNTBD_AUTHORITY")),
+                String.format("%s:10251", URI.create(AccountHost).getHost())
+            )
+        );
+
+        private RntbdTestConfiguration() {
+        }
     }
 
     // endregion

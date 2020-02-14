@@ -15,6 +15,7 @@ import com.azure.cosmos.implementation.PartitionKeyRange;
 import com.azure.cosmos.implementation.ResourceType;
 import com.azure.cosmos.implementation.RxDocumentServiceRequest;
 import com.azure.cosmos.implementation.Strings;
+import com.azure.cosmos.implementation.routing.PartitionKeyInternal;
 import com.azure.cosmos.implementation.routing.Range;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -74,11 +75,15 @@ public abstract class ParallelDocumentQueryExecutionContextBase<T extends Resour
                 Map<String, String> headers = new HashMap<>(commonRequestHeaders);
                 headers.put(HttpConstants.HttpHeaders.CONTINUATION, continuationToken);
                 headers.put(HttpConstants.HttpHeaders.PAGE_SIZE, Strings.toString(pageSize));
+
+                PartitionKeyInternal partitionKeyInternal = null;
                 if (feedOptions.partitionKey() != null && feedOptions.partitionKey() != PartitionKey.NONE) {
+                    partitionKeyInternal = BridgeInternal.getPartitionKeyInternal(feedOptions.partitionKey());
                     headers.put(HttpConstants.HttpHeaders.PARTITION_KEY,
-                                BridgeInternal.getPartitionKeyInternal(feedOptions.partitionKey()).toJson());
+                        partitionKeyInternal.toJson());
+
                 }
-                return this.createDocumentServiceRequest(headers, querySpecForInit, partitionKeyRange, collectionRid);
+                return this.createDocumentServiceRequest(headers, querySpecForInit, partitionKeyInternal, partitionKeyRange, collectionRid);
             };
 
             Function<RxDocumentServiceRequest, Mono<FeedResponse<T>>> executeFunc = (request) -> {
@@ -142,6 +147,46 @@ public abstract class ParallelDocumentQueryExecutionContextBase<T extends Resour
 
         for (DocumentProducer<T> producer : this.documentProducers) {
             producer.top = newTop;
+        }
+    }
+
+    protected void initializeReadMany(
+        IDocumentQueryClient queryClient, String collectionResourceId, SqlQuerySpec sqlQuerySpec,
+        Map<PartitionKeyRange, SqlQuerySpec> rangeQueryMap,
+        FeedOptions feedOptions,
+        UUID activityId,
+        String collectionRid) {
+        Map<String, String> commonRequestHeaders = createCommonHeadersAsync(this.getFeedOptions(null, null));
+
+        for (PartitionKeyRange targetRange : rangeQueryMap.keySet()) {
+            TriFunction<PartitionKeyRange, String, Integer, RxDocumentServiceRequest> createRequestFunc = (
+                partitionKeyRange,
+                continuationToken, pageSize) -> {
+                Map<String, String> headers = new HashMap<>(commonRequestHeaders);
+                headers.put(HttpConstants.HttpHeaders.CONTINUATION, continuationToken);
+                headers.put(HttpConstants.HttpHeaders.PAGE_SIZE, Strings.toString(pageSize));
+
+                PartitionKeyInternal partitionKeyInternal = null;
+                return this.createDocumentServiceRequest(headers,
+                                                         rangeQueryMap.get(targetRange),
+                                                         partitionKeyInternal,
+                                                         partitionKeyRange,
+                                                         collectionRid);
+            };
+
+            Function<RxDocumentServiceRequest, Mono<FeedResponse<T>>> executeFunc = (request) -> {
+                return this.executeRequestAsync(request);
+            };
+
+            // TODO: Review pagesize -1
+            DocumentProducer<T> dp = createDocumentProducer(collectionRid, targetRange,
+                                                            null, -1, feedOptions,
+                                                            rangeQueryMap.get(targetRange),
+                                                            commonRequestHeaders, createRequestFunc, executeFunc,
+                                                            () -> client.getResetSessionTokenRetryPolicy()
+                                                                      .getRequestPolicy());
+
+            documentProducers.add(dp);
         }
     }
 }
