@@ -3,8 +3,12 @@
 
 package com.azure.cosmos.serialization.hybridrow;
 
+import com.google.common.io.BaseEncoding;
+import io.netty.buffer.ByteBuf;
+
 import javax.annotation.Nonnull;
 
+import static com.azure.cosmos.base.Preconditions.checkArgument;
 import static com.azure.cosmos.base.Preconditions.checkNotNull;
 
 /**
@@ -52,5 +56,17 @@ public final class HybridRowHeader {
     @Nonnull
     public HybridRowVersion version() {
         return this.version;
+    }
+
+    @Nonnull
+    public static HybridRowHeader decode(@Nonnull final ByteBuf buffer) {
+
+        checkNotNull(buffer, "expected non-null buffer");
+
+        checkArgument(buffer.readableBytes() >= HybridRowVersion.BYTES,
+            "expected buffer with at least %s readable bytes",
+            buffer.readableBytes());
+
+        return new HybridRowHeader(HybridRowVersion.from(buffer.readByte()), SchemaId.from(buffer.readIntLE()));
     }
 }

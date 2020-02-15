@@ -25,8 +25,8 @@ import static com.azure.cosmos.base.Preconditions.checkState;
 
 public final class RecordIOStream {
 
-    private static final CompletableFuture<Result> SUCCESS = CompletableFuture.completedFuture(Result.SUCCESS);
     private static final int INITIAL_CAPACITY = 1024;
+    private static final CompletableFuture<Result> SUCCESS = CompletableFuture.completedFuture(Result.SUCCESS);
 
     /**
      * Reads an entire stream of records.
@@ -99,9 +99,8 @@ public final class RecordIOStream {
 
                 Out<ProductionType> productionType = new Out<>();
                 Out<ByteBuf> record = new Out<>();
-                Out<Integer> consumed = new Out<>();
 
-                Result result = parser.process(buffer, productionType, record, need, consumed);
+                Result result = parser.process(buffer, productionType, record, need);
 
                 if (result == Result.INSUFFICIENT_BUFFER) {
                     break;
@@ -200,7 +199,7 @@ public final class RecordIOStream {
         checkNotNull(producer, "expected non-null producer");
 
         Out<ByteBuf> metadata = new Out<>();
-        Result result = RecordIOStream.FormatSegment(segment, metadata);
+        Result result = RecordIOStream.formatSegment(segment, metadata);
 
         if (result != Result.SUCCESS) {
             return CompletableFuture.completedFuture(result);
@@ -214,73 +213,18 @@ public final class RecordIOStream {
             return future;
         }
 
-        CompletableFuture<?> future = null;
-        long index = 0;
-
-        // TODO (DANOBLE) figure out how to terminate this loop
-        //  Do we need another producer to tell us in advance when the body is empty?
-
-        while (true) {
-
-            final long column = index;
-
-            future = future == null
-                ? writeResultValue(outputStream, producer.apply(column))
-                : future.thenApplyAsync(
-                    r1 -> writeResultValue(outputStream, producer.apply(column)).thenApplyAsync((Result r2) -> r2));
-
-            index++;
-        }
-
-        return (CompletableFuture<Result>) future;
-    }
-
-    private static CompletableFuture<Result> writeResultValue(
-        @Nonnull final OutputStream outputStream,
-        @Nonnull final CompletableFuture<ResultValue<ByteBuf>> future) {
-
-        return future.thenApplyAsync(resultValue -> {
-            Result result = resultValue.getResult();
-
-            if (result != Result.SUCCESS) {
-                return result;
-            }
-
-            final ByteBuf body = resultValue.getValue();
-
-            if (body.readableBytes() == 0) {
-                return result;
-            }
-
-            final Out<ByteBuf> buffer = new Out<>();
-
-            result = FormatRow(body, buffer);
-
-            if (result != Result.SUCCESS) {
-                return result;
-            }
-
-            try {
-                buffer.get().readBytes(outputStream, buffer.get().readableBytes());
-                body.readBytes(outputStream, body.readableBytes());
-            } catch (IOException cause) {
-
-            }
-
-            return result;
-
-        });
+        return produceRecords(outputStream, producer, 0L);
     }
 
     /**
      * Compute and format a record header for the given record body.
      *
      * @param body The body whose record header should be formatted.
-     * @param buffer The byte sequence of the written row buffer.
+     * @param buffer The byte sequence of the formatted row row body.
      *
      * @return Success if the write completes without error, the error code otherwise.
      */
-    private static Result FormatRow(ByteBuf body, Out<ByteBuf> buffer) {
+    private static Result formatRow(ByteBuf body, Out<ByteBuf> buffer) {
 
         Out<RowBuffer> rowBuffer = new Out<>();
         Result result = RecordIOFormatter.formatRecord(body, rowBuffer);
@@ -290,7 +234,7 @@ public final class RecordIOStream {
             return result;
         }
 
-        buffer.setAndGet(rowBuffer.get().buffer());
+        buffer.set(rowBuffer.get().buffer());
         return Result.SUCCESS;
     }
 
@@ -298,11 +242,11 @@ public final class RecordIOStream {
      * Format a segment.
      *
      * @param segment The segment to format.
-     * @param buffer The byte sequence of the written row buffer.
+     * @param buffer The byte sequence of the formatted segment buffer.
      *
      * @return Success if the write completes without error, the error code otherwise.
      */
-    private static Result FormatSegment(
+    private static Result formatSegment(
         @Nonnull final Segment segment,
         @Nonnull final Out<ByteBuf> buffer) {
 
@@ -319,15 +263,54 @@ public final class RecordIOStream {
         return Result.SUCCESS;
     }
 
-    /**
-     * A function that produces record bodies.
-     * <p>
-     * Record bodies are returned as memory blocks. It is expected that each block is a HybridRow, but any binary data
-     * is allowed. The argument to {#apply} is the 0based index of the reord within the segment to be produced. The
-     * {#apply} method produces a {@link ResultValue} of type {@link ByteBuf}}.
-     */
-    @FunctionalInterface
-    public interface Producer extends Function<Long, ResultValue<ByteBuf>> {
+    private static CompletableFuture<Result> produceRecords(
+        @Nonnull OutputStream outputStream,
+        @Nonnull AsyncProducer producer,
+        final long index) {
+
+        return producer.apply(index).thenApplyAsync(resultValue -> {
+
+            final Result result = resultValue.getResult();
+
+            if (result == Result.SUCCESS) {
+                ByteBuf value = resultValue.getValue();
+                if (value.readableBytes() > 0) {
+                    writeBody(outputStream, value);
+                    return new ResultValue<Long>(Result.SUCCESS, index + 1L);
+                }
+            }
+
+            return new ResultValue<>(result, -1L);
+
+        }).thenComposeAsync(resultValue -> {
+            if (resultValue.getValue() >= 0L) {
+                return produceRecords(outputStream, producer, index + 1);
+            }
+            return CompletableFuture.completedFuture(Result.SUCCESS);
+        });
+    }
+
+    private static Result writeBody(
+        @Nonnull final OutputStream outputStream,
+        @Nonnull final ByteBuf body) {
+
+        final Out<ByteBuf> out = new Out<>();
+        final Result result = formatRow(body, out);
+
+        if (result != Result.SUCCESS) {
+            return result;
+        }
+
+        final ByteBuf row = out.get();
+
+        try {
+            row.readBytes(outputStream, row.readableBytes());
+            body.readBytes(outputStream, body.readableBytes());
+        } catch (IOException cause) {
+            // TODO (DANOBLE)
+        }
+
+        return result;
     }
 
     /**
@@ -338,5 +321,16 @@ public final class RecordIOStream {
      * {#apply} method produces a {@link CompletableFuture} of type {@link ResultValue} of type {@code ByteBuf}.
      */
     public interface AsyncProducer extends Function<Long, CompletableFuture<ResultValue<ByteBuf>>> {
+    }
+
+    /**
+     * A function that produces record bodies.
+     * <p>
+     * Record bodies are returned as memory blocks. It is expected that each block is a HybridRow, but any binary data
+     * is allowed. The argument to {#apply} is the 0based index of the reord within the segment to be produced. The
+     * {#apply} method produces a {@link ResultValue} of type {@link ByteBuf}}.
+     */
+    @FunctionalInterface
+    public interface Producer extends Function<Long, ResultValue<ByteBuf>> {
     }
 }

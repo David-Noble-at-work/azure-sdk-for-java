@@ -4,12 +4,10 @@
 package com.azure.cosmos.serialization.hybridrow.recordio;
 
 import com.azure.cosmos.core.Out;
-import com.azure.cosmos.core.Reference;
 import com.azure.cosmos.serialization.hybridrow.HybridRowHeader;
 import com.azure.cosmos.serialization.hybridrow.HybridRowVersion;
 import com.azure.cosmos.serialization.hybridrow.Result;
 import com.azure.cosmos.serialization.hybridrow.RowBuffer;
-import com.azure.cosmos.serialization.hybridrow.SchemaId;
 import com.azure.cosmos.serialization.hybridrow.io.RowReader;
 import com.azure.cosmos.serialization.hybridrow.io.Segment;
 import com.azure.cosmos.serialization.hybridrow.layouts.SystemSchema;
@@ -20,9 +18,10 @@ import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+import java.util.zip.CRC32;
 
 import static com.azure.cosmos.base.Preconditions.checkNotNull;
-import static com.google.common.base.Preconditions.checkState;
 
 public final class RecordIOParser {
 
@@ -39,9 +38,6 @@ public final class RecordIOParser {
      * @param need The smallest number of bytes needed to advanced the parser state further
      * <p>
      * It is recommended that this method not be called again until at least this number of bytes are available.
-     * @param consumed The number of bytes consumed from the input buffer
-     * <p>
-     * This number may be less than the total buffer size if the parser moved to a new state.
      *
      * @return {@link Result#SUCCESS} if no error has occurred;, otherwise the {@link Result} of the last error
      * encountered during parsing.
@@ -51,205 +47,202 @@ public final class RecordIOParser {
         @Nonnull final ByteBuf buffer,
         @Nonnull final Out<ProductionType> type,
         @Nonnull final Out<ByteBuf> record,
-        @Nonnull final Out<Integer> need,
-        @Nonnull final Out<Integer> consumed) {
+        @Nonnull final Out<Integer> need) {
 
         checkNotNull(buffer, "expected non-null buffer");
         checkNotNull(type, "expected non-null type");
         checkNotNull(record, "expected non-null record");
         checkNotNull(need, "expected non-null need");
-        checkNotNull(consumed, "expected non-null consumed");
 
-        Result result = Result.FAILURE;
+        final Out<?> out = new Out<>();
+        RowReader reader;
+
+        Result result = Result.SUCCESS;
         type.set(ProductionType.NONE);
         record.set(null);
 
-        final int start = buffer.readerIndex();
+        do {
+            switch (this.state) {
 
-        switch (this.state) {
+                case START:
 
-            case START:
-                this.state = State.NEED_SEGMENT_LENGTH;
-                // TODO: C# TO JAVA CONVERTER: There is no 'goto' in Java:
-                //  goto case State.NeedSegmentLength;
-
-            case NEED_SEGMENT_LENGTH: {
-
-                final int minimalSegmentRowSize = HybridRowHeader.BYTES + RecordIOFormatter.SEGMENT_LAYOUT.size();
-
-                if (buffer.readableBytes() < minimalSegmentRowSize) {
-                    consumed.set(buffer.readerIndex() - start);
-                    need.set(minimalSegmentRowSize);
-                    return Result.INSUFFICIENT_BUFFER;
-                }
-
-                ByteBuf span = buffer.slice(buffer.readerIndex(), minimalSegmentRowSize);
-                RowBuffer row = new RowBuffer(span, HybridRowVersion.V1, SystemSchema.layoutResolver());
-                Reference<RowBuffer> tempReference_row =
-                    new Reference<RowBuffer>(row);
-                RowReader reader = new RowReader(tempReference_row);
-                row = tempReference_row.get();
-                Reference<RowReader> tempReference_reader =
-                    new Reference<RowReader>(reader);
-                Out<Segment> tempOut_segment =
-                    new Out<Segment>();
-                result = SegmentSerializer.read(tempReference_reader, tempOut_segment);
-                this.segment = tempOut_segment.get();
-                reader = tempReference_reader.get();
-                if (result != Result.SUCCESS) {
+                    this.state = State.NEED_SEGMENT_LENGTH;
                     break;
-                }
 
-                this.state = State.NEED_SEGMENT;
-                // TODO: C# TO JAVA CONVERTER: There is no 'goto' in Java:
-				goto case State.NEED_SEGMENT
-            }
+                case NEED_SEGMENT_LENGTH:
 
-            case NEED_SEGMENT: {
-                if (buffer.Length < this.segment.length()) {
-                    need.set(this.segment.length());
-                    consumed.set(buffer.Length - buffer.Length);
-                    return Result.INSUFFICIENT_BUFFER;
-                }
+                    final int minimalSegmentRowSize = HybridRowHeader.BYTES + RecordIOFormatter.SEGMENT_LAYOUT.size();
 
-                //C# TO JAVA CONVERTER WARNING: Unsigned integer types have no direct equivalent in Java:
-                //ORIGINAL LINE: Span<byte> span = b.Span.Slice(0, this.segment.Length);
-                Span<Byte> span = buffer.Span.Slice(0, this.segment.length());
-                RowBuffer row = new RowBuffer(span, HybridRowVersion.V1, SystemSchema.layoutResolver);
-                Reference<RowBuffer> tempReference_row2 =
-                    new Reference<RowBuffer>(row);
-                RowReader reader = new RowReader(tempReference_row2);
-                row = tempReference_row2.get();
-                Reference<RowReader> tempReference_reader2 =
-                    new Reference<RowReader>(reader);
-                Out<Segment> tempOut_segment2
-                    = new Out<Segment>();
-                result = SegmentSerializer.read(tempReference_reader2, tempOut_segment2);
-                this.segment = tempOut_segment2.get();
-                reader = tempReference_reader2.get();
-                if (result != Result.SUCCESS) {
+                    if (buffer.readableBytes() < minimalSegmentRowSize) {
+                        need.set(minimalSegmentRowSize);
+                        return Result.INSUFFICIENT_BUFFER;
+                    }
+
+                    reader = new RowReader(new RowBuffer(
+                        buffer.slice(buffer.readerIndex(), minimalSegmentRowSize),
+                        HybridRowVersion.V1,
+                        SystemSchema.layoutResolver()));
+
+                    result = SegmentSerializer.read(reader, (Out<Segment>) out);
+                    this.segment = (Segment) out.get();
+
+                    if (result != Result.SUCCESS) {
+                        this.state = State.ERROR;
+                        break;
+                    }
+
+                    this.state = State.NEED_SEGMENT;
                     break;
-                }
 
-                record.set(buffer.Slice(0, span.Length));
-                buffer = buffer.Slice(span.Length);
-                need.set(0);
-                this.state = State.NEED_HEADER;
-                consumed.set(buffer.Length - buffer.Length);
-                type.set(ProductionType.SEGMENT);
-                return Result.SUCCESS;
-            }
+                case NEED_SEGMENT:
 
-            case NEED_HEADER: {
-                if (buffer.Length < HybridRowHeader.BYTES) {
-                    need.set(HybridRowHeader.BYTES);
-                    consumed.set(buffer.Length - buffer.Length);
-                    return Result.INSUFFICIENT_BUFFER;
-                }
+                    final int segmentLength = this.segment.length();
 
-                HybridRowHeader header;
-                // TODO: C# TO JAVA CONVERTER: The following method call contained an unresolved 'out' keyword -
-                // these cannot be converted using the 'Out' helper class unless the method is within the code
-                // being modified:
-                MemoryMarshal.TryRead(buffer.Span, out header);
-                if (header.Version != HybridRowVersion.V1) {
+                    if (buffer.readableBytes() < segmentLength) {
+                        need.set(segmentLength);
+                        return Result.INSUFFICIENT_BUFFER;
+                    }
+
+                    reader = new RowReader(
+                        new RowBuffer(
+                            buffer.slice(buffer.readerIndex(), segmentLength),
+                            HybridRowVersion.V1,
+                            SystemSchema.layoutResolver()));
+
+                    result = SegmentSerializer.read(reader, (Out<Segment>) out);
+                    this.segment = (Segment) out.get();
+
+                    if (result != Result.SUCCESS) {
+                        this.state = State.ERROR;
+                        break;
+                    }
+
+                    record.set(buffer.readSlice(segmentLength));
+                    type.set(ProductionType.SEGMENT);
+                    this.state = State.NEED_HEADER;
+                    need.set(0);
+
+                    return Result.SUCCESS;
+
+                case NEED_HEADER:
+
+                    if (buffer.readableBytes() < HybridRowHeader.BYTES) {
+                        need.set(HybridRowHeader.BYTES);
+                        return Result.INSUFFICIENT_BUFFER;
+                    }
+
+                    HybridRowHeader header = HybridRowHeader.decode(buffer);
+
+                    if (header.version() != HybridRowVersion.V1) {
+                        result = Result.INVALID_ROW;
+                        this.state = State.ERROR;
+                        break;
+                    }
+
+                    if (header.schemaId().equals(SystemSchema.RECORD_SCHEMA_ID)) {
+                        this.state = State.NEED_RECORD;
+                        break;
+                    }
+
+                    if (header.schemaId().equals(SystemSchema.SEGMENT_SCHEMA_ID)) {
+                        this.state = State.NEED_SEGMENT;
+                        break;
+                    }
+
                     result = Result.INVALID_ROW;
+                    this.state = State.ERROR;
                     break;
-                }
 
-                if (SchemaId.opEquals(header.SchemaId,
-                    SystemSchema.SEGMENT_SCHEMA_ID)) {
-                    // TODO: C# TO JAVA CONVERTER: There is no 'goto' in Java:
-					goto case State.NEED_SEGMENT
-                }
+                case NEED_RECORD:
 
-                if (SchemaId.opEquals(header.SchemaId,
-                    SystemSchema.RECORD_SCHEMA_ID)) {
-                    // TODO: C# TO JAVA CONVERTER: There is no 'goto' in Java:
-					goto case State.NEED_RECORD
-                }
+                    final int minimalRecordRowSize = HybridRowHeader.BYTES + RecordIOFormatter.RECORD_LAYOUT.size();
 
-                result = Result.INVALID_ROW;
-                break;
+                    if (buffer.readableBytes() < minimalRecordRowSize) {
+                        need.set(minimalRecordRowSize);
+                        return Result.INSUFFICIENT_BUFFER;
+                    }
+
+                    buffer.markReaderIndex();
+
+                    reader = new RowReader(
+                        new RowBuffer(
+                            buffer.readSlice(minimalRecordRowSize),
+                            HybridRowVersion.V1,
+                            SystemSchema.layoutResolver()));
+
+                    result = RecordSerializer.read(reader, (Out<Record>) out);
+                    this.record = (Record) out.get();
+
+                    if (result != Result.SUCCESS) {
+                        buffer.resetReaderIndex();
+                        this.state = State.ERROR;
+                        break;
+                    }
+
+                    this.state = State.NEED_ROW;
+                    break;
+
+                case NEED_ROW:
+
+                    if (buffer.readableBytes() < this.record.length()) {
+                        need.set(this.record.length());
+                        return Result.INSUFFICIENT_BUFFER;
+                    }
+
+                    buffer.markReaderIndex();
+
+                    record.set(buffer.readBytes(this.record.length()));
+                    CRC32 crc32 = new CRC32();
+
+                    if (record.get().hasArray()) {
+                        crc32.update(record.get().array());
+                    } else {
+                        record.get().forEachByte(b -> {
+                            crc32.update(b);
+                            return true;
+                        });
+                    }
+
+                    if (crc32.getValue() != this.record.crc32()) {
+                        result = Result.INVALID_ROW;
+                        this.state = State.ERROR;
+                        buffer.resetReaderIndex();
+                        break;
+                    }
+
+                    this.state = State.NEED_HEADER;
+                    type.set(ProductionType.RECORD);
+                    need.set(0);
+
+                    return Result.SUCCESS;
+
+                default:
+                    assert false : "unexpected value: " + this.state;
             }
 
-            case NEED_RECORD: {
-                int minimalRecordRowSize = HybridRowHeader.BYTES + RecordIOFormatter.RECORD_LAYOUT.size();
-                if (buffer.Length < minimalRecordRowSize) {
-                    need.set(minimalRecordRowSize);
-                    consumed.set(buffer.Length - buffer.Length);
-                    return Result.INSUFFICIENT_BUFFER;
-                }
+        } while (this.state != State.ERROR);
 
-                //C# TO JAVA CONVERTER WARNING: Unsigned integer types have no direct equivalent in Java:
-                //ORIGINAL LINE: Span<byte> span = b.Span.Slice(0, minimalRecordRowSize);
-                Span<Byte> span = buffer.Span.Slice(0, minimalRecordRowSize);
-                RowBuffer row = new RowBuffer(span, HybridRowVersion.V1, SystemSchema.layoutResolver);
-                Reference<RowBuffer> tempReference_row3 =
-                    new Reference<RowBuffer>(row);
-                RowReader reader = new RowReader(tempReference_row3);
-                row = tempReference_row3.get();
-                Reference<RowReader> tempReference_reader3 = new Reference<RowReader>(reader);
-                Out<Record> tempOut_record = new Out<Record>();
-                result = RecordSerializer.read(tempReference_reader3, tempOut_record);
-                this.record = tempOut_record.get();
-                reader = tempReference_reader3.get();
-                if (result != Result.SUCCESS) {
-                    break;
-                }
-
-                buffer = buffer.Slice(span.Length);
-                this.state = State.NEED_ROW;
-                // TODO: C# TO JAVA CONVERTER: There is no 'goto' in Java:
-				goto case State.NEED_ROW
-            }
-
-            case NEED_ROW: {
-                if (buffer.Length < this.record.length()) {
-                    need.set(this.record.length());
-                    consumed.set(buffer.Length - buffer.Length);
-                    return Result.INSUFFICIENT_BUFFER;
-                }
-
-                record.set(buffer.Slice(0, this.record.length()));
-
-                // Validate that the record has not been corrupted.
-                //C# TO JAVA CONVERTER WARNING: Unsigned integer types have no direct equivalent in Java:
-                //ORIGINAL LINE: uint crc32 = Crc32.Update(0, record.Span);
-                int crc32 = Crc32.Update(0, record.get().Span);
-                if (crc32 != this.record.crc32()) {
-                    result = Result.INVALID_ROW;
-                    break;
-                }
-
-                buffer = buffer.Slice(this.record.length());
-                need.set(0);
-                this.state = State.NEED_HEADER;
-                consumed.set(buffer.Length - buffer.Length);
-                type.set(ProductionType.RECORD);
-                return Result.SUCCESS;
-            }
-        }
-
-        this.state = State.ERROR;
         need.set(0);
-        consumed.set(buffer.Length - buffer.Length);
         return result;
     }
 
     /**
-     * True if a valid segment has been parsed.
+     * {@code true} if a valid segment has been parsed.
+     *
+     * @return {@code true} if a valid segment has been parsed.
      */
     public boolean haveSegment() {
         return this.state.value() >= State.NEED_HEADER.value();
     }
 
     /**
-     * If a valid segment has been parsed then current active segment, otherwise undefined.
+     * Current active {@link Segment segment} or {@code null}, if there is no current active segment.
+     *
+     * @return current active {@link Segment segment} or {@code null}, if there is no current active segment.
      */
+    @Nullable
     public Segment segment() {
-        checkState(this.haveSegment());
-        return this.segment;
+        return this.haveSegment() ? this.segment : null;
     }
 
     /**
