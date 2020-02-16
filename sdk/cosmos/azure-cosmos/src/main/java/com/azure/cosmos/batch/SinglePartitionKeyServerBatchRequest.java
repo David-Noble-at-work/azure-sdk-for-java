@@ -50,7 +50,7 @@ public final class SinglePartitionKeyServerBatchRequest extends ServerBatchReque
         final SinglePartitionKeyServerBatchRequest request = new SinglePartitionKeyServerBatchRequest(
             partitionKey,
             serializerCore);
-        /*await*/ request.CreateBodyStreamAsync(operations);
+        /*await*/ request.createBodyStreamAsync(operations);
         return request;
     }
 }

@@ -9,6 +9,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.util.concurrent.CompletableFuture;
 
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -29,7 +30,7 @@ public class ItemBatchOperationContext implements AutoCloseable {
     }
 
     public ItemBatchOperationContext(
-        @Nonnull final String partitionKeyRangeId, final DocumentClientRetryPolicy retryPolicy) {
+        @Nonnull final String partitionKeyRangeId, @Nullable final DocumentClientRetryPolicy retryPolicy) {
 
         checkNotNull(partitionKeyRangeId, "expected non-null partitionKeyRangeId");
         this.partitionKeyRangeId = partitionKeyRangeId;

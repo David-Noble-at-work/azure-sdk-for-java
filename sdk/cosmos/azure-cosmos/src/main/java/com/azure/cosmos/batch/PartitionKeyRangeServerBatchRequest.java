@@ -73,7 +73,9 @@ final class PartitionKeyRangeServerBatchRequest extends ServerBatchRequest {
             maxOperationCount,
             serializerCore);
 
-        List<ItemBatchOperation> pendingOperations = /*await*/request.CreateBodyStreamAsync(operations, ensureContinuousOperationIndexes);
+        List<ItemBatchOperation> pendingOperations = /*await*/ request.createBodyStreamAsync(
+            operations,
+            ensureContinuousOperationIndexes);
         return new ServerOperationBatchRequest(request, pendingOperations);
     }
 }

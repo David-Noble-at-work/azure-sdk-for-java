@@ -17,6 +17,7 @@ import com.azure.cosmos.serialization.hybridrow.layouts.TypeArgument;
 import com.azure.cosmos.serializer.CosmosSerializerCore;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.io.InputStream;
 import java.nio.channels.AsynchronousByteChannel;
 import java.util.Map;
@@ -303,11 +304,14 @@ public final class ItemBatchOperation<TResource> implements AutoCloseable {
 
     public static Result writeOperation(
         @Nonnull RowWriter writer,
-        @Nonnull TypeArgument typeArg,
-        @Nonnull ItemBatchOperation operation) {
+        @Nonnull ItemBatchOperation operation,
+        @Nullable TypeArgument typeArgument) {
 
+        checkNotNull(writer, "expected non-null writer");
+        checkNotNull(operation, "expected non-null operation");
         boolean pkWritten = false;
 
+        operation.getOperationType();
         Result result = writer.writeInt32(OPERATION_TYPE, (int) operation.getOperationType());
 
         if (result != Result.SUCCESS) {

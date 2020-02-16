@@ -14,6 +14,7 @@ import io.netty.handler.codec.http.HttpResponseStatus;
 import org.apache.commons.collections4.list.UnmodifiableList;
 
 import javax.annotation.Nonnull;
+import java.io.IOException;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -26,6 +27,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicReferenceFieldUpdater;
 import java.util.stream.Stream;
 
+import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
@@ -318,7 +320,12 @@ public class TransactionalBatchResponse implements AutoCloseable, List<Transacti
      *
      * @return Result of batch operation that contains a Resource deserialized to specified type.
      */
-    public <T> TransactionalBatchOperationResult<T> GetOperationResultAtIndex(int index, Class<T> type) {
+    public <T> TransactionalBatchOperationResult<T> GetOperationResultAtIndex(
+        final int index,
+        @Nonnull final Class<T> type) throws IOException {
+
+        checkArgument(index >= 0, "expected non-negative index");
+        checkNotNull(type, "expected non-null type");
 
         TransactionalBatchOperationResult result = this.results.get(index);
         T resource = null;

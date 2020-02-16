@@ -3,6 +3,8 @@
 
 package com.azure.cosmos.batch;
 
+import com.azure.cosmos.BridgeInternal;
+import com.azure.cosmos.PartitionKey;
 import com.azure.cosmos.PartitionKeyDefinition;
 import com.azure.cosmos.RetryOptions;
 import com.azure.cosmos.batch.unimplemented.CosmosDiagnosticScope;
@@ -19,13 +21,13 @@ import com.azure.cosmos.implementation.routing.PartitionKeyInternal;
 import com.azure.cosmos.implementation.routing.PartitionKeyInternalHelper;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Semaphore;
-import java.util.stream.Stream;
 
 import static com.azure.cosmos.base.Preconditions.checkState;
 import static com.google.common.base.Preconditions.checkArgument;
@@ -44,10 +46,13 @@ import static com.google.common.base.Preconditions.checkNotNull;
  * {@link BatchAsyncStreamer}
  */
 public class BatchAsyncContainerExecutor implements AutoCloseable {
-    private static final int DefaultDispatchTimerInSeconds = 1;
-    private static final int MinimumDispatchTimerInSeconds = 1;
+
+    private static final int DEFAULT_DISPATCH_TIMER_IN_SECONDS = 1;
+    private static final int MINIMUM_DISPATCH_TIMER_IN_SECONDS = 1;
+
     private final ConcurrentHashMap<String, Semaphore> limitersByPartitionkeyRange = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<String, BatchAsyncStreamer> streamersByPartitionKeyRange = new ConcurrentHashMap<>();
+
     private CosmosClientContext cosmosClientContext;
     private ContainerCore cosmosContainer;
     private int dispatchTimerInSeconds;
@@ -74,7 +79,7 @@ public class BatchAsyncContainerExecutor implements AutoCloseable {
             cosmosClientContext,
             maxServerRequestOperationCount,
             maxServerRequestBodyLength,
-            BatchAsyncContainerExecutor.DefaultDispatchTimerInSeconds);
+            BatchAsyncContainerExecutor.DEFAULT_DISPATCH_TIMER_IN_SECONDS);
     }
 
     //C# TO JAVA CONVERTER NOTE: Java does not support optional parameters. Overloaded method(s) are created above:
@@ -107,32 +112,29 @@ public class BatchAsyncContainerExecutor implements AutoCloseable {
         this.maxServerRequestBodyLength = maxServerRequestBodyLength;
         this.maxServerRequestOperationCount = maxServerRequestOperationCount;
         this.dispatchTimerInSeconds = dispatchTimerInSeconds;
-        this.timerPool = new TimerPool(BatchAsyncContainerExecutor.MinimumDispatchTimerInSeconds);
+        this.timerPool = new TimerPool(BatchAsyncContainerExecutor.MINIMUM_DISPATCH_TIMER_IN_SECONDS);
         this.retryOptions = cosmosClientContext.ClientOptions.GetConnectionPolicy().RetryOptions;
     }
 
-
-    public CompletableFuture<TransactionalBatchOperationResult> AddAsync(
-        ItemBatchOperation operation,
-        ItemRequestOptions itemRequestOptions) {
-        return AddAsync(operation, itemRequestOptions, null);
-    }
 
     public CompletableFuture<TransactionalBatchOperationResult> AddAsync(ItemBatchOperation operation) {
         return AddAsync(operation, null, null);
     }
 
     public CompletableFuture<TransactionalBatchOperationResult> AddAsync(
-        @Nonnull final ItemBatchOperation operation, final ItemRequestOptions itemRequestOptions) {
+        @Nonnull final ItemBatchOperation operation, @Nullable final RequestOptions options) {
 
         checkNotNull(operation, "expected non-null operation");
 
-        /*await*/ this.ValidateOperationAsync(operation, itemRequestOptions);
+        /*await*/ this.ValidateOperationAsync(operation, options);
 
-        String resolvedPartitionKeyRangeId = /*await*/this.ResolvePartitionKeyRangeIdAsync(operation);
-        BatchAsyncStreamer streamer = this.GetOrAddStreamerForPartitionKeyRange(resolvedPartitionKeyRangeId);
-        ItemBatchOperationContext context = new ItemBatchOperationContext(resolvedPartitionKeyRangeId,
+        final String resolvedPartitionKeyRangeId = /*await*/ this.ResolvePartitionKeyRangeIdAsync(operation);
+        final BatchAsyncStreamer streamer = this.GetOrAddStreamerForPartitionKeyRange(resolvedPartitionKeyRangeId);
+
+        final ItemBatchOperationContext context = new ItemBatchOperationContext(
+            resolvedPartitionKeyRangeId,
             BatchAsyncContainerExecutor.GetRetryPolicy(this.retryOptions));
+
         operation.AttachContext(context);
         streamer.Add(operation);
         return /*await*/ context.getOperationTask();
@@ -142,13 +144,16 @@ public class BatchAsyncContainerExecutor implements AutoCloseable {
         return ValidateOperationAsync(operation, null);
     }
 
-    public CompletableFuture<Void> ValidateOperationAsync(ItemBatchOperation operation, ItemRequestOptions itemRequestOptions) {
+    public CompletableFuture<Void> ValidateOperationAsync(
+        @Nonnull final ItemBatchOperation operation,
+        @Nullable final RequestOptions options) {
 
-        if (itemRequestOptions != null) {
-            if (itemRequestOptions.BaseConsistencyLevel.HasValue || itemRequestOptions.PreTriggers != null || itemRequestOptions.PostTriggers != null || itemRequestOptions.SessionToken != null) {
-                throw new IllegalStateException(ClientResources.UnsupportedBulkRequestOptions);
-            }
-            assert BatchAsyncContainerExecutor.ValidateOperationEPK(operation, itemRequestOptions);
+        if (options != null) {
+            checkState(options.getConsistencyLevel() == null
+                && options.getPostTriggerInclude() == null
+                && options.getPreTriggerInclude() == null
+                && options.getSessionToken() == null);
+            checkState(BatchAsyncContainerExecutor.ValidateOperationEPK(operation, options));
         }
 
         /*await*/ operation.materializeResource(this.cosmosClientContext.SerializerCore);
@@ -199,7 +204,7 @@ public class BatchAsyncContainerExecutor implements AutoCloseable {
             return future;
         }
 
-        try (InputStream payload = serverRequest.TransferBodyStream()) {
+        try (InputStream payload = serverRequest.transferBodyStream()) {
 
             assert payload != null : "expected non-null serverRequestPayload";
 
@@ -250,17 +255,19 @@ public class BatchAsyncContainerExecutor implements AutoCloseable {
             this::ReBatchAsync));
     }
 
-    //C# TO JAVA CONVERTER TODO TASK: There is no equivalent in Java to the 'async' keyword:
-    //ORIGINAL LINE: private async Task<PartitionKeyInternal> GetPartitionKeyInternalAsync
-    // (ItemBatchOperation operation, CancellationToken cancellationToken)
-    private CompletableFuture<PartitionKeyInternal> GetPartitionKeyInternalAsync(ItemBatchOperation operation) {
-        assert operation.getPartitionKey() != null : "expected non-null operation.partitionKey";
-        if (operation.getPartitionKey().getValue().IsNone) {
-            //C# TO JAVA CONVERTER TODO TASK: There is no equivalent to 'await' in Java:
-            return /*await*/ this.cosmosContainer.GetNonePartitionKeyValueAsync().ConfigureAwait(false);
+    private CompletableFuture<PartitionKeyInternal> GetPartitionKeyInternalAsync(
+        @Nonnull final ItemBatchOperation operation) {
+
+        checkNotNull(operation, "expected non-null operation");
+        PartitionKey partitionKey = operation.getPartitionKey();
+        checkNotNull(partitionKey, "expected non-null operation partition key");
+        PartitionKeyInternal partitionKeyInternal = BridgeInternal.getPartitionKeyInternal(partitionKey);
+
+        if (partitionKeyInternal == null) {
+            return /*await*/ this.cosmosContainer.GetNonePartitionKeyValueAsync();
         }
 
-        return operation.getPartitionKey().getValue().InternalKey;
+        return CompletableFuture.completedFuture(partitionKeyInternal);
     }
 
     private static DocumentClientRetryPolicy GetRetryPolicy(RetryOptions retryOptions) {
@@ -272,7 +279,7 @@ public class BatchAsyncContainerExecutor implements AutoCloseable {
 
 
     private CompletableFuture<Void> ReBatchAsync(ItemBatchOperation operation) {
-        String resolvedPartitionKeyRangeId = /*await*/this.ResolvePartitionKeyRangeIdAsync(operation);
+        String resolvedPartitionKeyRangeId = /*await*/ this.ResolvePartitionKeyRangeIdAsync(operation);
         BatchAsyncStreamer streamer = this.GetOrAddStreamerForPartitionKeyRange(resolvedPartitionKeyRangeId);
         streamer.Add(operation);
     }
@@ -281,7 +288,7 @@ public class BatchAsyncContainerExecutor implements AutoCloseable {
 
         checkNotNull(operation, "expected non-null operation");
 
-        PartitionKeyDefinition partitionKeyDefinition =/*await*/this.cosmosContainer.GetPartitionKeyDefinitionAsync();
+        PartitionKeyDefinition partitionKeyDefinition = /*await*/ this.cosmosContainer.GetPartitionKeyDefinitionAsync();
         CollectionRoutingMap collectionRoutingMap = /*await*/ this.cosmosContainer.GetRoutingMapAsync();
         final RequestOptions options = operation.getRequestOptions();
         byte[] effectivePartitionKey = null;
@@ -309,28 +316,35 @@ public class BatchAsyncContainerExecutor implements AutoCloseable {
         return collectionRoutingMap.getRangeByEffectivePartitionKey(effectivePartitionKeyString).getId();
     }
 
-    private static boolean ValidateOperationEPK(ItemBatchOperation operation, ItemRequestOptions itemRequestOptions) {
-        Object epkObj;
-        Object epkStrObj;
-        Object pkStringObj;
-        //C# TO JAVA CONVERTER TODO TASK: The following method call contained an unresolved 'out' keyword - these
-        // cannot be converted using the 'OutObject' helper class unless the method is within the code being modified:
-        if (itemRequestOptions.Properties != null && (itemRequestOptions.Properties.TryGetValue(BackendHeaders.EFFECTIVE_PARTITION_KEY, out epkObj) | itemRequestOptions.Properties.TryGetValue(BackendHeaders.EffectivePartitionKeyString, out epkStrObj) | itemRequestOptions.Properties.TryGetValue(HttpHeaders.PartitionKey, out pkStringObj))) {
-            //C# TO JAVA CONVERTER WARNING: Unsigned integer types have no direct equivalent in Java:
-            //ORIGINAL LINE: byte[] epk = epkObj instanceof byte[] ? (byte[])epkObj : null;
-            byte[] epk = epkObj instanceof byte[] ? (byte[]) epkObj : null;
-            String epkStr = epkStrObj instanceof String ? (String) epkStrObj : null;
-            String pkString = pkStringObj instanceof String ? (String) pkStringObj : null;
-            if ((epk == null && pkString == null) || epkStr == null) {
-                throw new IllegalStateException(String.format(ClientResources.EpkPropertiesPairingExpected,
-                    BackendHeaders.EFFECTIVE_PARTITION_KEY,
-                    BackendHeaders.EFFECTIVE_PARTITION_KEY_STRING));
-            }
+    private static boolean ValidateOperationEPK(
+        @Nonnull final ItemBatchOperation operation,
+        @Nonnull final RequestOptions options) {
 
-            if (operation.getPartitionKey() != null) {
-                throw new IllegalStateException(ClientResources.PKAndEpkSetTogether);
-            }
+        checkNotNull(operation, "expected non-null operation");
+        checkNotNull(options, "expected non-null options");
+
+        final Map<String, Object> properties = options.getProperties();
+
+        if (properties == null) {
+            return true;
         }
+
+        byte[] epk = (byte[]) properties.computeIfPresent(BackendHeaders.EFFECTIVE_PARTITION_KEY,
+            (k, v) -> v instanceof byte[] ? v : null);
+
+        String epkString = (String) properties.computeIfPresent(BackendHeaders.EFFECTIVE_PARTITION_KEY_STRING,
+            (k, v) -> v.getClass()  == String.class ? v : null);
+
+        String pk = (String) properties.computeIfPresent(HttpHeaders.PARTITION_KEY,
+            (k, v) -> v.getClass() == String.class ? v : null);
+
+        checkState(epkString != null || epk != null || pk != null,
+            "expected byte array value for {0} and string value for {1} when either property is set",
+            BackendHeaders.EFFECTIVE_PARTITION_KEY,
+            BackendHeaders.EFFECTIVE_PARTITION_KEY_STRING);
+
+        checkState(operation.getPartitionKey() == null,
+            "partition key and effective partition key may not both be set.");
 
         return true;
     }

@@ -70,7 +70,7 @@ public final class BatchExecutor {
      */
     private CompletableFuture<TransactionalBatchResponse> ExecuteServerRequestAsync(SinglePartitionKeyServerBatchRequest serverRequest) {
 
-        try (Stream serverRequestPayload = serverRequest.TransferBodyStream()) {
+        try (Stream serverRequestPayload = serverRequest.transferBodyStream()) {
             assert serverRequestPayload != null : "expected non-null serverRequestPayload";
             ResponseMessage responseMessage = /*await*/
                 this.clientContext.ProcessResourceOperationStreamAsync(this.container.LinkUri, ResourceType.Document,

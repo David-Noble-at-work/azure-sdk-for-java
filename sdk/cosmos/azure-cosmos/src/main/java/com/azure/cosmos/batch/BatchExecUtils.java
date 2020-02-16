@@ -3,17 +3,20 @@
 
 package com.azure.cosmos.batch;
 
+import com.azure.cosmos.BridgeInternal;
 import com.azure.cosmos.PartitionKey;
 import com.azure.cosmos.PartitionKeyDefinition;
 import com.azure.cosmos.implementation.HttpConstants.HttpHeaders;
 import com.azure.cosmos.implementation.RequestOptions;
 import com.azure.cosmos.implementation.directconnectivity.WFConstants.BackendHeaders;
 import com.azure.cosmos.implementation.routing.CollectionRoutingMap;
+import com.azure.cosmos.implementation.routing.PartitionKeyInternalHelper;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufUtil;
 import io.netty.buffer.Unpooled;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
@@ -23,6 +26,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
+import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Strings.lenientFormat;
 import static java.lang.Math.max;
@@ -34,13 +38,12 @@ public final class BatchExecUtils {
 
     private static final int MINIMUM_BUFFER_SIZE = 81920;
 
-    public static void ensureValid(final List<ItemBatchOperation> operations, final RequestOptions options) {
+    public static void ensureValid(
+        @Nonnull final List<ItemBatchOperation> operations,
+        @Nullable final RequestOptions options) {
 
         final String errorMessage = BatchExecUtils.isValid(operations, options);
-
-        if (errorMessage != null) {
-            throw new IllegalArgumentException(errorMessage);
-        }
+        checkArgument(errorMessage == null, errorMessage);
     }
 
     public static String getPartitionKeyRangeId(
@@ -52,14 +55,23 @@ public final class BatchExecUtils {
         checkNotNull(keyDefinition, "expected non-null keyDefinition");
         checkNotNull(collectionRoutingMap, "expected non-null collectionRoutingMap");
 
-        final String effectiveKey = key.getEffectivePartitionKeyString(keyDefinition);
-        return collectionRoutingMap.getRangeByEffectivePartitionKey(effectiveKey).getId();
+        String epkString = PartitionKeyInternalHelper.getEffectivePartitionKeyString(
+            BridgeInternal.getPartitionKeyInternal(key),
+            keyDefinition);
+
+        return collectionRoutingMap.getRangeByEffectivePartitionKey(epkString).getId();
     }
 
-    public static String isValid(final List<ItemBatchOperation> operations, RequestOptions options) {
+    public static String isValid(
+        @Nonnull final List<ItemBatchOperation> operations,
+        @Nullable final RequestOptions options) {
 
-        if (operations.size() == 0) {
-            return "batch request did not have any operations to be executed";
+        if (operations == null) {
+            return "expected non-null operations";
+        }
+
+        if (operations.size() <= 0) {
+            return "expected operations.size > 0";
         }
 
         if (options != null && options.getAccessCondition() != null) {

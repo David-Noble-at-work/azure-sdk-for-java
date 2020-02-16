@@ -3,7 +3,6 @@
 
 package com.azure.cosmos.batch;
 
-import com.azure.cosmos.CosmosItemRequestOptions;
 import com.azure.cosmos.implementation.RequestOptions;
 
 /**
