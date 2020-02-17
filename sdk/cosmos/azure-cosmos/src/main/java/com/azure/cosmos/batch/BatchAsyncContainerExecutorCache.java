@@ -32,8 +32,7 @@ public final class BatchAsyncContainerExecutorCache implements AutoCloseable {
 
         return this.executors.computeIfAbsent(container.LinkUri.toString(), k ->
             new BatchAsyncContainerExecutor(
-                container,
-                clientContext,
+                clientContext, container,
                 MAX_OPERATIONS_IN_DIRECT_MODE_BATCH_REQUEST,
                 MAX_DIRECT_MODE_BATCH_REQUEST_BODY_SIZE_IN_BYTES)
         );

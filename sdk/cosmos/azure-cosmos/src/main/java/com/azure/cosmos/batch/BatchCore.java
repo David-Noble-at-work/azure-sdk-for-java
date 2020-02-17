@@ -19,7 +19,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 public class BatchCore implements TransactionalBatch {
 
     private final ContainerCore container;
-    private final ArrayList<ItemBatchOperation> operations;
+    private final ArrayList<ItemBatchOperation<?>> operations;
     private final PartitionKey partitionKey;
 
     /**
@@ -35,7 +35,7 @@ public class BatchCore implements TransactionalBatch {
 
         this.container = container;
         this.partitionKey = partitionKey;
-        this.operations = new ArrayList<ItemBatchOperation>();
+        this.operations = new ArrayList<>();
     }
 
 
@@ -102,7 +102,7 @@ public class BatchCore implements TransactionalBatch {
             new CosmosDiagnosticsContext());
 
         this.operations.clear();
-        return executor.ExecuteAsync();
+        return executor.executeAsync();
     }
 
     /**

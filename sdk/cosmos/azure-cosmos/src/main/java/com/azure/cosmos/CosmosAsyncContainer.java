@@ -631,7 +631,7 @@ public class CosmosAsyncContainer {
         return database.getLink();
     }
 
-    String getLink() {
+    public String getLink() {
         return this.link;
     }
 }

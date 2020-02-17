@@ -3,88 +3,125 @@
 
 package com.azure.cosmos.batch;
 
+import com.azure.cosmos.CosmosAsyncContainer;
 import com.azure.cosmos.PartitionKey;
+import com.azure.cosmos.batch.unimplemented.CosmosDiagnosticScope;
 import com.azure.cosmos.batch.unimplemented.CosmosDiagnosticsContext;
+import com.azure.cosmos.batch.unimplemented.ResponseMessage;
+import com.azure.cosmos.core.Out;
 import com.azure.cosmos.implementation.HttpConstants.HttpHeaders;
 import com.azure.cosmos.implementation.OperationType;
 import com.azure.cosmos.implementation.RequestOptions;
 import com.azure.cosmos.implementation.ResourceType;
+import com.azure.cosmos.serializer.CosmosSerializerCore;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import javax.annotation.Nonnull;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
-import java.util.stream.Stream;
+
+import static com.azure.cosmos.base.Preconditions.checkState;
+import static com.azure.cosmos.batch.TransactionalBatchResponse.fromResponseMessageAsync;
 
 public final class BatchExecutor {
-    private RequestOptions batchOptions;
+
+    private static final Logger logger = LoggerFactory.getLogger(BatchExecutor.class);
+
     private CosmosClientContext clientContext;
-    private ContainerCore container;
-    private CosmosDiagnosticsContext diagnosticsContext;
-    private List<ItemBatchOperation> inputOperations;
-    private PartitionKey partitionKey;
+    private CosmosAsyncContainer container;
+    private final CosmosDiagnosticsContext diagnosticsContext;
+    private final List<ItemBatchOperation<?>> operations;
+    private final RequestOptions options;
+    private final PartitionKey partitionKey;
 
     public BatchExecutor(
-        final ContainerCore container,
+        final CosmosAsyncContainer container,
         final PartitionKey partitionKey,
-        final List<ItemBatchOperation> operations,
-        final RequestOptions batchOptions,
+        final List<ItemBatchOperation<?>> operations,
+        final RequestOptions options,
         final CosmosDiagnosticsContext diagnosticsContext) {
 
         this.container = container;
-        this.clientContext = this.container.ClientContext;
-        this.inputOperations = operations;
+        this.operations = operations;
         this.partitionKey = partitionKey;
-        this.batchOptions = batchOptions;
+        this.options = options;
         this.diagnosticsContext = diagnosticsContext;
     }
 
-    public CompletableFuture<TransactionalBatchResponse> ExecuteAsync() {
+    public CompletableFuture<TransactionalBatchResponse> executeAsync() {
 
-        try (this.diagnosticsContext.CreateOverallScope("BatchExecuteAsync")) {
+        return CompletableFuture.supplyAsync(() -> {
 
-            BatchExecUtils.ensureValid(this.inputOperations, this.batchOptions);
-            PartitionKey serverRequestPartitionKey = this.partitionKey;
+            final CosmosDiagnosticScope executeScope = this.diagnosticsContext.createOverallScope("BatchExecuteAsync");
+            BatchExecUtils.ensureValid(this.operations, this.options);
 
-            if (this.batchOptions != null && this.batchOptions.IsEffectivePartitionKeyRouting) {
-                serverRequestPartitionKey = null;
-            }
+            final PartitionKey partitionKey = this.options != null && this.options.isEffectivePartitionKeyRouting()
+                ? null
+                : this.partitionKey;
 
-            SinglePartitionKeyServerBatchRequest serverRequest;
+            final SinglePartitionKeyServerBatchRequest serverRequest;
 
-            try (this.diagnosticsContext.CreateScope("CreateBatchRequest")) {
-                serverRequest = /*await*/SinglePartitionKeyServerBatchRequest.createAsync(serverRequestPartitionKey,
-                    new ArrayList<ItemBatchOperation>(this.inputOperations),
-                    this.clientContext.SerializerCore);
-            }
+            final CosmosDiagnosticScope requestScope = this.diagnosticsContext.createScope("CreateBatchRequest");
+            final ArrayList<ItemBatchOperation<?>> operations = new ArrayList<>(this.operations);
+            final CosmosSerializerCore serializerCore = this.clientContext.getSerializerCore();
 
-            return /*await*/ this.ExecuteServerRequestAsync(serverRequest);
-        }
+            return SinglePartitionKeyServerBatchRequest.createAsync(partitionKey, operations, serializerCore)
+                .whenCompleteAsync((request, error) -> requestScope.close())
+                .thenComposeAsync(this::executeBatchRequestAsync)
+                .whenCompleteAsync((response, error) -> executeScope.close());
+        });
     }
 
     /**
      * Makes a single batch request to the server.
      *
-     * @param serverRequest A server request with a set of operations on items.
+     * @param request A server request with a set of operations on items.
      *
      * @return Response from the server.
      */
-    private CompletableFuture<TransactionalBatchResponse> ExecuteServerRequestAsync(SinglePartitionKeyServerBatchRequest serverRequest) {
+    private CompletableFuture<TransactionalBatchResponse> executeBatchRequestAsync(
+        @Nonnull final SinglePartitionKeyServerBatchRequest request) {
 
-        try (Stream serverRequestPayload = serverRequest.transferBodyStream()) {
-            assert serverRequestPayload != null : "expected non-null serverRequestPayload";
-            ResponseMessage responseMessage = /*await*/
-                this.clientContext.ProcessResourceOperationStreamAsync(this.container.LinkUri, ResourceType.Document,
-                    OperationType.Batch, this.batchOptions, this.container, serverRequest.getPartitionKey(),
-                    serverRequestPayload, requestMessage -> {
-                        requestMessage.Headers.Add(HttpHeaders.IS_BATCH_REQUEST, Boolean.TRUE.toString());
-                        requestMessage.Headers.Add(HttpHeaders.IS_BATCH_ATOMIC, Boolean.TRUE.toString());
-                        requestMessage.Headers.Add(HttpHeaders.IS_BATCH_ORDERED, Boolean.TRUE.toString());
-                    }, this.diagnosticsContext);
+        final CosmosSerializerCore serializerCore = this.clientContext.getSerializerCore();
+        final Out<CosmosDiagnosticScope> responseScope = new Out<>();
+        final InputStream payload = request.transferBodyStream();
 
-            try (this.diagnosticsContext.CreateScope("TransactionalBatchResponse")) {
-                return /*await*/
-                TransactionalBatchResponse.FromResponseMessageAsync(responseMessage, serverRequest, this.clientContext.SerializerCore);
-            }
-        }
+        checkState(payload != null, "expected non-null payload");
+
+        return CompletableFuture
+            .supplyAsync(() -> this.clientContext.processResourceOperationStreamAsync(
+                this.container.getLink(),
+                ResourceType.Document,
+                OperationType.Batch,
+                options,
+                this.container,
+                request.getPartitionKey(),
+                payload,
+                requestMessage -> {
+                    requestMessage.Headers.Add(HttpHeaders.IS_BATCH_REQUEST, Boolean.TRUE.toString());
+                    requestMessage.Headers.Add(HttpHeaders.IS_BATCH_ATOMIC, Boolean.TRUE.toString());
+                    requestMessage.Headers.Add(HttpHeaders.IS_BATCH_ORDERED, Boolean.TRUE.toString());
+                },
+                this.diagnosticsContext))
+
+            .thenComposeAsync((ResponseMessage message) -> {
+                responseScope.set(this.diagnosticsContext.createScope("TransactionalBatchResponse"));
+                return fromResponseMessageAsync(message, request, serializerCore)
+            })
+
+            .whenCompleteAsync((response, error) -> {
+                if (responseScope.get() != null) {
+                    responseScope.get().close();
+                }
+                try {
+                    payload.close();
+                } catch (IOException e) {
+                    logger.error("failed to close payload input stream due to ", e);
+                }
+            });
     }
 }

@@ -31,6 +31,7 @@ public class RequestOptions {
     private boolean scriptLoggingEnabled;
     private boolean populateQuotaInfo;
     private Map<String, Object> properties;
+    private boolean effectivePartitionKeyRouting;
 
     /**
      * Gets the triggers to be invoked before the operation.
@@ -307,6 +308,7 @@ public class RequestOptions {
     public Map<String, String> getHeaders() {
         return this.customOptions;
     }
+
     /**
      * Gets the properties
      *
@@ -323,6 +325,46 @@ public class RequestOptions {
      */
     public RequestOptions setProperties(Map<String, Object> properties) {
         this.properties = properties;
+        return this;
+    }
+
+    /**
+     * Gets a {@code boolean} value indicating whether to use effective partition key routing in the Cosmos DB request.
+     * <p>
+     * This method is provided in addition to {@link #isEffectivePartitionKeyRouting}.
+     *
+     * @return {@code true} if effective partition key routing should be used in the Cosmos DB request.
+     * <p>
+     * See the <a href="http://download.oracle.com/otndocs/jcp/7224-javabeans-1.01-fr-spec-oth-JSpec/">JavaBeans
+     * specification</a> section 8.3.2:
+     */
+    public boolean getEffectivePartitionKeyRouting() {
+        return this.effectivePartitionKeyRouting;
+    }
+
+    /**
+     * Gets a {@code boolean} value indicating whether to use effective partition key routing in the Cosmos DB request.
+     * <p>
+     * This method is provided in addition to {@link #getEffectivePartitionKeyRouting}.
+     *
+     * @return {@code true} if effective partition key routing should be used in the Cosmos DB request.
+     * <p>
+     * See the <a href="http://download.oracle.com/otndocs/jcp/7224-javabeans-1.01-fr-spec-oth-JSpec/">JavaBeans
+     * specification</a> section 8.3.2:
+     */
+    public boolean isEffectivePartitionKeyRouting() {
+        return this.effectivePartitionKeyRouting;
+    }
+
+    /**
+     * Sets a {@code boolean} value indicating whether to use effective partition key routing in the Cosmos DB request.
+     *
+     * @param value {@code true} if effective partition key routing should be used in the Cosmos DB request.
+     *
+     * @return this {@link RequestOptions} instance.
+     */
+    public RequestOptions setEffectivePartitionKeyRouting(boolean value) {
+        this.effectivePartitionKeyRouting = value;
         return this;
     }
 }

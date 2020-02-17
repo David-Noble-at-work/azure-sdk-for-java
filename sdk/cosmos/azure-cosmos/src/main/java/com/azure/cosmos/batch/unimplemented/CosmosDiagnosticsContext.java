@@ -5,11 +5,11 @@ package com.azure.cosmos.batch.unimplemented;
 
 public class CosmosDiagnosticsContext {
 
-    public CosmosDiagnosticScope CreateOverallScope(String name) {
+    public CosmosDiagnosticScope createOverallScope(String name) {
         return new CosmosDiagnosticScope();
     }
 
-    public CosmosDiagnosticScope CreateScope(String name) {
+    public CosmosDiagnosticScope createScope(String name) {
         return new CosmosDiagnosticScope();
     }
 }

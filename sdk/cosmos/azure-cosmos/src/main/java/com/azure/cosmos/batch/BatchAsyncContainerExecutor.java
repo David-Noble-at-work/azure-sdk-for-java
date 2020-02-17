@@ -3,10 +3,12 @@
 
 package com.azure.cosmos.batch;
 
+import com.azure.cosmos.CosmosAsyncContainer;
 import com.azure.cosmos.PartitionKeyDefinition;
 import com.azure.cosmos.RetryOptions;
 import com.azure.cosmos.batch.unimplemented.CosmosDiagnosticScope;
 import com.azure.cosmos.batch.unimplemented.CosmosDiagnosticsContext;
+import com.azure.cosmos.batch.unimplemented.ResponseMessage;
 import com.azure.cosmos.implementation.DocumentClientRetryPolicy;
 import com.azure.cosmos.implementation.HttpConstants.HttpHeaders;
 import com.azure.cosmos.implementation.OperationType;
@@ -52,58 +54,59 @@ public class BatchAsyncContainerExecutor implements AutoCloseable {
 
     private final ConcurrentHashMap<String, Semaphore> limiters = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<String, BatchAsyncStreamer> streamers = new ConcurrentHashMap<>();
-    private final CosmosClientContext clientContext;
-    private final ContainerCore containerCore;
 
-    private int dispatchTimerInSeconds;
-    private int maxServerRequestBodyLength;
-    private int maxServerRequestOperationCount;
-    private RetryOptions retryOptions;
-    private final TimerPool timerPool;
+    private final CosmosClientContext clientContext;
+    private final CosmosAsyncContainer container;
+    private final int dispatchTimerInSeconds;
+    private final int maxOperationCount;
+    private final int maxPayloadLength;
+    private final RetryOptions retryOptions;
+
+    private TimerPool timerPool;
 
     public BatchAsyncContainerExecutor(
-        ContainerCore cosmosContainer,
-        CosmosClientContext cosmosClientContext,
-        int maxServerRequestOperationCount,
-        int maxServerRequestBodyLength) {
+        @Nonnull final CosmosClientContext clientContext,
+        @Nonnull final CosmosAsyncContainer container,
+        final int maxOperationCount,
+        final int maxPayloadLength) {
 
         this(
-            cosmosContainer,
-            cosmosClientContext,
-            maxServerRequestOperationCount,
-            maxServerRequestBodyLength,
+            clientContext, container,
+            maxOperationCount,
+            maxPayloadLength,
             BatchAsyncContainerExecutor.DEFAULT_DISPATCH_TIMER_IN_SECONDS);
     }
 
     public BatchAsyncContainerExecutor(
-        @Nonnull final ContainerCore containerCore,
         @Nonnull final CosmosClientContext clientContext,
-        final int maxServerRequestOperationCount,
-        final int maxServerRequestBodyLength,
+        @Nonnull final CosmosAsyncContainer container,
+        final int maxOperationCount,
+        final int maxPayloadLength,
         final int dispatchTimerInSeconds) {
 
-        checkNotNull(containerCore, "expected non-null containerCore");
         checkNotNull(clientContext, "expected non-null clientContext");
+        checkNotNull(container, "expected non-null containerCore");
 
-        checkArgument(maxServerRequestOperationCount > 0,
+        checkArgument(maxOperationCount > 0,
             "expected maxServerRequestOperationCount > 0, not %s",
-            maxServerRequestOperationCount);
+            maxOperationCount);
 
-        checkArgument(maxServerRequestBodyLength > 0,
+        checkArgument(maxPayloadLength > 0,
             "expected maxServerRequestBodyLength > 0, not %s",
-            maxServerRequestBodyLength);
+            maxPayloadLength);
 
         checkArgument(dispatchTimerInSeconds > 0,
             "expected dispatchTimerInSeconds > 0, not %s",
             dispatchTimerInSeconds);
 
-        this.containerCore = containerCore;
         this.clientContext = clientContext;
-        this.maxServerRequestBodyLength = maxServerRequestBodyLength;
-        this.maxServerRequestOperationCount = maxServerRequestOperationCount;
+        this.container = container;
+        this.maxOperationCount = maxOperationCount;
+        this.maxPayloadLength = maxPayloadLength;
         this.dispatchTimerInSeconds = dispatchTimerInSeconds;
+
         this.timerPool = new TimerPool(BatchAsyncContainerExecutor.MINIMUM_DISPATCH_TIMER_IN_SECONDS);
-        this.retryOptions = clientContext.ClientOptions.GetConnectionPolicy().RetryOptions;
+        this.retryOptions = clientContext.getConnectionPolicy().getRetryOptions();
     }
 
 
@@ -135,25 +138,12 @@ public class BatchAsyncContainerExecutor implements AutoCloseable {
         });
     }
 
-    public CompletableFuture<Void> validateOperationAsync(ItemBatchOperation operation) {
-        return validateOperationAsync(operation, null);
-    }
-
-    public CompletableFuture<Void> validateOperationAsync(
-        @Nonnull final ItemBatchOperation<?> operation,
-        @Nullable final RequestOptions options) {
-
-        if (options != null) {
-            checkState(options.getConsistencyLevel() == null
-                && options.getPostTriggerInclude() == null
-                && options.getPreTriggerInclude() == null
-                && options.getSessionToken() == null);
-            checkState(BatchAsyncContainerExecutor.ValidateOperationEPK(operation, options));
-        }
-
-        return operation.materializeResource(this.clientContext.SerializerCore);
-    }
-
+    /**
+     * Closes the current {@link BatchAsyncContainerExecutor async batch executor}.
+     *
+     * @throws IOException if an input/output error occurs while closing any of the underlying {@link BatchAsyncStreamer
+     * streamer} instances.
+     */
     public final void close() throws IOException {
 
         IOException aggregateException = null;
@@ -178,6 +168,25 @@ public class BatchAsyncContainerExecutor implements AutoCloseable {
         }
     }
 
+    public CompletableFuture<Void> validateOperationAsync(
+        @Nonnull final ItemBatchOperation<?> operation,
+        @Nullable final RequestOptions options) {
+
+        if (options != null) {
+            checkState(options.getConsistencyLevel() == null
+                && options.getPostTriggerInclude() == null
+                && options.getPreTriggerInclude() == null
+                && options.getSessionToken() == null);
+            checkState(BatchAsyncContainerExecutor.ValidateOperationEPK(operation, options));
+        }
+
+        return operation.materializeResource(this.clientContext.SerializerCore);
+    }
+
+    public CompletableFuture<Void> validateOperationAsync(ItemBatchOperation operation) {
+        return validateOperationAsync(operation, null);
+    }
+
     private static void AddHeadersToRequestMessage(RequestMessage requestMessage, String partitionKeyRangeId) {
         requestMessage.Headers.PartitionKeyRangeId = partitionKeyRangeId;
         requestMessage.Headers.Add(HttpHeaders.SHOULD_BATCH_CONTINUE_ON_ERROR, Boolean.TRUE.toString());
@@ -192,7 +201,7 @@ public class BatchAsyncContainerExecutor implements AutoCloseable {
         CosmosDiagnosticsContext diagnosticsContext = new CosmosDiagnosticsContext();
         Semaphore limiter = this.getOrAddLimiterForPartitionKeyRange(serverRequest.getPartitionKeyRangeId());
 
-        try (CosmosDiagnosticScope scope = diagnosticsContext.CreateScope("BatchAsyncContainerExecutor.Limiter")) {
+        try (CosmosDiagnosticScope scope = diagnosticsContext.createScope("BatchAsyncContainerExecutor.Limiter")) {
             limiter.acquire();
         } catch (InterruptedException error) {
             future.completeExceptionally(error);
@@ -203,12 +212,12 @@ public class BatchAsyncContainerExecutor implements AutoCloseable {
 
             assert payload != null : "expected non-null serverRequestPayload";
 
-            ResponseMessage responseMessage = /*await*/ this.clientContext.ProcessResourceOperationStreamAsync(
-                this.containerCore.LinkUri,
+            ResponseMessage responseMessage = /*await*/ this.clientContext.processResourceOperationStreamAsync(
+                this.container.LinkUri,
                 ResourceType.Document,
                 OperationType.Batch,
                 new RequestOptions(),
-                this.containerCore,
+                this.container,
                 null,
                 payload,
                 requestMessage -> BatchAsyncContainerExecutor.AddHeadersToRequestMessage(
@@ -216,8 +225,8 @@ public class BatchAsyncContainerExecutor implements AutoCloseable {
                     serverRequest.getPartitionKeyRangeId()),
                 diagnosticsContext);
 
-            try (CosmosDiagnosticScope scope = diagnosticsContext.CreateScope("BatchAsyncContainerExecutor.ToResponse")) {
-                TransactionalBatchResponse serverResponse = /*await*/TransactionalBatchResponse.FromResponseMessageAsync(responseMessage, serverRequest, this.clientContext.SerializerCore).ConfigureAwait(false);
+            try (CosmosDiagnosticScope scope = diagnosticsContext.createScope("BatchAsyncContainerExecutor.ToResponse")) {
+                TransactionalBatchResponse serverResponse = /*await*/TransactionalBatchResponse.fromResponseMessageAsync(responseMessage, serverRequest, this.clientContext.SerializerCore).ConfigureAwait(false);
                 return new PartitionKeyRangeBatchExecutionResult(serverRequest.getPartitionKeyRangeId(), serverRequest.getOperations(), serverResponse);
             }
 
@@ -230,49 +239,12 @@ public class BatchAsyncContainerExecutor implements AutoCloseable {
         return future;
     }
 
-    private Semaphore getOrAddLimiterForPartitionKeyRange(String partitionKeyRangeId) {
-        return this.limiters.computeIfAbsent(partitionKeyRangeId, id -> {
-            Semaphore semaphore = new Semaphore(1);
-            semaphore.tryAcquire();
-            return semaphore;
-        });
-    }
-
-    private BatchAsyncStreamer getOrAddStreamerForPartitionKeyRange(String partitionKeyRangeId) {
-
-        return this.streamers.computeIfAbsent(partitionKeyRangeId, id -> new BatchAsyncStreamer(
-            this.maxServerRequestOperationCount,
-            this.maxServerRequestBodyLength,
-            this.dispatchTimerInSeconds,
-            this.timerPool,
-            this.clientContext.SerializerCore,
-            this::ExecuteAsync,
-            this::ReBatchAsync));
-    }
-
-    private CompletableFuture<PartitionKeyInternal> getPartitionKeyInternalAsync(
-        @Nonnull final ItemBatchOperation operation) {
-
-        checkNotNull(operation, "expected non-null operation");
-
-        PartitionKeyInternal partitionKeyInternal = getPartitionKeyInternal(Objects.requireNonNull(
-            operation.getPartitionKey(),
-            "expected non-null operation partition key"));
-
-        if (partitionKeyInternal != null) {
-            return CompletableFuture.completedFuture(partitionKeyInternal);
-        }
-
-        return /*await*/ this.containerCore.GetNonePartitionKeyValueAsync();
-    }
-
     private static DocumentClientRetryPolicy GetRetryPolicy(RetryOptions retryOptions) {
         return new BulkPartitionKeyRangeGoneRetryPolicy(
             new ResourceThrottleRetryPolicy(
                 retryOptions.getMaxRetryAttemptsOnThrottledRequests(),
                 retryOptions.getMaxRetryWaitTimeInSeconds()));
     }
-
 
     private CompletableFuture<Void> ReBatchAsync(ItemBatchOperation operation) {
         return this.ResolvePartitionKeyRangeIdAsync(operation).thenApplyAsync((String resolvedPartitionKeyRangeId) -> {
@@ -286,8 +258,8 @@ public class BatchAsyncContainerExecutor implements AutoCloseable {
 
         checkNotNull(operation, "expected non-null operation");
 
-        PartitionKeyDefinition partitionKeyDefinition = /*await*/ this.containerCore.GetPartitionKeyDefinitionAsync();
-        CollectionRoutingMap collectionRoutingMap = /*await*/ this.containerCore.GetRoutingMapAsync();
+        PartitionKeyDefinition partitionKeyDefinition = /*await*/ this.container.GetPartitionKeyDefinitionAsync();
+        CollectionRoutingMap collectionRoutingMap = /*await*/ this.container.GetRoutingMapAsync();
         final RequestOptions options = operation.getRequestOptions();
         byte[] effectivePartitionKey = null;
 
@@ -346,5 +318,41 @@ public class BatchAsyncContainerExecutor implements AutoCloseable {
             "partition key and effective partition key may not both be set.");
 
         return true;
+    }
+
+    private Semaphore getOrAddLimiterForPartitionKeyRange(String partitionKeyRangeId) {
+        return this.limiters.computeIfAbsent(partitionKeyRangeId, id -> {
+            Semaphore semaphore = new Semaphore(1);
+            semaphore.tryAcquire();
+            return semaphore;
+        });
+    }
+
+    private BatchAsyncStreamer getOrAddStreamerForPartitionKeyRange(String partitionKeyRangeId) {
+
+        return this.streamers.computeIfAbsent(partitionKeyRangeId, id -> new BatchAsyncStreamer(
+            this.maxOperationCount,
+            this.maxPayloadLength,
+            this.dispatchTimerInSeconds,
+            this.timerPool,
+            this.clientContext.SerializerCore,
+            this::ExecuteAsync,
+            this::ReBatchAsync));
+    }
+
+    private CompletableFuture<PartitionKeyInternal> getPartitionKeyInternalAsync(
+        @Nonnull final ItemBatchOperation operation) {
+
+        checkNotNull(operation, "expected non-null operation");
+
+        PartitionKeyInternal partitionKeyInternal = getPartitionKeyInternal(Objects.requireNonNull(
+            operation.getPartitionKey(),
+            "expected non-null operation partition key"));
+
+        if (partitionKeyInternal != null) {
+            return CompletableFuture.completedFuture(partitionKeyInternal);
+        }
+
+        return /*await*/ this.container.GetNonePartitionKeyValueAsync();
     }
 }
