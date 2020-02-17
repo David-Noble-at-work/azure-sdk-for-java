@@ -61,7 +61,7 @@ final class PartitionKeyRangeServerBatchRequest extends ServerBatchRequest {
      */
     public static CompletableFuture<ServerOperationBatchRequest> createAsync(
         final String partitionKeyRangeId,
-        final List<ItemBatchOperation> operations,
+        final List<ItemBatchOperation<?>> operations,
         final int maxBodyLength,
         final int maxOperationCount,
         final boolean ensureContinuousOperationIndexes,
@@ -73,9 +73,7 @@ final class PartitionKeyRangeServerBatchRequest extends ServerBatchRequest {
             maxOperationCount,
             serializerCore);
 
-        List<ItemBatchOperation> pendingOperations = /*await*/ request.createBodyStreamAsync(
-            operations,
-            ensureContinuousOperationIndexes);
-        return new ServerOperationBatchRequest(request, pendingOperations);
+        return request.createBodyStreamAsync(operations, ensureContinuousOperationIndexes).thenApply(
+            pendingOperations -> new ServerOperationBatchRequest(request, pendingOperations));
     }
 }

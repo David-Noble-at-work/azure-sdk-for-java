@@ -6,8 +6,11 @@ package com.azure.cosmos.batch;
 import com.azure.cosmos.PartitionKey;
 import com.azure.cosmos.serializer.CosmosSerializerCore;
 
+import javax.annotation.Nonnull;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
+
+import static com.azure.cosmos.base.Preconditions.checkNotNull;
 
 public final class SinglePartitionKeyServerBatchRequest extends ServerBatchRequest {
 
@@ -20,7 +23,9 @@ public final class SinglePartitionKeyServerBatchRequest extends ServerBatchReque
      * @param partitionKey Partition key that applies to all operations in this request.
      * @param serializerCore Serializer to serialize user provided objects to JSON.
      */
-    private SinglePartitionKeyServerBatchRequest(PartitionKey partitionKey, CosmosSerializerCore serializerCore) {
+    private SinglePartitionKeyServerBatchRequest(
+        @Nonnull final PartitionKey partitionKey,
+        @Nonnull final CosmosSerializerCore serializerCore) {
         super(Integer.MAX_VALUE, Integer.MAX_VALUE, serializerCore);
         this.partitionKey = partitionKey;
     }
@@ -42,15 +47,19 @@ public final class SinglePartitionKeyServerBatchRequest extends ServerBatchReque
      *
      * @return A newly created instance of {@link SinglePartitionKeyServerBatchRequest}.
      */
-    public static CompletableFuture<SinglePartitionKeyServerBatchRequest> CreateAsync(
-        PartitionKey partitionKey,
-        List<ItemBatchOperation> operations,
-        CosmosSerializerCore serializerCore) {
+    public static CompletableFuture<SinglePartitionKeyServerBatchRequest> createAsync(
+        @Nonnull final PartitionKey partitionKey,
+        @Nonnull final List<ItemBatchOperation<?>> operations,
+        @Nonnull final CosmosSerializerCore serializerCore) {
+
+        checkNotNull(partitionKey, "expected non-null partitionKey");
+        checkNotNull(operations, "expected non-null operations");
+        checkNotNull(serializerCore, "expected non-null serializerCore");
 
         final SinglePartitionKeyServerBatchRequest request = new SinglePartitionKeyServerBatchRequest(
             partitionKey,
             serializerCore);
-        /*await*/ request.createBodyStreamAsync(operations);
-        return request;
+
+        return request.createBodyStreamAsync(operations).thenApplyAsync(pendingOperations -> request);
     }
 }

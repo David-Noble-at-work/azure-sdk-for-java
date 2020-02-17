@@ -52,12 +52,12 @@ public final class BatchExecutor {
             SinglePartitionKeyServerBatchRequest serverRequest;
 
             try (this.diagnosticsContext.CreateScope("CreateBatchRequest")) {
-                serverRequest = /*await*/SinglePartitionKeyServerBatchRequest.CreateAsync(serverRequestPartitionKey,
+                serverRequest = /*await*/SinglePartitionKeyServerBatchRequest.createAsync(serverRequestPartitionKey,
                     new ArrayList<ItemBatchOperation>(this.inputOperations),
                     this.clientContext.SerializerCore);
             }
 
-            return /*await*/this.ExecuteServerRequestAsync(serverRequest);
+            return /*await*/ this.ExecuteServerRequestAsync(serverRequest);
         }
     }
 
