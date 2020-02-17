@@ -3,6 +3,7 @@
 
 package com.azure.cosmos.batch;
 
+import com.azure.cosmos.batch.unimplemented.CosmosDiagnosticsContext;
 import com.azure.cosmos.core.Out;
 import com.azure.cosmos.serialization.hybridrow.HybridRowVersion;
 import com.azure.cosmos.serialization.hybridrow.Result;

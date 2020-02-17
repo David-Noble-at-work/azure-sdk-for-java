@@ -16,7 +16,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.atomic.AtomicReference;
 
-import static com.azure.cosmos.batch.PartitionKeyRangeServerBatchRequest.*;
+import static com.azure.cosmos.batch.PartitionKeyRangeServerBatchRequest.createAsync;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
@@ -87,7 +87,7 @@ public class BatchAsyncBatcher {
 
         final String partitionKeyRangeId = this.batchOperations.get(0).getContext().getPartitionKeyRangeId();
 
-        final List<ItemBatchOperation> itemBatchOperations = Collections.unmodifiableList(
+        final List<ItemBatchOperation<?>> itemBatchOperations = Collections.unmodifiableList(
             new ArrayList<>(this.batchOperations)
         );
 

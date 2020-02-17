@@ -4,6 +4,7 @@
 package com.azure.cosmos.batch;
 
 import com.azure.cosmos.PartitionKey;
+import com.azure.cosmos.batch.unimplemented.CosmosDiagnosticsContext;
 import com.azure.cosmos.implementation.OperationType;
 import com.azure.cosmos.implementation.RequestOptions;
 

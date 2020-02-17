@@ -4,6 +4,8 @@
 package com.azure.cosmos.batch;
 
 import com.azure.cosmos.Resource;
+import com.azure.cosmos.batch.unimplemented.CosmosDiagnostics;
+import com.azure.cosmos.batch.unimplemented.CosmosDiagnosticsContext;
 import com.azure.cosmos.implementation.HttpConstants.HttpHeaders;
 import com.azure.cosmos.implementation.HttpConstants.StatusCodes;
 import com.azure.cosmos.implementation.HttpConstants.SubStatusCodes;

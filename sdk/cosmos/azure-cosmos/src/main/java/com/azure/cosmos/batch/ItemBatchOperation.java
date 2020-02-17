@@ -5,6 +5,7 @@ package com.azure.cosmos.batch;
 
 import com.azure.cosmos.AccessCondition;
 import com.azure.cosmos.PartitionKey;
+import com.azure.cosmos.batch.unimplemented.CosmosDiagnosticsContext;
 import com.azure.cosmos.core.UtfAnyString;
 import com.azure.cosmos.implementation.HttpConstants.HttpHeaders;
 import com.azure.cosmos.implementation.OperationType;
