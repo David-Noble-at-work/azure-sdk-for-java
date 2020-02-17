@@ -3,11 +3,12 @@
 
 package com.azure.cosmos.batch;
 
-import com.azure.cosmos.core.Out;
 import com.azure.cosmos.serialization.hybridrow.HybridRowVersion;
 import com.azure.cosmos.serialization.hybridrow.Result;
+import com.azure.cosmos.serialization.hybridrow.ResultValue;
 import com.azure.cosmos.serialization.hybridrow.RowBuffer;
 import com.azure.cosmos.serialization.hybridrow.io.RowWriter;
+import com.azure.cosmos.serialization.hybridrow.recordio.RecordIOStream;
 import com.azure.cosmos.serializer.CosmosSerializerCore;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufInputStream;
@@ -49,7 +50,7 @@ public abstract class ServerBatchRequest {
         this.serializerCore = serializerCore;
     }
 
-    public final List<ItemBatchOperation> getOperations() {
+    public final List<ItemBatchOperation<?>> getOperations() {
         return this.operations;
     }
 
@@ -72,8 +73,8 @@ public abstract class ServerBatchRequest {
      *
      * @return Any pending operations that were not included in the request.
      */
-    protected final CompletableFuture<List<ItemBatchOperation>> createBodyStreamAsync(
-        @Nonnull final List<ItemBatchOperation> operations) {
+    protected final CompletableFuture<List<ItemBatchOperation<?>>> createBodyStreamAsync(
+        @Nonnull final List<ItemBatchOperation<?>> operations) {
         return createBodyStreamAsync(operations, false);
     }
 
@@ -95,7 +96,6 @@ public abstract class ServerBatchRequest {
 
         CompletableFuture<Void> future = null;
         final Track track = new Track();
-
         int previousOperationIndex = -1;
 
         for (ItemBatchOperation<?> operation : operations) {
@@ -108,13 +108,11 @@ public abstract class ServerBatchRequest {
                 previousOperationIndex = operationIndex;
             }
 
-            if (future == null) {
-                future = operation.materializeResource(this.serializerCore);
-            } else {
-                future.thenComposeAsync((Void result) -> operation.materializeResource(this.serializerCore));
-            }
+            future = future == null
+                ? operation.materializeResource(this.serializerCore)
+                : future.thenComposeAsync((Void r) -> operation.materializeResource(this.serializerCore));
 
-            future.thenApplyAsync((Void result) -> {
+            future = future.thenApplyAsync((Void r) -> {
 
                 final int approximateSerializedLength = operation.GetApproximateSerializedLength();
                 track.estimatedMaxOperationLength = max(approximateSerializedLength, track.estimatedMaxOperationLength);
@@ -126,67 +124,35 @@ public abstract class ServerBatchRequest {
                     throw BatchOverflowException.INSTANCE;
                 }
 
-                return result;
+                return r;
             })
             ;
         }
 
-        future.thenApplyAsync((Void result) -> {
+        assert future != null : "expected non-null future";
+
+        return future.thenComposeAsync((Void result) -> {
 
             track.approximateTotalSerializedLength += track.materializedCount * SERIALIZATION_OVERHEAD_ESTIMATE_IN_BYTES;
             this.operations = operations.subList(0, track.materializedCount);
             this.bodyStream = new ByteBufOutputStream(Unpooled.buffer(track.approximateTotalSerializedLength));
-            return result;
 
-        }).thenComposeAsync((Void result) -> {
+            return RecordIOStream.writeRecordIOAsync(this.bodyStream, null, this::writeOperation);
 
-            Result r = /*await*/ this.bodyStream.WriteRecordIOAsync(null, this::WriteOperation);
-            assert r == Result.SUCCESS : "Failed to serialize batch request";
-
-            this.bodyStream.Position = 0;
+        }).thenApplyAsync((Result result) -> {
 
             if (this.shouldDeleteLastWrittenRecord) {
-                this.bodyStream.SetLength(this.bodyStreamPositionBeforeWritingCurrentRecord);
-                this.operations = new ArraySegment<ItemBatchOperation>(
-                    operations.Array, operations.Offset, this.lastWrittenOperationIndex);
+                this.bodyStream.buffer().writerIndex((int) this.bodyStreamPositionBeforeWritingCurrentRecord);
+                this.operations = operations.subList(0, this.lastWrittenOperationIndex);
             } else {
-                this.operations = new ArraySegment<ItemBatchOperation>(
-                    operations.Array, operations.Offset, this.lastWrittenOperationIndex + 1);
+                this.operations = operations.subList(0, this.lastWrittenOperationIndex + 1);
             }
 
-            ////
-
-            return operations.subList(materializedCount, operations.size());
+            return operations.subList(track.materializedCount, operations.size());
         });
-
-        ////
-
-        this.bodyStream = new MemoryStream(
-            approximateTotalSerializedLength + (SERIALIZATION_OVERHEAD_ESTIMATE_IN_BYTES * materializedCount));
-
-        this.operationResizableWriteBuffer = new MemorySpanResizer<Byte>(
-            estimatedMaxOperationLength + SERIALIZATION_OVERHEAD_ESTIMATE_IN_BYTES);
-
-        Result r = /*await*/ this.bodyStream.WriteRecordIOAsync(null, this::WriteOperation);
-        assert r == Result.SUCCESS : "Failed to serialize batch request";
-
-        this.bodyStream.Position = 0;
-
-        if (this.shouldDeleteLastWrittenRecord) {
-            this.bodyStream.SetLength(this.bodyStreamPositionBeforeWritingCurrentRecord);
-            this.operations = new ArraySegment<ItemBatchOperation>(
-                operations.Array, operations.Offset, this.lastWrittenOperationIndex);
-        } else {
-            this.operations = new ArraySegment<ItemBatchOperation>(
-                operations.Array, operations.Offset, this.lastWrittenOperationIndex + 1);
-        }
-
-        ////
-
-        return operations.subList(materializedCount, operations.size());
     }
 
-    private Result WriteOperation(final long index, @Nonnull final Out<ByteBuf> buffer) {
+    private ResultValue<ByteBuf> writeOperation(final long index) {
 
         checkArgument(0 <= index && index < Integer.MAX_VALUE, "expected 0 <= index && index <= %s, not %s",
             Integer.MAX_VALUE,
@@ -199,18 +165,16 @@ public abstract class ServerBatchRequest {
             if (index > 1) {
                 this.shouldDeleteLastWrittenRecord = true;
             }
-            buffer.set(null);
-            return Result.SUCCESS;
+            return new ResultValue<>(Result.SUCCESS, null);
         }
 
         this.bodyStreamPositionBeforeWritingCurrentRecord = start;
 
         if (index >= this.operations.size()) {
-            buffer.set(null);
-            return Result.SUCCESS;
+            return new ResultValue<>(Result.SUCCESS, null);
         }
 
-        ItemBatchOperation operation = this.operations.get((int) index);
+        ItemBatchOperation<?> operation = this.operations.get((int) index);
 
         RowBuffer rowBuffer = new RowBuffer(1024).initLayout(
             HybridRowVersion.V1,
@@ -220,14 +184,11 @@ public abstract class ServerBatchRequest {
         Result result = RowWriter.writeBuffer(rowBuffer, operation, ItemBatchOperation::writeOperation);
 
         if (result != Result.SUCCESS) {
-            buffer.set(null);
-            return result;
+            return new ResultValue<>(Result.SUCCESS, null);
         }
 
         this.lastWrittenOperationIndex = (int) index;
-        buffer.set(rowBuffer.buffer());
-
-        return Result.SUCCESS;
+        return new ResultValue<>(Result.SUCCESS, rowBuffer.buffer());
     }
 
     private static final class BatchOverflowException extends RuntimeException {
