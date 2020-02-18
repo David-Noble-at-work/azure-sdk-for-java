@@ -13,7 +13,7 @@ import com.azure.cosmos.batch.unimplemented.ResponseMessage;
 import com.azure.cosmos.implementation.OperationType;
 import com.azure.cosmos.implementation.RequestOptions;
 import com.azure.cosmos.implementation.ResourceType;
-import com.azure.cosmos.serializer.CosmosSerializerCore;
+import com.azure.cosmos.batch.serializer.CosmosSerializerCore;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;

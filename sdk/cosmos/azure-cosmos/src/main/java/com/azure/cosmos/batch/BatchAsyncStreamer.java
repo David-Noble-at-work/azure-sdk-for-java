@@ -3,7 +3,7 @@
 
 package com.azure.cosmos.batch;
 
-import com.azure.cosmos.serializer.CosmosSerializerCore;
+import com.azure.cosmos.batch.serializer.CosmosSerializerCore;
 
 import java.io.IOException;
 

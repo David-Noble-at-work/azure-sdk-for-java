@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-package com.azure.cosmos.serializer;
+package com.azure.cosmos.batch.serializer;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 

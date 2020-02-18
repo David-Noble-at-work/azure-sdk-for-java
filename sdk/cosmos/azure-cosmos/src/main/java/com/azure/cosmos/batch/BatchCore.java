@@ -3,6 +3,7 @@
 
 package com.azure.cosmos.batch;
 
+import com.azure.cosmos.CosmosAsyncContainer;
 import com.azure.cosmos.PartitionKey;
 import com.azure.cosmos.batch.unimplemented.CosmosDiagnosticsContext;
 import com.azure.cosmos.implementation.OperationType;
@@ -18,21 +19,28 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 public class BatchCore implements TransactionalBatch {
 
-    private final ContainerCore container;
+    private final CosmosClientContext clientContext;
+    private final CosmosAsyncContainer container;
     private final ArrayList<ItemBatchOperation<?>> operations;
     private final PartitionKey partitionKey;
 
     /**
      * Initializes a new instance of the {@link BatchCore} class.
      *
-     * @param container Container that has items on which batch operations are to be performed.
-     * @param partitionKey The partition key for all items in the batch. {@link PartitionKey}.
+     * @param clientContext Cosmos client context for batch operations to be performed.
+     * @param container Container of items on which the batch operations are to be performed.
+     * @param partitionKey The partition key for all items on which batch operations are to be performed.
      */
-    public BatchCore(@Nonnull ContainerCore container, @Nonnull PartitionKey partitionKey) {
+    public BatchCore(
+        @Nonnull final CosmosClientContext clientContext,
+        @Nonnull final CosmosAsyncContainer container,
+        @Nonnull final PartitionKey partitionKey) {
 
+        checkNotNull(clientContext, "expected non-null clientContext");
         checkNotNull(container, "expected non-null container");
         checkNotNull(partitionKey, "expected non-null partitionKey");
 
+        this.clientContext = clientContext;
         this.container = container;
         this.partitionKey = partitionKey;
         this.operations = new ArrayList<>();
@@ -95,6 +103,7 @@ public class BatchCore implements TransactionalBatch {
     public CompletableFuture<TransactionalBatchResponse> executeAsync(RequestOptions requestOptions) {
 
         BatchExecutor executor = new BatchExecutor(
+            this.clientContext,
             this.container,
             this.partitionKey,
             new ArrayList<>(this.operations),

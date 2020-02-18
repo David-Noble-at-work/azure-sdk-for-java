@@ -39,7 +39,7 @@ public final class BatchExecUtils {
     private static final int MINIMUM_BUFFER_SIZE = 81920;
 
     public static void ensureValid(
-        @Nonnull final List<ItemBatchOperation> operations,
+        @Nonnull final List<ItemBatchOperation<?>> operations,
         @Nullable final RequestOptions options) {
 
         final String errorMessage = BatchExecUtils.isValid(operations, options);
@@ -62,9 +62,7 @@ public final class BatchExecUtils {
         return collectionRoutingMap.getRangeByEffectivePartitionKey(epkString).getId();
     }
 
-    public static String isValid(
-        @Nonnull final List<ItemBatchOperation> operations,
-        @Nullable final RequestOptions options) {
+    public static String isValid(final List<ItemBatchOperation<?>> operations, final RequestOptions options) {
 
         if (operations == null) {
             return "expected non-null operations";
@@ -80,7 +78,7 @@ public final class BatchExecUtils {
             return "one or more request options provided on the batch request are not supported";
         }
 
-        for (ItemBatchOperation operation : operations) {
+        for (ItemBatchOperation<?> operation : operations) {
 
             final RequestOptions operationOptions = operation.getRequestOptions();
 

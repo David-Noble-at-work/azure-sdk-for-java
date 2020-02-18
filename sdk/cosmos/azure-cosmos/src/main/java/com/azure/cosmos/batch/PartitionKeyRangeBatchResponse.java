@@ -6,7 +6,7 @@ package com.azure.cosmos.batch;
 import com.azure.cosmos.Resource;
 import com.azure.cosmos.batch.unimplemented.CosmosDiagnostics;
 import com.azure.cosmos.batch.unimplemented.CosmosDiagnosticsContext;
-import com.azure.cosmos.serializer.CosmosSerializerCore;
+import com.azure.cosmos.batch.serializer.CosmosSerializerCore;
 import io.netty.handler.codec.http.HttpResponseStatus;
 
 import javax.annotation.Nonnull;
@@ -106,7 +106,7 @@ public class PartitionKeyRangeBatchResponse extends TransactionalBatchResponse {
      * @return Result of batch operation that contains a Resource deserialized to specified type.
      */
     @Override
-    public <T> TransactionalBatchOperationResult<T> GetOperationResultAtIndex(
+    public <T> TransactionalBatchOperationResult<T> getOperationResultAtIndex(
         final int index, @Nonnull final Class<T> type) {
 
         checkArgument(0 <= index && index < this.size(), "expected index in range [0, %s), not %s",

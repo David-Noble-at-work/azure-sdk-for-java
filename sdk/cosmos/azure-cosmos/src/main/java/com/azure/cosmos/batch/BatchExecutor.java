@@ -9,11 +9,10 @@ import com.azure.cosmos.batch.unimplemented.CosmosDiagnosticScope;
 import com.azure.cosmos.batch.unimplemented.CosmosDiagnosticsContext;
 import com.azure.cosmos.batch.unimplemented.ResponseMessage;
 import com.azure.cosmos.core.Out;
-import com.azure.cosmos.implementation.HttpConstants.HttpHeaders;
 import com.azure.cosmos.implementation.OperationType;
 import com.azure.cosmos.implementation.RequestOptions;
 import com.azure.cosmos.implementation.ResourceType;
-import com.azure.cosmos.serializer.CosmosSerializerCore;
+import com.azure.cosmos.batch.serializer.CosmosSerializerCore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -31,20 +30,22 @@ public final class BatchExecutor {
 
     private static final Logger logger = LoggerFactory.getLogger(BatchExecutor.class);
 
-    private CosmosClientContext clientContext;
-    private CosmosAsyncContainer container;
+    private final CosmosClientContext clientContext;
+    private final CosmosAsyncContainer container;
     private final CosmosDiagnosticsContext diagnosticsContext;
     private final List<ItemBatchOperation<?>> operations;
     private final RequestOptions options;
     private final PartitionKey partitionKey;
 
     public BatchExecutor(
+        final CosmosClientContext clientContext,
         final CosmosAsyncContainer container,
         final PartitionKey partitionKey,
         final List<ItemBatchOperation<?>> operations,
         final RequestOptions options,
         final CosmosDiagnosticsContext diagnosticsContext) {
 
+        this.clientContext = clientContext;
         this.container = container;
         this.operations = operations;
         this.partitionKey = partitionKey;
@@ -54,26 +55,22 @@ public final class BatchExecutor {
 
     public CompletableFuture<TransactionalBatchResponse> executeAsync() {
 
-        return CompletableFuture.supplyAsync(() -> {
+        BatchExecUtils.ensureValid(this.operations, this.options);
 
-            final CosmosDiagnosticScope executeScope = this.diagnosticsContext.createOverallScope("BatchExecuteAsync");
-            BatchExecUtils.ensureValid(this.operations, this.options);
+        final CosmosDiagnosticScope executeScope = this.diagnosticsContext.createOverallScope("BatchExecuteAsync");
+        final ArrayList<ItemBatchOperation<?>> operations = new ArrayList<>(this.operations);
+        final CosmosSerializerCore serializerCore = this.clientContext.getSerializerCore();
 
-            final PartitionKey partitionKey = this.options != null && this.options.isEffectivePartitionKeyRouting()
-                ? null
-                : this.partitionKey;
+        final PartitionKey partitionKey = this.options != null && this.options.isEffectivePartitionKeyRouting()
+            ? null
+            : this.partitionKey;
 
-            final SinglePartitionKeyServerBatchRequest serverRequest;
+        final CosmosDiagnosticScope requestScope = this.diagnosticsContext.createScope("CreateBatchRequest");
 
-            final CosmosDiagnosticScope requestScope = this.diagnosticsContext.createScope("CreateBatchRequest");
-            final ArrayList<ItemBatchOperation<?>> operations = new ArrayList<>(this.operations);
-            final CosmosSerializerCore serializerCore = this.clientContext.getSerializerCore();
-
-            return SinglePartitionKeyServerBatchRequest.createAsync(partitionKey, operations, serializerCore)
-                .whenCompleteAsync((request, error) -> requestScope.close())
-                .thenComposeAsync(this::executeBatchRequestAsync)
-                .whenCompleteAsync((response, error) -> executeScope.close());
-        });
+        return SinglePartitionKeyServerBatchRequest.createAsync(partitionKey, operations, serializerCore)
+            .whenCompleteAsync((request, error) -> requestScope.close())
+            .thenComposeAsync(this::executeBatchRequestAsync)
+            .whenCompleteAsync((response, error) -> executeScope.close());
     }
 
     /**
@@ -92,25 +89,24 @@ public final class BatchExecutor {
 
         checkState(payload != null, "expected non-null payload");
 
-        return CompletableFuture
-            .supplyAsync(() -> this.clientContext.processResourceOperationStreamAsync(
-                this.container.getLink(),
-                ResourceType.Document,
-                OperationType.Batch,
-                options,
-                this.container,
-                request.getPartitionKey(),
-                payload,
-                requestMessage -> {
-                    requestMessage.Headers.Add(HttpHeaders.IS_BATCH_REQUEST, Boolean.TRUE.toString());
-                    requestMessage.Headers.Add(HttpHeaders.IS_BATCH_ATOMIC, Boolean.TRUE.toString());
-                    requestMessage.Headers.Add(HttpHeaders.IS_BATCH_ORDERED, Boolean.TRUE.toString());
-                },
-                this.diagnosticsContext))
+        return this.clientContext.processResourceOperationStreamAsync(
+            this.container.getLink(),
+            ResourceType.Document,
+            OperationType.Batch,
+            options,
+            this.container,
+            request.getPartitionKey(),
+            payload,
+            requestMessage -> {
+                //requestMessage.Headers.Add(HttpHeaders.IS_BATCH_REQUEST, Boolean.TRUE.toString());
+                //requestMessage.Headers.Add(HttpHeaders.IS_BATCH_ATOMIC, Boolean.TRUE.toString());
+                //requestMessage.Headers.Add(HttpHeaders.IS_BATCH_ORDERED, Boolean.TRUE.toString());
+            },
+            this.diagnosticsContext)
 
             .thenComposeAsync((ResponseMessage message) -> {
                 responseScope.set(this.diagnosticsContext.createScope("TransactionalBatchResponse"));
-                return fromResponseMessageAsync(message, request, serializerCore)
+                return fromResponseMessageAsync(message, request, serializerCore);
             })
 
             .whenCompleteAsync((response, error) -> {

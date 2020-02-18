@@ -26,7 +26,7 @@ final class RntbdConstants {
         Eventual((byte) 0x03),
         ConsistentPrefix((byte) 0x04),
 
-        Invalid((byte)0xFF);
+        Invalid((byte) 0xFF);
 
         private final byte id;
 

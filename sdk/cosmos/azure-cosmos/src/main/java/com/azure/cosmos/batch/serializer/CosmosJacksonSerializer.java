@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-package com.azure.cosmos.serializer;
+package com.azure.cosmos.batch.serializer;
 
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -15,6 +15,7 @@ import io.netty.buffer.ByteBufOutputStream;
 import io.netty.buffer.Unpooled;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -40,7 +41,7 @@ final class CosmosJacksonSerializer implements CosmosSerializer {
      *
      * @see PropertyNamingStrategy
      */
-    CosmosJacksonSerializer(CosmosSerializationOptions serializationOptions) {
+    CosmosJacksonSerializer(@Nullable final CosmosSerializationOptions serializationOptions) {
 
         this.objectMapper = new ObjectMapper();
 

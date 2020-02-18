@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-package com.azure.cosmos.serializer;
+package com.azure.cosmos.batch.serializer;
 
 import com.azure.cosmos.CosmosConflictProperties;
 import com.azure.cosmos.CosmosContainerProperties;
@@ -28,7 +28,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 public class CosmosSerializerCore {
 
     private static final CosmosSerializer DEFAULT_SERIALIZER = new CosmosSerializerWrapper(
-        new CosmosJacksonSerializer());
+        new CosmosJacksonSerializer((CosmosSerializationOptions) null));
 
     private final CosmosSerializer serializer;
     private final CosmosSerializer sqlQuerySpecSerializer;

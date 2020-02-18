@@ -3,7 +3,7 @@
 
 package com.azure.cosmos.batch.unimplemented;
 
-public class CosmosDiagnosticsContext {
+public final class CosmosDiagnosticsContext extends CosmosDiagnostics {
 
     public CosmosDiagnosticScope createOverallScope(String name) {
         return new CosmosDiagnosticScope();

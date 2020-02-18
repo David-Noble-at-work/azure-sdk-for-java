@@ -7,17 +7,22 @@ import com.azure.cosmos.Resource;
 import com.azure.cosmos.batch.unimplemented.CosmosDiagnostics;
 import com.azure.cosmos.batch.unimplemented.CosmosDiagnosticsContext;
 import com.azure.cosmos.batch.unimplemented.ResponseMessage;
+import com.azure.cosmos.core.Out;
 import com.azure.cosmos.implementation.HttpConstants.HttpHeaders;
-import com.azure.cosmos.implementation.HttpConstants.StatusCodes;
 import com.azure.cosmos.implementation.HttpConstants.SubStatusCodes;
 import com.azure.cosmos.serialization.hybridrow.HybridRowVersion;
 import com.azure.cosmos.serialization.hybridrow.Result;
-import com.azure.cosmos.serializer.CosmosSerializerCore;
+import com.azure.cosmos.serialization.hybridrow.recordio.RecordIOStream;
+import com.azure.cosmos.batch.serializer.CosmosSerializerCore;
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.ByteBufInputStream;
+import io.netty.buffer.Unpooled;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import org.apache.commons.collections4.list.UnmodifiableList;
 
 import javax.annotation.Nonnull;
 import java.io.IOException;
+import java.io.InputStream;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -36,18 +41,16 @@ import static com.google.common.base.Preconditions.checkNotNull;
 /**
  * Response of a {@link TransactionalBatch} request.
  */
-public class TransactionalBatchResponse implements AutoCloseable, List<TransactionalBatchOperationResult> {
+public class TransactionalBatchResponse implements AutoCloseable, List<TransactionalBatchOperationResult<?>> {
 
     // region Fields
-
-    private static String EMPTY_UUID = "00000000-0000-0000-0000-000000000000";
 
     private static final AtomicReferenceFieldUpdater<TransactionalBatchResponse, UnmodifiableList> operationsUpdater =
         AtomicReferenceFieldUpdater.newUpdater(
             TransactionalBatchResponse.class,
             UnmodifiableList.class,
             "operations");
-
+    private static String EMPTY_UUID = "00000000-0000-0000-0000-000000000000";
     /**
      * Gets the ActivityId that identifies the server request made to execute the batch.
      */
@@ -63,7 +66,7 @@ public class TransactionalBatchResponse implements AutoCloseable, List<Transacti
      * <value>The reason for failure, if any.</value>
      */
     private String errorMessage;
-    private volatile UnmodifiableList<ItemBatchOperation> operations;
+    private volatile UnmodifiableList<ItemBatchOperation<?>> operations;
 
     /**
      * Gets the request charge for the batch request.
@@ -79,7 +82,7 @@ public class TransactionalBatchResponse implements AutoCloseable, List<Transacti
      * <value>The request completion status code.</value>
      */
     private HttpResponseStatus responseStatus;
-    private List<TransactionalBatchOperationResult> results;
+    private List<TransactionalBatchOperationResult<?>> results;
 
     /**
      * Gets the amount of time to wait before retrying this or any other request within Cosmos container or collection
@@ -111,7 +114,7 @@ public class TransactionalBatchResponse implements AutoCloseable, List<Transacti
         CosmosDiagnosticsContext diagnosticsContext) {
 
         this(responseStatus, subStatusCode, errorMessage, 0.0D, null, EMPTY_UUID, diagnosticsContext, operations, null);
-        this.CreateAndPopulateResults(operations);
+        this.createAndPopulateResults(operations);
     }
 
     /**
@@ -125,7 +128,7 @@ public class TransactionalBatchResponse implements AutoCloseable, List<Transacti
         final Duration retryAfter,
         @Nonnull final String activityId,
         @Nonnull final CosmosDiagnosticsContext diagnosticsContext,
-        List<ItemBatchOperation> operations,
+        List<ItemBatchOperation<?>> operations,
         final CosmosSerializerCore serializer) {
 
         checkNotNull(responseStatus, "expected non-null responseStatus");
@@ -140,8 +143,8 @@ public class TransactionalBatchResponse implements AutoCloseable, List<Transacti
         this.diagnosticsContext = diagnosticsContext;
 
         this.operations = operations instanceof UnmodifiableList<?>
-            ? (UnmodifiableList<ItemBatchOperation>) operations
-            : (UnmodifiableList<ItemBatchOperation>) Collections.unmodifiableList(operations);
+            ? (UnmodifiableList<ItemBatchOperation<?>>) operations
+            : (UnmodifiableList<ItemBatchOperation<?>>) Collections.unmodifiableList(operations);
 
         this.serializer = serializer;
     }
@@ -154,8 +157,21 @@ public class TransactionalBatchResponse implements AutoCloseable, List<Transacti
         return this.activityId;
     }
 
+    /**
+     * Gets all the Activity IDs associated with the response.
+     *
+     * @return An enumerable that contains the Activity IDs.
+     */
+    public Iterable<String> getActivityIds() {
+        return Stream.of(this.getActivityId())::iterator;
+    }
+
+    public final List<ItemBatchOperation<?>> getBatchOperations() {
+        return this.operations;
+    }
+
     public CosmosDiagnostics getDiagnostics() {
-        return (CosmosDiagnostics) this.diagnosticsContext;
+        return this.diagnosticsContext;
     }
 
     public CosmosDiagnosticsContext getDiagnosticsContext() {
@@ -168,18 +184,6 @@ public class TransactionalBatchResponse implements AutoCloseable, List<Transacti
 
     public void setErrorMessage(String value) {
         this.errorMessage = value;
-    }
-
-    /**
-     * Gets a value indicating whether the batch was processed.
-     */
-    public boolean isSuccessStatusCode() {
-        int statusCode = this.responseStatus.code();
-        return statusCode >= 200 && statusCode <= 299;
-    }
-
-    public final List<ItemBatchOperation> getBatchOperations() {
-        return this.operations;
     }
 
     public double getRequestCharge() {
@@ -211,152 +215,31 @@ public class TransactionalBatchResponse implements AutoCloseable, List<Transacti
 
     // region Methods
 
-    public static CompletableFuture<TransactionalBatchResponse> fromResponseMessageAsync(
-        ResponseMessage responseMessage,
-        ServerBatchRequest serverRequest,
-        CosmosSerializerCore serializer) {
-        return fromResponseMessageAsync(responseMessage, serverRequest, serializer, true);
-    }
-
-    public static CompletableFuture<TransactionalBatchResponse> fromResponseMessageAsync(
-        ResponseMessage responseMessage,
-        ServerBatchRequest serverRequest,
-        CosmosSerializerCore serializer,
-        boolean shouldPromoteOperationStatus) {
-
-        try (responseMessage) {
-            TransactionalBatchResponse response = null;
-            if (responseMessage.Content != null) {
-                //C# TO JAVA CONVERTER TODO TASK: C# to Java Converter cannot determine whether this System.IO.Stream
-                // is input or output:
-                Stream content = responseMessage.Content;
-
-                // Shouldn't be the case practically, but handle it for safety.
-                if (!responseMessage.Content.CanSeek) {
-                    //C# TO JAVA CONVERTER TODO TASK: C# to Java Converter cannot determine whether this System.IO
-                    // .MemoryStream is input or output:
-                    content = new MemoryStream();
-                    //C# TO JAVA CONVERTER TODO TASK: There is no equivalent to 'await' in Java:
-                    /*await*/ responseMessage.Content.CopyToAsync(content);
-                }
-
-                if (content.ReadByte() == (int) HybridRowVersion.V1) {
-                    content.Position = 0;
-                    response = /*await*/
-                    TransactionalBatchResponse.PopulateFromContentAsync(content, responseMessage, serverRequest,
-                        serializer, shouldPromoteOperationStatus);
-
-                    if (response == null) {
-                        // Convert any payload read failures as InternalServerError
-                        response = new TransactionalBatchResponse(StatusCodes.INTERNAL_SERVER_ERROR,
-                            SubStatusCodes.UNKNOWN, ClientResources.ServerResponseDeserializationFailure,
-                            responseMessage.Headers.RequestCharge, responseMessage.Headers.RetryAfter,
-                            responseMessage.Headers.ActivityId, responseMessage.DiagnosticsContext,
-                            serverRequest.getOperations(), serializer);
-                    }
-                }
-            }
-
-            if (response == null) {
-                response = new TransactionalBatchResponse(responseMessage.StatusCode,
-                    responseMessage.Headers.SubStatusCode, responseMessage.ErrorMessage,
-                    responseMessage.Headers.RequestCharge, responseMessage.Headers.RetryAfter,
-                    responseMessage.Headers.ActivityId, responseMessage.DiagnosticsContext,
-                    serverRequest.getOperations(), serializer);
-            }
-
-            if (response.results == null || response.results.size() != serverRequest.getOperations().Count) {
-                if (responseMessage.IsSuccessStatusCode) {
-                    // Server should be guaranteeing number of results equal to operations when
-                    // batch request is successful - so fail as InternalServerError if this is not the case.
-                    response = new TransactionalBatchResponse(HttpResponseStatus.InternalServerError,
-                        SubStatusCodes.UNKNOWN, ClientResources.InvalidServerResponse,
-                        responseMessage.Headers.RequestCharge, responseMessage.Headers.RetryAfter,
-                        responseMessage.Headers.ActivityId, responseMessage.DiagnosticsContext,
-                        serverRequest.getOperations(), serializer);
-                }
-
-                // When the overall response status code is TooManyRequests, propagate the RetryAfter into the
-                // individual operations.
-                int retryAfterMilliseconds = 0;
-
-                if (responseMessage.getStatusCode() == HttpResponseStatus.TOO_MANY_REQUESTS) {
-                    tangible.OutObject<Integer> tempOut_retryAfterMilliseconds = new tangible.OutObject<Integer>();
-                    String retryAfter;
-                    //C# TO JAVA CONVERTER TODO TASK: The following method call contained an unresolved 'out' keyword
-                    // - these cannot be converted using the 'OutObject' helper class unless the method is within the
-                    // code being modified:
-                    if (!responseMessage.Headers.TryGetValue(HttpHeaders.RETRY_AFTER_IN_MILLISECONDS,
-                        out retryAfter) || retryAfter == null || !tangible.TryParseHelper.tryParseInt(retryAfter,
-                        tempOut_retryAfterMilliseconds)) {
-                        retryAfterMilliseconds = tempOut_retryAfterMilliseconds.argValue;
-                        retryAfterMilliseconds = 0;
-                    } else {
-                        retryAfterMilliseconds = tempOut_retryAfterMilliseconds.argValue;
-                    }
-                }
-
-                response.CreateAndPopulateResults(serverRequest.getOperations(), retryAfterMilliseconds);
-            }
-
-            return response;
-        }
-    }
-
     /**
-     * Gets all the Activity IDs associated with the response.
-     *
-     * @return An enumerable that contains the Activity IDs.
+     * Gets a value indicating whether the batch was processed.
      */
-    public Iterable<String> getActivityIds() {
-        return Stream.of(this.getActivityId())::iterator;
-    }
-
-    /**
-     * Gets the result of the operation at the provided index in the batch
-     * <p>
-     * The returned result has a {@link Resource} of the provided type.
-     *
-     * @param <T> Type to which the Resource in the operation result needs to be deserialized, when present.
-     *
-     * @param index 0-based index of the operation in the batch whose result needs to be returned.
-     *
-     * @return Result of batch operation that contains a Resource deserialized to specified type.
-     */
-    public <T> TransactionalBatchOperationResult<T> GetOperationResultAtIndex(
-        final int index,
-        @Nonnull final Class<T> type) throws IOException {
-
-        checkArgument(index >= 0, "expected non-negative index");
-        checkNotNull(type, "expected non-null type");
-
-        TransactionalBatchOperationResult result = this.results.get(index);
-        T resource = null;
-
-        if (result.getResourceStream() != null) {
-            resource = this.getSerializer().<T>fromStream(result.getResourceStream(), type);
-        }
-
-        return new TransactionalBatchOperationResult<T>(result, resource);
+    public boolean isSuccessStatusCode() {
+        int statusCode = this.responseStatus.code();
+        return statusCode >= 200 && statusCode <= 299;
     }
 
     @Override
-    public boolean add(TransactionalBatchOperationResult result) {
+    public boolean add(TransactionalBatchOperationResult<?> result) {
         return this.results.add(result);
     }
 
     @Override
-    public void add(int index, TransactionalBatchOperationResult element) {
+    public void add(int index, TransactionalBatchOperationResult<?> element) {
 
     }
 
     @Override
-    public boolean addAll(Collection<? extends TransactionalBatchOperationResult> collection) {
+    public boolean addAll(Collection<? extends TransactionalBatchOperationResult<?>> collection) {
         return this.results.addAll(collection);
     }
 
     @Override
-    public boolean addAll(int index, Collection<? extends TransactionalBatchOperationResult> collection) {
+    public boolean addAll(int index, Collection<? extends TransactionalBatchOperationResult<?>> collection) {
         return this.results.addAll(index, collection);
     }
 
@@ -370,10 +253,10 @@ public class TransactionalBatchResponse implements AutoCloseable, List<Transacti
      */
     public void close() throws Exception {
 
-        UnmodifiableList<ItemBatchOperation> operations = operationsUpdater.getAndSet(this, null);
+        UnmodifiableList<ItemBatchOperation<?>> operations = operationsUpdater.getAndSet(this, null);
 
         if (operations != null) {
-            for (ItemBatchOperation operation : operations) {
+            for (ItemBatchOperation<?> operation : operations) {
                 operation.close();
             }
         }
@@ -389,6 +272,144 @@ public class TransactionalBatchResponse implements AutoCloseable, List<Transacti
         return false;
     }
 
+    public static CompletableFuture<TransactionalBatchResponse> fromResponseMessageAsync(
+        ResponseMessage responseMessage,
+        ServerBatchRequest serverRequest,
+        CosmosSerializerCore serializer) throws IOException {
+        return fromResponseMessageAsync(responseMessage, serverRequest, serializer, true);
+    }
+
+    public static CompletableFuture<TransactionalBatchResponse> fromResponseMessageAsync(
+        @Nonnull final ResponseMessage message,
+        @Nonnull final ServerBatchRequest request,
+        @Nonnull final CosmosSerializerCore serializer,
+        final boolean shouldPromoteOperationStatus) throws IOException {
+
+        try {
+
+            InputStream inputStream = message.getContent();
+
+            if (inputStream != null) {
+
+                if (!inputStream.markSupported()) {
+
+                    int length = inputStream.available();
+
+                    if (length <= 0) {
+                        inputStream = null;
+                    } else {
+
+                        ByteBuf buffer = Unpooled.buffer(length);
+
+                        do {
+                            buffer.writeBytes(inputStream, length);
+                            length = inputStream.available();
+                        } while (length > 0);
+
+                        inputStream = new ByteBufInputStream(buffer);
+                    }
+                }
+            }
+
+            CompletableFuture<TransactionalBatchResponse> future = null;
+
+            if (inputStream != null) {
+
+                inputStream.mark(1);
+                byte b = (byte) inputStream.read();
+
+                if (b == HybridRowVersion.V1.value()) {
+
+                    inputStream.reset();
+
+                    future = populateFromContentAsync(
+                        inputStream,
+                        message,
+                        request,
+                        serializer,
+                        shouldPromoteOperationStatus
+
+                    ).thenApplyAsync(response -> response != null
+                        ? response
+                        : new TransactionalBatchResponse(
+                            HttpResponseStatus.INTERNAL_SERVER_ERROR,
+                            SubStatusCodes.UNKNOWN,
+                            "failed to deserialize response returned by server",
+                            message.getHeaders().getRequestCharge(),
+                            message.getHeaders().getRetryAfter(),
+                            message.getHeaders().getActivityId(),
+                            message.getDiagnosticsContext(),
+                            request.getOperations(),
+                            serializer)
+                    );
+                }
+            }
+
+            if (future == null) {
+                future = CompletableFuture.completedFuture(new TransactionalBatchResponse(
+                    message.getStatus(),
+                    message.getHeaders().getSubStatusCode(),
+                    message.getErrorMessage(),
+                    message.getHeaders().getRequestCharge(),
+                    message.getHeaders().getRetryAfter(),
+                    message.getHeaders().getActivityId(),
+                    message.getDiagnosticsContext(),
+                    request.getOperations(),
+                    serializer));
+            }
+
+            future = future.thenApplyAsync(response -> {
+
+                if (response.results == null || response.results.size() != request.getOperations().size()) {
+                    if (message.isSuccessStatus()) {
+                        // Server should be guaranteeing number of results equal to operations when
+                        // batch request is successful - so fail as InternalServerError if this is not the case.
+                        response = new TransactionalBatchResponse(
+                            HttpResponseStatus.INTERNAL_SERVER_ERROR,
+                            SubStatusCodes.UNKNOWN,
+                            "received an invalid response from the server",
+                            message.getHeaders().getRequestCharge(),
+                            message.getHeaders().getRetryAfter(),
+                            message.getHeaders().getActivityId(),
+                            message.getDiagnosticsContext(),
+                            request.getOperations(),
+                            serializer);
+                    }
+
+                    int retryAfterMilliseconds = 0;
+
+                    if (message.getStatus() == HttpResponseStatus.TOO_MANY_REQUESTS) {
+
+                        // Propagate the RetryAfter into the individual operations
+
+                        String value = message.Headers.get(HttpHeaders.RETRY_AFTER_IN_MILLISECONDS);
+
+                        if (value == null) {
+                            retryAfterMilliseconds = 0;
+                        } else {
+                            try {
+                                retryAfterMilliseconds = Integer.parseInt(value);
+                            } catch (NumberFormatException error) {
+                                retryAfterMilliseconds = 0;
+                            }
+                        }
+                    }
+
+                    response.createAndPopulateResults(request.getOperations(), retryAfterMilliseconds);
+                }
+
+                return response;
+
+            }).whenCompleteAsync((response, error) -> message.close());
+
+            return future;
+
+        } catch (IOException error) {
+            message.close();
+            throw error;
+        }
+    }
+
     /**
      * Gets the result of the operation at the provided index in the batch.
      *
@@ -401,13 +422,41 @@ public class TransactionalBatchResponse implements AutoCloseable, List<Transacti
         return this.results.get(index);
     }
 
+    /**
+     * Gets the result of the operation at the provided index in the batch
+     * <p>
+     * The returned result has a {@link Resource} of the provided type.
+     *
+     * @param <T> Type to which the Resource in the operation result needs to be deserialized, when present.
+     *
+     * @param index 0-based index of the operation in the batch whose result needs to be returned.
+     *
+     * @return Result of batch operation that contains a Resource deserialized to specified type.
+     */
+    public <T> TransactionalBatchOperationResult<T> getOperationResultAtIndex(
+        final int index,
+        @Nonnull final Class<T> type) throws IOException {
+
+        checkArgument(index >= 0, "expected non-negative index");
+        checkNotNull(type, "expected non-null type");
+
+        TransactionalBatchOperationResult<T> result = this.results.get(index);
+        T resource = null;
+
+        if (result.getResourceStream() != null) {
+            resource = this.getSerializer().<T>fromStream(result.getResourceStream(), type);
+        }
+
+        return new TransactionalBatchOperationResult<T>(result, resource);
+    }
+
     @Override
     public int indexOf(Object o) {
         return 0;
     }
 
     @Override
-    public Iterator<TransactionalBatchOperationResult> iterator() {
+    public Iterator<TransactionalBatchOperationResult<?>> iterator() {
         return this.results.iterator();
     }
 
@@ -417,12 +466,12 @@ public class TransactionalBatchResponse implements AutoCloseable, List<Transacti
     }
 
     @Override
-    public ListIterator<TransactionalBatchOperationResult> listIterator() {
+    public ListIterator<TransactionalBatchOperationResult<?>> listIterator() {
         return null;
     }
 
     @Override
-    public ListIterator<TransactionalBatchOperationResult> listIterator(int index) {
+    public ListIterator<TransactionalBatchOperationResult<?>> listIterator(int index) {
         return null;
     }
 
@@ -432,7 +481,7 @@ public class TransactionalBatchResponse implements AutoCloseable, List<Transacti
     }
 
     @Override
-    public TransactionalBatchOperationResult remove(int index) {
+    public TransactionalBatchOperationResult<?> remove(int index) {
         return null;
     }
 
@@ -447,7 +496,7 @@ public class TransactionalBatchResponse implements AutoCloseable, List<Transacti
     }
 
     @Override
-    public TransactionalBatchOperationResult set(int index, TransactionalBatchOperationResult result) {
+    public TransactionalBatchOperationResult<?> set(int index, TransactionalBatchOperationResult result) {
         return this.results.set(index, result);
     }
 
@@ -459,7 +508,7 @@ public class TransactionalBatchResponse implements AutoCloseable, List<Transacti
     }
 
     @Override
-    public List<TransactionalBatchOperationResult> subList(int fromIndex, int toIndex) {
+    public List<TransactionalBatchOperationResult<?>> subList(int fromIndex, int toIndex) {
         return null;
     }
 
@@ -473,74 +522,85 @@ public class TransactionalBatchResponse implements AutoCloseable, List<Transacti
         return this.results.toArray(a);
     }
 
-    private void CreateAndPopulateResults(List<ItemBatchOperation> operations) {
-        CreateAndPopulateResults(operations, 0);
+    private void createAndPopulateResults(List<ItemBatchOperation<?>> operations) {
+        createAndPopulateResults(operations, 0);
     }
 
-    private void CreateAndPopulateResults(List<ItemBatchOperation> operations, int retryAfterMilliseconds) {
+    private void createAndPopulateResults(List<ItemBatchOperation<?>> operations, int retryAfterMilliseconds) {
 
-        TransactionalBatchOperationResult[] results = new TransactionalBatchOperationResult[operations.size()];
+        TransactionalBatchOperationResult<?>[] results = new TransactionalBatchOperationResult<?>[operations.size()];
 
         for (int i = 0; i < operations.size(); i++) {
-            this.results.add(new TransactionalBatchOperationResult(this.getResponseStatus())
+             results[i] = new TransactionalBatchOperationResult<>(this.getResponseStatus())
                 .setSubStatusCode(this.getSubStatusCode())
-                .setRetryAfter(Duration.ofMillis(retryAfterMilliseconds)));
+                .setRetryAfter(Duration.ofMillis(retryAfterMilliseconds));
         }
 
         this.results = Collections.unmodifiableList(Arrays.asList(results));
     }
 
-    private static CompletableFuture<TransactionalBatchResponse> PopulateFromContentAsync(
-        Stream content,
-        ResponseMessage responseMessage,
-        ServerBatchRequest serverRequest,
-        CosmosSerializerCore serializer,
-        boolean shouldPromoteOperationStatus) {
+    @Nonnull
+    private static CompletableFuture<TransactionalBatchResponse> populateFromContentAsync(
+        @Nonnull final InputStream inputStream,
+        @Nonnull final ResponseMessage message,
+        @Nonnull final ServerBatchRequest request,
+        @Nonnull final CosmosSerializerCore serializer,
+        final boolean shouldPromoteOperationStatus) {
 
-        ArrayList<TransactionalBatchOperationResult> results = new ArrayList<TransactionalBatchOperationResult>();
+        ArrayList<TransactionalBatchOperationResult<?>> results = new ArrayList<>();
 
-        // content is ensured to be seekable in caller
+        // inputStream is ensured to be seekable in caller
 
-        int resizerInitialCapacity = (int) content.Length;
+        return RecordIOStream.readRecordIOAsync(inputStream, record -> {
 
-        Result res = /*await*/ content.ReadRecordIOAsync(record ->
-        {
-            TransactionalBatchOperationResult operationResult;
-            Result r = TransactionalBatchOperationResult.ReadOperationResult(record, out operationResult);
-            if (r != Result.SUCCESS) {
-                return r;
+            final Out<TransactionalBatchOperationResult<?>> batchOperationResult = new Out<>();
+            final Result result = TransactionalBatchOperationResult.readBatchOperationResult(record, batchOperationResult);
+
+            if (result != Result.SUCCESS) {
+                return result;
             }
 
-            results.add(operationResult);
-            return r;
-        }, resizer:new MemorySpanResizer<Byte>(resizerInitialCapacity))
+            results.add(batchOperationResult.get());
+            return result;
 
-        if (res != Result.SUCCESS) {
-            return null;
-        }
+        }).thenApplyAsync(result -> {
 
-        HttpResponseStatus responseStatusCode = responseMessage.StatusCode;
-        SubStatusCodes responseSubStatusCode = responseMessage.Headers.SubStatusCode;
+            if (result != Result.SUCCESS) {
+                return null;
+            }
 
-        // Promote the operation error status as the Batch response error status if we have a MultiStatus response
-        // to provide users with status codes they are used to.
-        if ((int) responseMessage.StatusCode == (int) StatusCodes.MultiStatus && shouldPromoteOperationStatus) {
-            for (TransactionalBatchOperationResult result : results) {
-                if ((int) result.getStatusCode() != (int) StatusCodes.FailedDependency) {
-                    responseStatusCode = result.getStatusCode();
-                    responseSubStatusCode = result.getSubStatusCode();
-                    break;
+            HttpResponseStatus status = message.getStatus();
+            int subStatusCode = message.getHeaders().getSubStatusCode();
+
+            // Promote the operation error status as the Batch response error status if we have a MultiStatus response
+            // to provide users with status codes they are used to.
+
+            if (status == HttpResponseStatus.MULTI_STATUS && shouldPromoteOperationStatus) {
+
+                for (TransactionalBatchOperationResult<?> batchOperationResult : results) {
+
+                    if (batchOperationResult.getStatus() != HttpResponseStatus.FAILED_DEPENDENCY) {
+                        status = batchOperationResult.getStatus();
+                        subStatusCode = batchOperationResult.getSubStatusCode();
+                        break;
+                    }
                 }
             }
-        }
 
-        TransactionalBatchResponse response = new TransactionalBatchResponse(responseStatusCode,
-            responseSubStatusCode, responseMessage.ErrorMessage, responseMessage.Headers.RequestCharge,
-            responseMessage.Headers.RetryAfter, responseMessage.Headers.ActivityId,
-            responseMessage.DiagnosticsContext, serverRequest.getOperations(), serializer);
+            TransactionalBatchResponse response = new TransactionalBatchResponse(
+                status,
+                subStatusCode,
+                message.getErrorMessage(),
+                message.getHeaders().getRequestCharge(),
+                message.getHeaders().getRetryAfter(),
+                message.getHeaders().getActivityId(),
+                message.getDiagnosticsContext(),
+                request.getOperations(),
+                serializer);
 
-        response.results = results;
-        return response;
+            response.results = results;
+            return response;
+        });
     }
 
     // endregion

@@ -15,7 +15,7 @@ import com.azure.cosmos.implementation.directconnectivity.WFConstants.BackendHea
 import com.azure.cosmos.serialization.hybridrow.Result;
 import com.azure.cosmos.serialization.hybridrow.io.RowWriter;
 import com.azure.cosmos.serialization.hybridrow.layouts.TypeArgument;
-import com.azure.cosmos.serializer.CosmosSerializerCore;
+import com.azure.cosmos.batch.serializer.CosmosSerializerCore;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;

@@ -156,6 +156,10 @@ public class TransactionalBatchOperationResult<TResource> {
         return this;
     }
 
+    public HttpResponseStatus getStatus() {
+        return this.responseStatus;
+    }
+
     public int getStatusCode() {
         return this.responseStatus.code();
     }
@@ -179,20 +183,23 @@ public class TransactionalBatchOperationResult<TResource> {
         return 200 <= statusCode && statusCode <= 299;
     }
 
-    public static Result ReadOperationResult(
-        @Nonnull final ByteBuf input, @Nonnull final Out<TransactionalBatchOperationResult<?>> batchOperationResult) {
+    public static Result readBatchOperationResult(
+        @Nonnull final ByteBuf in, @Nonnull final Out<TransactionalBatchOperationResult<?>> out) {
 
-        RowBuffer rowBuffer = new RowBuffer(input.readableBytes());
+        checkNotNull(in, "expected non-null in");
+        checkNotNull(out, "expected non-null out");
 
-        if (!rowBuffer.readFrom(input, HybridRowVersion.V1,
+        RowBuffer rowBuffer = new RowBuffer(in.readableBytes());
+
+        if (!rowBuffer.readFrom(in, HybridRowVersion.V1,
             BatchSchemaProvider.getBatchLayoutResolverNamespace())) {
-            batchOperationResult.set(null);
+            out.set(null);
             return Result.FAILURE;
         }
 
-        Result result = TransactionalBatchOperationResult.ReadOperationResult(
+        Result result = TransactionalBatchOperationResult.readBatchOperationResult(
             new RowReader(rowBuffer),
-            batchOperationResult);
+            out);
 
         if (result != Result.SUCCESS) {
             return result;
@@ -200,7 +207,7 @@ public class TransactionalBatchOperationResult<TResource> {
 
         // Ensure the mandatory fields were populated
 
-        if (batchOperationResult.get().getResponseStatus() == null) {
+        if (out.get().getResponseStatus() == null) {
             return Result.FAILURE;
         }
 
@@ -231,7 +238,7 @@ public class TransactionalBatchOperationResult<TResource> {
     }
 
     @SuppressWarnings("unchecked")
-    private static Result ReadOperationResult(
+    private static Result readBatchOperationResult(
         @Nonnull final RowReader reader,
         @Nonnull final Out<TransactionalBatchOperationResult<?>> batchOperationResult) {
 

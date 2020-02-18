@@ -9,7 +9,7 @@ import com.azure.cosmos.serialization.hybridrow.ResultValue;
 import com.azure.cosmos.serialization.hybridrow.RowBuffer;
 import com.azure.cosmos.serialization.hybridrow.io.RowWriter;
 import com.azure.cosmos.serialization.hybridrow.recordio.RecordIOStream;
-import com.azure.cosmos.serializer.CosmosSerializerCore;
+import com.azure.cosmos.batch.serializer.CosmosSerializerCore;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufInputStream;
 import io.netty.buffer.ByteBufOutputStream;
