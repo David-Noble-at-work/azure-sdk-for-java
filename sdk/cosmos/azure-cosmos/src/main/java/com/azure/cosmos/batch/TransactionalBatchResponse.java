@@ -4,6 +4,7 @@
 package com.azure.cosmos.batch;
 
 import com.azure.cosmos.Resource;
+import com.azure.cosmos.batch.serializer.CosmosSerializerCore;
 import com.azure.cosmos.batch.unimplemented.CosmosDiagnostics;
 import com.azure.cosmos.batch.unimplemented.CosmosDiagnosticsContext;
 import com.azure.cosmos.batch.unimplemented.ResponseMessage;
@@ -13,7 +14,6 @@ import com.azure.cosmos.implementation.HttpConstants.SubStatusCodes;
 import com.azure.cosmos.serialization.hybridrow.HybridRowVersion;
 import com.azure.cosmos.serialization.hybridrow.Result;
 import com.azure.cosmos.serialization.hybridrow.recordio.RecordIOStream;
-import com.azure.cosmos.batch.serializer.CosmosSerializerCore;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufInputStream;
 import io.netty.buffer.Unpooled;
@@ -45,52 +45,25 @@ public class TransactionalBatchResponse implements AutoCloseable, List<Transacti
 
     // region Fields
 
+    private static final String EMPTY_UUID = "00000000-0000-0000-0000-000000000000";
+
     private static final AtomicReferenceFieldUpdater<TransactionalBatchResponse, UnmodifiableList> operationsUpdater =
         AtomicReferenceFieldUpdater.newUpdater(
             TransactionalBatchResponse.class,
             UnmodifiableList.class,
             "operations");
-    private static String EMPTY_UUID = "00000000-0000-0000-0000-000000000000";
-    /**
-     * Gets the ActivityId that identifies the server request made to execute the batch.
-     */
-    private String activityId;
-    /**
-     * Gets the cosmos diagnostic information for the current request to Azure Cosmos DB service
-     */
-    private CosmosDiagnostics diagnostics;
-    private CosmosDiagnosticsContext diagnosticsContext;
-    /**
-     * Gets the reason for failure of the batch request.
-     *
-     * <value>The reason for failure, if any.</value>
-     */
+
+    private final String activityId;
+    private final CosmosDiagnosticsContext diagnosticsContext;
+    private final double requestCharge;
+    private final HttpResponseStatus responseStatus;
+    private final Duration retryAfter;
+    private final CosmosSerializerCore serializer;
     private String errorMessage;
-    private volatile UnmodifiableList<ItemBatchOperation<?>> operations;
-
-    /**
-     * Gets the request charge for the batch request.
-     *
-     * <value>
-     * The request charge measured in request units.
-     * </value>
-     */
-    private double requestCharge;
-    /**
-     * Gets the completion status code of the batch request.
-     *
-     * <value>The request completion status code.</value>
-     */
-    private HttpResponseStatus responseStatus;
     private List<TransactionalBatchOperationResult<?>> results;
-
-    /**
-     * Gets the amount of time to wait before retrying this or any other request within Cosmos container or collection
-     * due to throttling.
-     */
-    private Duration retryAfter;
-    private CosmosSerializerCore serializer;
     private int subStatusCode;
+
+    private volatile UnmodifiableList<ItemBatchOperation<?>> operations;
 
     // endregion
 
@@ -153,14 +126,19 @@ public class TransactionalBatchResponse implements AutoCloseable, List<Transacti
 
     // region Accessors
 
+    /**
+     * Gets the activity ID that identifies the server request made to execute the batch.
+     *
+     * @return the activity ID that identifies the server request made to execute the batch.
+     */
     public String getActivityId() {
         return this.activityId;
     }
 
     /**
-     * Gets all the Activity IDs associated with the response.
+     * Gets all the activity IDs associated with the response.
      *
-     * @return An enumerable that contains the Activity IDs.
+     * @return an enumerable that contains the activity IDs.
      */
     public Iterable<String> getActivityIds() {
         return Stream.of(this.getActivityId())::iterator;
@@ -174,10 +152,20 @@ public class TransactionalBatchResponse implements AutoCloseable, List<Transacti
         return this.diagnosticsContext;
     }
 
+    /**
+     * Gets {@link CosmosDiagnosticsContext diagnostic information} for the current request to Azure Cosmos DB.
+     *
+     * @return {@link CosmosDiagnosticsContext diagnostic information} for the current request to Azure Cosmos DB.
+     */
     public CosmosDiagnosticsContext getDiagnosticsContext() {
         return this.diagnosticsContext;
     }
 
+    /**
+     * Gets the reason for the failure of the batch request, if any, or {@code null}.
+     *
+     * @return the reason for the failure of the batch request, if any, or {@code null}.
+     */
     public String getErrorMessage() {
         return this.errorMessage;
     }
@@ -186,14 +174,29 @@ public class TransactionalBatchResponse implements AutoCloseable, List<Transacti
         this.errorMessage = value;
     }
 
+    /**
+     * Gets the request charge for the batch request.
+     *
+     * @return the request charge measured in request units.
+     */
     public double getRequestCharge() {
         return this.requestCharge;
     }
 
+    /**
+     * Gets the response status code of the batch request.
+     *
+     * @return the response status code of the batch request.
+     */
     public HttpResponseStatus getResponseStatus() {
         return this.responseStatus;
     }
 
+    /**
+     * Gets the amount of time to wait before retrying this or any other request due to throttling.
+     *
+     * @return the amount of time to wait before retrying this or any other request due to throttling.
+     */
     public Duration getRetryAfter() {
         return this.retryAfter;
     }
@@ -250,10 +253,14 @@ public class TransactionalBatchResponse implements AutoCloseable, List<Transacti
 
     /**
      * Closes the current {@link TransactionalBatchResponse}.
+     *
+     * @throws Exception if the close fails.
      */
     public void close() throws Exception {
 
         UnmodifiableList<ItemBatchOperation<?>> operations = operationsUpdater.getAndSet(this, null);
+
+        // TODO (DANOBLE) Aggregate exceptions to ensure that all operations that be closed are closed.
 
         if (operations != null) {
             for (ItemBatchOperation<?> operation : operations) {

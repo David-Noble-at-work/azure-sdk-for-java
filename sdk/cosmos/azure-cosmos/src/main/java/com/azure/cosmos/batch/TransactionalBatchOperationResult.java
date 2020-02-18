@@ -4,6 +4,7 @@
 package com.azure.cosmos.batch;
 
 import com.azure.cosmos.batch.unimplemented.CosmosDiagnosticsContext;
+import com.azure.cosmos.batch.unimplemented.ResponseMessage;
 import com.azure.cosmos.core.Out;
 import com.azure.cosmos.serialization.hybridrow.HybridRowVersion;
 import com.azure.cosmos.serialization.hybridrow.Result;
@@ -62,6 +63,9 @@ public class TransactionalBatchOperationResult<TResource> {
         this.resourceStream = other.resourceStream;
         this.requestCharge = other.requestCharge;
         this.retryAfter = other.retryAfter;
+
+        this.resource = null;
+        this.diagnosticsContext = null;
     }
 
     public TransactionalBatchOperationResult(TransactionalBatchOperationResult<TResource> result, TResource resource) {
@@ -214,18 +218,23 @@ public class TransactionalBatchOperationResult<TResource> {
         return Result.SUCCESS;
     }
 
-    public final ResponseMessage ToResponseMessage() {
+    public final ResponseMessage toResponseMessage() {
 
-        Headers headers = new Headers();
-        headers.SubStatusCode = this.getSubStatusCode();
-        headers.ETag = this.getETag();
-        headers.RetryAfter = this.getRetryAfter();
-        headers.RequestCharge = this.getRequestCharge();
+        ResponseMessage.Headers headers = ResponseMessage.Headers.builder()
+            .subStatusCode(this.getSubStatusCode())
+            .etag(this.getETag())
+            .retryAfter(this.getRetryAfter())
+            .requestCharge(this.requestCharge)
+            .build();
 
         return new ResponseMessage(
-            this.getResponseStatus(), null, null, null, headers, this.getDiagnosticsContext() != null
-            ? this.getDiagnosticsContext()
-            : new CosmosDiagnosticsContext()).setContent(this.getResourceStream());
+            this.getResponseStatus(),
+            null,
+            null,
+            null,
+            headers,
+            this.getResourceStream(),
+            this.getDiagnosticsContext() != null ? this.getDiagnosticsContext() : new CosmosDiagnosticsContext());
     }
 
     protected HttpResponseStatus getResponseStatus() {

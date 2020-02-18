@@ -81,7 +81,7 @@ public class ItemBatchOperationContext implements AutoCloseable {
             return CompletableFuture.completedFuture(ShouldRetryResult.noRetry());
         }
 
-        ResponseMessage responseMessage = result.ToResponseMessage();
+        ResponseMessage responseMessage = result.toResponseMessage();
         return this.retryPolicy.ShouldRetryAsync(responseMessage);
     }
 
