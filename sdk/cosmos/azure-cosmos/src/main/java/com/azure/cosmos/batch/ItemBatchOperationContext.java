@@ -45,7 +45,7 @@ public class ItemBatchOperationContext implements AutoCloseable {
         currentBatcher = value;
     }
 
-    public final CompletableFuture<TransactionalBatchOperationResult> getOperationTask() {
+    public final CompletableFuture<TransactionalBatchOperationResult<?>> getOperationTask() {
         return this.taskCompletionSource.Task;
     }
 
@@ -53,7 +53,7 @@ public class ItemBatchOperationContext implements AutoCloseable {
         return partitionKeyRangeId;
     }
 
-    public final void Complete(BatchAsyncBatcher completer, TransactionalBatchOperationResult result) {
+    public final void Complete(BatchAsyncBatcher completer, TransactionalBatchOperationResult<?> result) {
         if (this.AssertBatcher(completer)) {
             this.taskCompletionSource.SetResult(result);
         }

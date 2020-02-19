@@ -39,7 +39,15 @@ public final class ResponseMessage implements AutoCloseable {
         throw new UnsupportedOperationException();
     }
 
+    public String getResourceAddress() {
+        throw new UnsupportedOperationException();
+    }
+
     public HttpResponseStatus getStatus() {
+        throw new UnsupportedOperationException();
+    }
+
+    public int getStatusCode() {
         throw new UnsupportedOperationException();
     }
 

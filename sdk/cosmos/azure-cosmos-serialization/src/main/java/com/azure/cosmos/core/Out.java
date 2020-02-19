@@ -4,6 +4,7 @@
 package com.azure.cosmos.core;
 
 import java.util.Objects;
+import java.util.function.Consumer;
 
 /**
  * A container object which may or may not contain a non-null value
@@ -17,6 +18,17 @@ import java.util.Objects;
 public final class Out<T> {
 
     private volatile T value;
+
+    /**
+     * If a value is present, invoke the specified consumer with the value, otherwise do nothing.
+     *
+     * @param consumer block to be executed if a value is present.
+     */
+    public void ifPresent(Consumer<T> consumer) {
+        if (this.value != null) {
+            consumer.accept(this.value);
+        }
+    }
 
     /**
      * {@code true} if there is a value present, otherwise {@code false}

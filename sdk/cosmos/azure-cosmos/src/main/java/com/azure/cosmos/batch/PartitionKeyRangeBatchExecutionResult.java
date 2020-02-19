@@ -8,13 +8,13 @@ import io.netty.handler.codec.http.HttpResponseStatus;
 
 public final class PartitionKeyRangeBatchExecutionResult {
 
-    private final Iterable<ItemBatchOperation> operations;
+    private final Iterable<ItemBatchOperation<?>> operations;
     private final String partitionKeyRangeId;
     private final TransactionalBatchResponse serverResponse;
 
     public PartitionKeyRangeBatchExecutionResult(
         final String pkRangeId,
-        final Iterable<ItemBatchOperation> operations,
+        final Iterable<ItemBatchOperation<?>> operations,
         final TransactionalBatchResponse serverResponse) {
 
         this.partitionKeyRangeId = pkRangeId;
@@ -22,7 +22,7 @@ public final class PartitionKeyRangeBatchExecutionResult {
         this.operations = operations;
     }
 
-    public Iterable<ItemBatchOperation> getBatchOperations() {
+    public Iterable<ItemBatchOperation<?>> getBatchOperations() {
         return operations;
     }
 
