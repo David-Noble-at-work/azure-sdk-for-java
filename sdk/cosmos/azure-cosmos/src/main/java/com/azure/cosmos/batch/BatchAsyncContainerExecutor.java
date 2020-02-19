@@ -6,6 +6,7 @@ package com.azure.cosmos.batch;
 import com.azure.cosmos.CosmosAsyncContainer;
 import com.azure.cosmos.PartitionKeyDefinition;
 import com.azure.cosmos.RetryOptions;
+import com.azure.cosmos.batch.implementation.BulkPartitionKeyRangeGoneRetryPolicy;
 import com.azure.cosmos.batch.unimplemented.CosmosDiagnosticScope;
 import com.azure.cosmos.batch.unimplemented.CosmosDiagnosticsContext;
 import com.azure.cosmos.batch.unimplemented.RequestMessage;
@@ -109,19 +110,18 @@ public class BatchAsyncContainerExecutor implements AutoCloseable {
     }
 
 
-    public CompletableFuture<TransactionalBatchOperationResult> addAsync(ItemBatchOperation operation) {
+    public CompletableFuture<TransactionalBatchOperationResult<?>> addAsync(ItemBatchOperation<?> operation) {
         return this.addAsync(operation, null);
     }
 
-    public CompletableFuture<TransactionalBatchOperationResult> addAsync(
-        @Nonnull final ItemBatchOperation operation,
+    public CompletableFuture<TransactionalBatchOperationResult<?>> addAsync(
+        @Nonnull final ItemBatchOperation<?> operation,
         @Nullable final RequestOptions options) {
 
         checkNotNull(operation, "expected non-null operation");
 
-        return this.validateOperationAsync(operation, options).thenComposeAsync((Void result) ->
-
-            this.ResolvePartitionKeyRangeIdAsync(operation)
+        return this.validateOperationAsync(operation, options).thenComposeAsync(
+            (Void result) -> this.ResolvePartitionKeyRangeIdAsync(operation)
 
         ).thenComposeAsync((String resolvedPartitionKeyRangeId) -> {
 
@@ -133,6 +133,7 @@ public class BatchAsyncContainerExecutor implements AutoCloseable {
 
             operation.attachContext(context);
             streamer.add(operation);
+
             return context.getOperationTask();
         });
     }

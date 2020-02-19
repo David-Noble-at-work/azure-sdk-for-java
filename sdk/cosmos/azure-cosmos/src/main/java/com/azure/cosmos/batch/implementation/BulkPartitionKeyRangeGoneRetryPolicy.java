@@ -14,7 +14,7 @@ import reactor.core.publisher.Mono;
 import javax.annotation.Nullable;
 import java.time.Duration;
 
-final class BulkPartitionKeyRangeGoneRetryPolicy extends DocumentClientRetryPolicy {
+public final class BulkPartitionKeyRangeGoneRetryPolicy extends DocumentClientRetryPolicy {
 
     private static final int MAX_RETRIES = 1;
 
