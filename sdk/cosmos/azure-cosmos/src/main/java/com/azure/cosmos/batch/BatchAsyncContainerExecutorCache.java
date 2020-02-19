@@ -3,6 +3,8 @@
 
 package com.azure.cosmos.batch;
 
+import com.azure.cosmos.CosmosAsyncContainer;
+
 import javax.annotation.Nonnull;
 import java.io.IOException;
 import java.util.concurrent.ConcurrentHashMap;
@@ -22,17 +24,20 @@ public final class BatchAsyncContainerExecutorCache implements AutoCloseable {
     private final AtomicBoolean closed = new AtomicBoolean();
 
     public BatchAsyncContainerExecutor getExecutorForContainer(
-        @Nonnull final ContainerCore container,
-        @Nonnull final CosmosClientContext clientContext) {
+        @Nonnull final CosmosClientContext clientContext, @Nonnull final CosmosAsyncContainer container) {
 
         checkState(!this.closed.get(), "cache closed");
+
         checkNotNull(container, "expected non-null container");
         checkNotNull(clientContext, "expected non-null clientContext");
-        checkState(clientContext.ClientOptions.AllowBulkExecution, "expected AllowBulkExecution to be enabled");
 
-        return this.executors.computeIfAbsent(container.LinkUri.toString(), k ->
+        final boolean allowBulkExecution = clientContext.getConnectionPolicy().getAllowBulkExecution();
+        checkState(allowBulkExecution, "expected client connection policy to allow bulk execution");
+
+        return this.executors.computeIfAbsent(container.getLink(), k ->
             new BatchAsyncContainerExecutor(
-                clientContext, container,
+                clientContext,
+                container,
                 MAX_OPERATIONS_IN_DIRECT_MODE_BATCH_REQUEST,
                 MAX_DIRECT_MODE_BATCH_REQUEST_BODY_SIZE_IN_BYTES)
         );

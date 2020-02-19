@@ -114,7 +114,7 @@ public abstract class ServerBatchRequest {
 
             future = future.thenApplyAsync((Void r) -> {
 
-                final int approximateSerializedLength = operation.GetApproximateSerializedLength();
+                final int approximateSerializedLength = operation.getApproximateSerializedLength();
                 track.estimatedMaxOperationLength = max(approximateSerializedLength, track.estimatedMaxOperationLength);
                 track.approximateTotalSerializedLength += approximateSerializedLength;
                 track.materializedCount++;

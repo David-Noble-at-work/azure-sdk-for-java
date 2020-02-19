@@ -5,6 +5,7 @@ package com.azure.cosmos.batch;
 
 import com.azure.cosmos.AccessCondition;
 import com.azure.cosmos.PartitionKey;
+import com.azure.cosmos.batch.serializer.CosmosSerializerCore;
 import com.azure.cosmos.batch.unimplemented.CosmosDiagnosticsContext;
 import com.azure.cosmos.core.UtfAnyString;
 import com.azure.cosmos.implementation.HttpConstants.HttpHeaders;
@@ -12,10 +13,11 @@ import com.azure.cosmos.implementation.OperationType;
 import com.azure.cosmos.implementation.RequestOptions;
 import com.azure.cosmos.implementation.ResourceType;
 import com.azure.cosmos.implementation.directconnectivity.WFConstants.BackendHeaders;
+import com.azure.cosmos.implementation.directconnectivity.rntbd.RntbdConstants.RntbdOperationType;
+import com.azure.cosmos.implementation.directconnectivity.rntbd.RntbdConstants.RntbdResourceType;
 import com.azure.cosmos.serialization.hybridrow.Result;
 import com.azure.cosmos.serialization.hybridrow.io.RowWriter;
 import com.azure.cosmos.serialization.hybridrow.layouts.TypeArgument;
-import com.azure.cosmos.batch.serializer.CosmosSerializerCore;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -56,7 +58,6 @@ public final class ItemBatchOperation<TResource> implements AutoCloseable {
     private CosmosDiagnosticsContext diagnosticsContext;
     private String id;
     private int operationIndex;
-    private Documents.PartitionKey parsedPartitionKey;
     private PartitionKey partitionKey;
     private String partitionKeyJson;
     private RequestOptions requestOptions;
@@ -67,6 +68,7 @@ public final class ItemBatchOperation<TResource> implements AutoCloseable {
     // region Constructors
 
     private ItemBatchOperation(
+
         @Nonnull final OperationType operationType,
         final int operationIndex,
         final PartitionKey partitionKey,
@@ -134,15 +136,6 @@ public final class ItemBatchOperation<TResource> implements AutoCloseable {
         return this.operationType;
     }
 
-    public Documents.PartitionKey getParsedPartitionKey() {
-        return this.parsedPartitionKey;
-    }
-
-    public ItemBatchOperation<TResource> setParsedPartitionKey(Documents.PartitionKey value) {
-        parsedPartitionKey = value;
-        return this;
-    }
-
     public PartitionKey getPartitionKey() {
         return partitionKey;
     }
@@ -191,7 +184,7 @@ public final class ItemBatchOperation<TResource> implements AutoCloseable {
      *
      * @return a reference to the {@link ItemBatchOperation current operation}.
      */
-    public ItemBatchOperation<TResource> AttachContext(@Nonnull final ItemBatchOperationContext context) {
+    public ItemBatchOperation<TResource> attachContext(@Nonnull final ItemBatchOperationContext context) {
         checkNotNull(context, "expected non-null context");
         this.context = context;
         return this;
@@ -202,7 +195,7 @@ public final class ItemBatchOperation<TResource> implements AutoCloseable {
      *
      * @return an underestimate of the serialized length of this {@link ItemBatchOperation}.
      */
-    public int GetApproximateSerializedLength() {
+    public int getApproximateSerializedLength() {
 
         int length = 0;
 
@@ -305,21 +298,23 @@ public final class ItemBatchOperation<TResource> implements AutoCloseable {
 
     public static Result writeOperation(
         @Nonnull RowWriter writer,
-        @Nonnull ItemBatchOperation operation,
+        @Nonnull ItemBatchOperation<?> operation,
         @Nullable TypeArgument typeArgument) {
 
         checkNotNull(writer, "expected non-null writer");
         checkNotNull(operation, "expected non-null operation");
         boolean pkWritten = false;
 
-        operation.getOperationType();
-        Result result = writer.writeInt32(OPERATION_TYPE, (int) operation.getOperationType());
+        final int operationTypeId = RntbdOperationType.fromType(operation.getOperationType()).id();
+        Result result = writer.writeInt32(OPERATION_TYPE, operationTypeId);
 
         if (result != Result.SUCCESS) {
             return result;
         }
 
-        result = writer.writeInt32(RESOURCE_TYPE, (int) ResourceType.Document);
+        final int resourceTypeId = RntbdResourceType.fromType(ResourceType.Document).id();
+        result = writer.writeInt32(RESOURCE_TYPE, resourceTypeId);
+
         if (result != Result.SUCCESS) {
             return result;
         }

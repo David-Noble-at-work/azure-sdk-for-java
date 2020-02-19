@@ -3,15 +3,19 @@
 
 package com.azure.cosmos.implementation.directconnectivity.rntbd;
 
-import com.google.common.base.Strings;
+import com.azure.cosmos.implementation.OperationType;
+import com.azure.cosmos.implementation.ResourceType;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
+import io.netty.handler.codec.DecoderException;
 
 import java.util.EnumSet;
 import java.util.stream.Collector;
 
-final class RntbdConstants {
+import static com.azure.cosmos.base.Strings.lenientFormat;
+
+public final class RntbdConstants {
 
     static final int CURRENT_PROTOCOL_VERSION = 0x00000001;
 
@@ -221,49 +225,51 @@ final class RntbdConstants {
 
     public enum RntbdOperationType {
 
-        Connection((short) 0x0000),
-        Create((short) 0x0001),
-        Update((short) 0x0002),
-        Read((short) 0x0003),
-        ReadFeed((short) 0x0004),
-        Delete((short) 0x0005),
-        Replace((short) 0x0006),
+        Connection((short) 0x0000, null),
+        Create((short) 0x0001, OperationType.Create),
+        Update((short) 0x0002, OperationType.Update),
+        Read((short) 0x0003, OperationType.Read),
+        ReadFeed((short) 0x0004, OperationType.ReadFeed),
+        Delete((short) 0x0005, OperationType.Delete),
+        Replace((short) 0x0006, OperationType.Replace),
         // Obsolete and now undefined: JPathQuery((short)0x0007),
-        ExecuteJavaScript((short) 0x0008),
-        SQLQuery((short) 0x0009),
-        Pause((short) 0x000A),
-        Resume((short) 0x000B),
-        Stop((short) 0x000C),
-        Recycle((short) 0x000D),
-        Crash((short) 0x000E),
-        Query((short) 0x000F),
-        ForceConfigRefresh((short) 0x0010),
-        Head((short) 0x0011),
-        HeadFeed((short) 0x0012),
-        Upsert((short) 0x0013),
-        Recreate((short) 0x0014),
-        Throttle((short) 0x0015),
-        GetSplitPoint((short) 0x0016),
-        PreCreateValidation((short) 0x0017),
-        BatchApply((short) 0x0018),
-        AbortSplit((short) 0x0019),
-        CompleteSplit((short) 0x001A),
-        OfferUpdateOperation((short) 0x001B),
-        OfferPreGrowValidation((short) 0x001C),
-        BatchReportThroughputUtilization((short) 0x001D),
-        CompletePartitionMigration((short) 0x001E),
-        AbortPartitionMigration((short) 0x001F),
-        PreReplaceValidation((short) 0x0020),
-        AddComputeGatewayRequestCharges((short) 0x0021),
-        MigratePartition((short) 0x0022);
+        ExecuteJavaScript((short) 0x0008, OperationType.ExecuteJavaScript),
+        SqlQuery((short) 0x0009, OperationType.SqlQuery),
+        Pause((short) 0x000A, OperationType.Pause),
+        Resume((short) 0x000B, OperationType.Resume),
+        Stop((short) 0x000C, OperationType.Stop),
+        Recycle((short) 0x000D, OperationType.Recycle),
+        Crash((short) 0x000E, OperationType.Crash),
+        Query((short) 0x000F, OperationType.Query),
+        ForceConfigRefresh((short) 0x0010, OperationType.ForceConfigRefresh),
+        Head((short) 0x0011, OperationType.Head),
+        HeadFeed((short) 0x0012, OperationType.HeadFeed),
+        Upsert((short) 0x0013, OperationType.Upsert),
+        Recreate((short) 0x0014, OperationType.Recreate),
+        Throttle((short) 0x0015, OperationType.Throttle),
+        GetSplitPoint((short) 0x0016, OperationType.GetSplitPoint),
+        PreCreateValidation((short) 0x0017, OperationType.PreCreateValidation),
+        BatchApply((short) 0x0018, OperationType.BatchApply),
+        AbortSplit((short) 0x0019, OperationType.AbortSplit),
+        CompleteSplit((short) 0x001A, OperationType.CompleteSplit),
+        OfferUpdateOperation((short) 0x001B, OperationType.OfferUpdateOperation),
+        OfferPreGrowValidation((short) 0x001C, OperationType.OfferPreGrowValidation),
+        BatchReportThroughputUtilization((short) 0x001D, OperationType.BatchReportThroughputUtilization),
+        CompletePartitionMigration((short) 0x001E, OperationType.CompletePartitionMigration),
+        AbortPartitionMigration((short) 0x001F, OperationType.AbortPartitionMigration),
+        PreReplaceValidation((short) 0x0020, OperationType.PreReplaceValidation),
+        AddComputeGatewayRequestCharges((short) 0x0021, OperationType.AddComputeGatewayRequestCharges),
+        MigratePartition((short) 0x0022, OperationType.MigratePartition);
 
         private final short id;
+        private final OperationType type;
 
-        RntbdOperationType(final short id) {
+        RntbdOperationType(final short id, final OperationType type) {
             this.id = id;
+            this.type = type;
         }
 
-        public static RntbdOperationType fromId(final short id) throws IllegalArgumentException {
+        public static RntbdOperationType fromId(final short id) {
 
             switch (id) {
                 case 0x0000:
@@ -284,7 +290,7 @@ final class RntbdConstants {
                 case 0x0008:
                     return RntbdOperationType.ExecuteJavaScript;
                 case 0x0009:
-                    return RntbdOperationType.SQLQuery;
+                    return RntbdOperationType.SqlQuery;
                 case 0x000A:
                     return RntbdOperationType.Pause;
                 case 0x000B:
@@ -335,12 +341,92 @@ final class RntbdConstants {
                     return RntbdOperationType.AddComputeGatewayRequestCharges;
                 case 0x0022:
                     return RntbdOperationType.MigratePartition;
+                default:
+                    throw new DecoderException(lenientFormat("expected byte value matching %s value, not %s",
+                        RntbdOperationType.class.getSimpleName(),
+                        id));
             }
-            throw new IllegalArgumentException("id");
+        }
+
+        public static RntbdOperationType fromType(OperationType type) {
+            switch (type) {
+                case Crash:
+                    return RntbdOperationType.Crash;
+                case Create:
+                    return RntbdOperationType.Create;
+                case Delete:
+                    return RntbdOperationType.Delete;
+                case ExecuteJavaScript:
+                    return RntbdOperationType.ExecuteJavaScript;
+                case Query:
+                    return RntbdOperationType.Query;
+                case Pause:
+                    return RntbdOperationType.Pause;
+                case Read:
+                    return RntbdOperationType.Read;
+                case ReadFeed:
+                    return RntbdOperationType.ReadFeed;
+                case Recreate:
+                    return RntbdOperationType.Recreate;
+                case Recycle:
+                    return RntbdOperationType.Recycle;
+                case Replace:
+                    return RntbdOperationType.Replace;
+                case Resume:
+                    return RntbdOperationType.Resume;
+                case Stop:
+                    return RntbdOperationType.Stop;
+                case SqlQuery:
+                    return RntbdOperationType.SqlQuery;
+                case Update:
+                    return RntbdOperationType.Update;
+                case ForceConfigRefresh:
+                    return RntbdOperationType.ForceConfigRefresh;
+                case Head:
+                    return RntbdOperationType.Head;
+                case HeadFeed:
+                    return RntbdOperationType.HeadFeed;
+                case Upsert:
+                    return RntbdOperationType.Upsert;
+                case Throttle:
+                    return RntbdOperationType.Throttle;
+                case PreCreateValidation:
+                    return RntbdOperationType.PreCreateValidation;
+                case GetSplitPoint:
+                    return RntbdOperationType.GetSplitPoint;
+                case AbortSplit:
+                    return RntbdOperationType.AbortSplit;
+                case CompleteSplit:
+                    return RntbdOperationType.CompleteSplit;
+                case BatchApply:
+                    return RntbdOperationType.BatchApply;
+                case OfferUpdateOperation:
+                    return RntbdOperationType.OfferUpdateOperation;
+                case OfferPreGrowValidation:
+                    return RntbdOperationType.OfferPreGrowValidation;
+                case BatchReportThroughputUtilization:
+                    return RntbdOperationType.BatchReportThroughputUtilization;
+                case AbortPartitionMigration:
+                    return RntbdOperationType.AbortPartitionMigration;
+                case CompletePartitionMigration:
+                    return RntbdOperationType.CompletePartitionMigration;
+                case PreReplaceValidation:
+                    return RntbdOperationType.PreReplaceValidation;
+                case MigratePartition:
+                    return RntbdOperationType.MigratePartition;
+                case AddComputeGatewayRequestCharges:
+                    return RntbdOperationType.AddComputeGatewayRequestCharges;
+                default:
+                    throw new IllegalArgumentException(lenientFormat("unrecognized operation type: %s", type));
+            }
         }
 
         public short id() {
             return this.id;
+        }
+
+        public OperationType type() {
+            return this.type;
         }
     }
 
@@ -518,43 +604,45 @@ final class RntbdConstants {
         }
     }
 
-    enum RntbdResourceType {
+    public enum RntbdResourceType {
 
-        Connection((short) 0x0000),
-        Database((short) 0x0001),
-        Collection((short) 0x0002),
-        Document((short) 0x0003),
-        Attachment((short) 0x0004),
-        User((short) 0x0005),
-        Permission((short) 0x0006),
-        StoredProcedure((short) 0x0007),
-        Conflict((short) 0x0008),
-        Trigger((short) 0x0009),
-        UserDefinedFunction((short) 0x000A),
-        Module((short) 0x000B),
-        Replica((short) 0x000C),
-        ModuleCommand((short) 0x000D),
-        Record((short) 0x000E),
-        Offer((short) 0x000F),
-        PartitionSetInformation((short) 0x0010),
-        XPReplicatorAddress((short) 0x0011),
-        MasterPartition((short) 0x0012),
-        ServerPartition((short) 0x0013),
-        DatabaseAccount((short) 0x0014),
-        Topology((short) 0x0015),
-        PartitionKeyRange((short) 0x0016),
+        Connection((short) 0x0000, null),
+        Database((short) 0x0001, ResourceType.Database),
+        Collection((short) 0x0002, ResourceType.DocumentCollection),
+        Document((short) 0x0003, ResourceType.Document),
+        Attachment((short) 0x0004, ResourceType.Attachment),
+        User((short) 0x0005, ResourceType.User),
+        Permission((short) 0x0006, ResourceType.Permission),
+        StoredProcedure((short) 0x0007, ResourceType.StoredProcedure),
+        Conflict((short) 0x0008, ResourceType.Conflict),
+        Trigger((short) 0x0009, ResourceType.Trigger),
+        UserDefinedFunction((short) 0x000A, ResourceType.UserDefinedFunction),
+        Module((short) 0x000B, ResourceType.Module),
+        Replica((short) 0x000C, ResourceType.Replica),
+        ModuleCommand((short) 0x000D, ResourceType.ModuleCommand),
+        Record((short) 0x000E, ResourceType.Record),
+        Offer((short) 0x000F, ResourceType.Offer),
+        PartitionSetInformation((short) 0x0010, ResourceType.PartitionSetInformation),
+        XPReplicatorAddress((short) 0x0011, ResourceType.XPReplicatorAddress),
+        MasterPartition((short) 0x0012, ResourceType.MasterPartition),
+        ServerPartition((short) 0x0013, ResourceType.ServerPartition),
+        DatabaseAccount((short) 0x0014, ResourceType.DatabaseAccount),
+        Topology((short) 0x0015, ResourceType.Topology),
+        PartitionKeyRange((short) 0x0016, ResourceType.PartitionKeyRange),
         // Obsolete and now undefined: Timestamp((short)0x0017),
-        Schema((short) 0x0018),
-        BatchApply((short) 0x0019),
-        RestoreMetadata((short) 0x001A),
-        ComputeGatewayCharges((short) 0x001B),
-        RidRange((short) 0x001C),
-        UserDefinedType((short) 0x001D);
+        Schema((short) 0x0018, ResourceType.Schema),
+        BatchApply((short) 0x0019, ResourceType.BatchApply),
+        RestoreMetadata((short) 0x001A, ResourceType.RestoreMetadata),
+        ComputeGatewayCharges((short) 0x001B, ResourceType.ComputeGatewayCharges),
+        RidRange((short) 0x001C, ResourceType.RidRange),
+        UserDefinedType((short) 0x001D, ResourceType.UserDefinedType);
 
         private final short id;
+        private final ResourceType type;
 
-        RntbdResourceType(final short id) {
+        RntbdResourceType(final short id, final ResourceType type) {
             this.id = id;
+            this.type = type;
         }
 
         public static RntbdResourceType fromId(final short id) throws IllegalArgumentException {
@@ -605,7 +693,6 @@ final class RntbdConstants {
                     return RntbdResourceType.Topology;
                 case 0x0016:
                     return RntbdResourceType.PartitionKeyRange;
-                // Obsolete and now undefined: case 0x0017: return RntbdResourceType.Timestamp;
                 case 0x0018:
                     return RntbdResourceType.Schema;
                 case 0x0019:
@@ -618,12 +705,83 @@ final class RntbdConstants {
                     return RntbdResourceType.RidRange;
                 case 0x001D:
                     return RntbdResourceType.UserDefinedType;
+                default:
+                    throw new DecoderException(lenientFormat("expected byte value matching %s value, not %s",
+                        RntbdResourceType.class.getSimpleName(),
+                        id));
             }
-            throw new IllegalArgumentException(Strings.lenientFormat("id: %s", id));
+        }
+
+        public static RntbdResourceType fromType(ResourceType type) {
+
+            switch (type) {
+                case Database:
+                    return RntbdResourceType.Database;
+                case DocumentCollection:
+                    return RntbdResourceType.Collection;
+                case Document:
+                    return RntbdResourceType.Document;
+                case Attachment:
+                    return RntbdResourceType.Attachment;
+                case User:
+                    return RntbdResourceType.User;
+                case Permission:
+                    return RntbdResourceType.Permission;
+                case StoredProcedure:
+                    return RntbdResourceType.StoredProcedure;
+                case Conflict:
+                    return RntbdResourceType.Conflict;
+                case Trigger:
+                    return RntbdResourceType.Trigger;
+                case UserDefinedFunction:
+                    return RntbdResourceType.UserDefinedFunction;
+                case Module:
+                    return RntbdResourceType.Module;
+                case Replica:
+                    return RntbdResourceType.Replica;
+                case ModuleCommand:
+                    return RntbdResourceType.ModuleCommand;
+                case Record:
+                    return RntbdResourceType.Record;
+                case Offer:
+                    return RntbdResourceType.Offer;
+                case PartitionSetInformation:
+                    return RntbdResourceType.PartitionSetInformation;
+                case XPReplicatorAddress:
+                    return RntbdResourceType.XPReplicatorAddress;
+                case MasterPartition:
+                    return RntbdResourceType.MasterPartition;
+                case ServerPartition:
+                    return RntbdResourceType.ServerPartition;
+                case DatabaseAccount:
+                    return RntbdResourceType.DatabaseAccount;
+                case Topology:
+                    return RntbdResourceType.Topology;
+                case PartitionKeyRange:
+                    return RntbdResourceType.PartitionKeyRange;
+                case Schema:
+                    return RntbdResourceType.Schema;
+                case BatchApply:
+                    return RntbdResourceType.BatchApply;
+                case RestoreMetadata:
+                    return RntbdResourceType.RestoreMetadata;
+                case ComputeGatewayCharges:
+                    return RntbdResourceType.ComputeGatewayCharges;
+                case RidRange:
+                    return RntbdResourceType.RidRange;
+                case UserDefinedType:
+                    return RntbdResourceType.UserDefinedType;
+                default:
+                    throw new IllegalArgumentException(lenientFormat("unrecognized resource type: %s", type));
+            }
         }
 
         public short id() {
             return this.id;
+        }
+
+        public ResourceType type() {
+            return this.type;
         }
     }
 

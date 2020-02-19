@@ -21,9 +21,9 @@ public class TransactionalBatchItemRequestOptions extends RequestOptions {
         itemRequestOptions
             .setIndexingDirective(options.getIndexingDirective())
             .setAccessCondition(options.getAccessCondition())
-            .setProperties(options.getProperties());
+            .setProperties(options.getProperties())
+            .setEffectivePartitionKeyRouting(options.getEffectivePartitionKeyRouting());
 
-        itemRequestOptions.IsEffectivePartitionKeyRouting = options.IsEffectivePartitionKeyRouting;
         return itemRequestOptions;
     }
 }

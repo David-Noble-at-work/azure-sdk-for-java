@@ -8,6 +8,7 @@ import com.azure.cosmos.PartitionKeyDefinition;
 import com.azure.cosmos.RetryOptions;
 import com.azure.cosmos.batch.unimplemented.CosmosDiagnosticScope;
 import com.azure.cosmos.batch.unimplemented.CosmosDiagnosticsContext;
+import com.azure.cosmos.batch.unimplemented.RequestMessage;
 import com.azure.cosmos.batch.unimplemented.ResponseMessage;
 import com.azure.cosmos.implementation.DocumentClientRetryPolicy;
 import com.azure.cosmos.implementation.HttpConstants.HttpHeaders;
@@ -18,6 +19,7 @@ import com.azure.cosmos.implementation.ResourceType;
 import com.azure.cosmos.implementation.directconnectivity.WFConstants.BackendHeaders;
 import com.azure.cosmos.implementation.routing.CollectionRoutingMap;
 import com.azure.cosmos.implementation.routing.PartitionKeyInternal;
+import io.netty.util.HashedWheelTimer;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -52,6 +54,7 @@ public class BatchAsyncContainerExecutor implements AutoCloseable {
     private static final int DEFAULT_DISPATCH_TIMER_IN_SECONDS = 1;
     private static final int MINIMUM_DISPATCH_TIMER_IN_SECONDS = 1;
 
+    private final HashedWheelTimer timer = new HashedWheelTimer();
     private final ConcurrentHashMap<String, Semaphore> limiters = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<String, BatchAsyncStreamer> streamers = new ConcurrentHashMap<>();
 
@@ -61,8 +64,6 @@ public class BatchAsyncContainerExecutor implements AutoCloseable {
     private final int maxOperationCount;
     private final int maxPayloadLength;
     private final RetryOptions retryOptions;
-
-    private TimerPool timerPool;
 
     public BatchAsyncContainerExecutor(
         @Nonnull final CosmosClientContext clientContext,
@@ -104,8 +105,6 @@ public class BatchAsyncContainerExecutor implements AutoCloseable {
         this.maxOperationCount = maxOperationCount;
         this.maxPayloadLength = maxPayloadLength;
         this.dispatchTimerInSeconds = dispatchTimerInSeconds;
-
-        this.timerPool = new TimerPool(BatchAsyncContainerExecutor.MINIMUM_DISPATCH_TIMER_IN_SECONDS);
         this.retryOptions = clientContext.getConnectionPolicy().getRetryOptions();
     }
 
@@ -132,8 +131,8 @@ public class BatchAsyncContainerExecutor implements AutoCloseable {
                 resolvedPartitionKeyRangeId,
                 BatchAsyncContainerExecutor.GetRetryPolicy(this.retryOptions));
 
-            operation.AttachContext(context);
-            streamer.Add(operation);
+            operation.attachContext(context);
+            streamer.add(operation);
             return context.getOperationTask();
         });
     }
@@ -159,7 +158,7 @@ public class BatchAsyncContainerExecutor implements AutoCloseable {
             }
         }
 
-        this.timerPool.Dispose();
+        this.timer.stop();
         this.limiters.clear();
         this.streamers.clear();
 
@@ -180,7 +179,7 @@ public class BatchAsyncContainerExecutor implements AutoCloseable {
             checkState(BatchAsyncContainerExecutor.ValidateOperationEPK(operation, options));
         }
 
-        return operation.materializeResource(this.clientContext.SerializerCore);
+        return operation.materializeResource(this.clientContext.getSerializerCore());
     }
 
     public CompletableFuture<Void> validateOperationAsync(ItemBatchOperation operation) {
@@ -188,9 +187,9 @@ public class BatchAsyncContainerExecutor implements AutoCloseable {
     }
 
     private static void AddHeadersToRequestMessage(RequestMessage requestMessage, String partitionKeyRangeId) {
-        requestMessage.Headers.PartitionKeyRangeId = partitionKeyRangeId;
-        requestMessage.Headers.Add(HttpHeaders.SHOULD_BATCH_CONTINUE_ON_ERROR, Boolean.TRUE.toString());
-        requestMessage.Headers.Add(HttpHeaders.IS_BATCH_REQUEST, Boolean.TRUE.toString());
+        requestMessage.getHeaders().PartitionKeyRangeId = partitionKeyRangeId;
+        requestMessage.getHeaders().Add(HttpHeaders.SHOULD_BATCH_CONTINUE_ON_ERROR, Boolean.TRUE.toString());
+        requestMessage.getHeaders().Add(HttpHeaders.IS_BATCH_REQUEST, Boolean.TRUE.toString());
     }
 
     private CompletableFuture<PartitionKeyRangeBatchExecutionResult> ExecuteAsync(
@@ -249,7 +248,7 @@ public class BatchAsyncContainerExecutor implements AutoCloseable {
     private CompletableFuture<Void> ReBatchAsync(ItemBatchOperation operation) {
         return this.ResolvePartitionKeyRangeIdAsync(operation).thenApplyAsync((String resolvedPartitionKeyRangeId) -> {
             BatchAsyncStreamer streamer = this.getOrAddStreamerForPartitionKeyRange(resolvedPartitionKeyRangeId);
-            streamer.Add(operation);
+            streamer.add(operation);
             return null;
         });
     }
@@ -334,8 +333,8 @@ public class BatchAsyncContainerExecutor implements AutoCloseable {
             this.maxOperationCount,
             this.maxPayloadLength,
             this.dispatchTimerInSeconds,
-            this.timerPool,
-            this.clientContext.SerializerCore,
+            this.timer,
+            this.clientContext.getSerializerCore(),
             this::ExecuteAsync,
             this::ReBatchAsync));
     }

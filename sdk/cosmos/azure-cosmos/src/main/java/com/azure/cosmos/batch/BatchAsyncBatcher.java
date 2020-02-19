@@ -250,7 +250,7 @@ public class BatchAsyncBatcher {
             return false;
         }
 
-        int itemByteSize = operation.GetApproximateSerializedLength();
+        int itemByteSize = operation.getApproximateSerializedLength();
 
         if (!this.batchOperations.isEmpty() && itemByteSize + this.currentSize > this.maxBatchByteSize) {
             logger.info("Batch is full - Max byte size {} reached.", this.maxBatchByteSize);
