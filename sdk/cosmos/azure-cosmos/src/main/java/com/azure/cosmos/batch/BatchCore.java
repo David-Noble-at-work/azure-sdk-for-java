@@ -10,6 +10,7 @@ import com.azure.cosmos.implementation.OperationType;
 import com.azure.cosmos.implementation.RequestOptions;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.concurrent.CompletableFuture;
@@ -48,7 +49,9 @@ public class BatchCore implements TransactionalBatch {
 
 
     @Override
-    public <TItem> TransactionalBatch createItem(@Nonnull final TItem item, final RequestOptions requestOptions) {
+    public <TItem> TransactionalBatch createItem(
+        @Nonnull final TItem item,
+        @Nullable final RequestOptions requestOptions) {
 
         checkNotNull(item, "expected non-null item");
 
@@ -63,7 +66,7 @@ public class BatchCore implements TransactionalBatch {
     @Override
     public TransactionalBatch createItemStream(
         @Nonnull final InputStream inputStream,
-        final RequestOptions requestOptions) {
+        @Nullable final RequestOptions requestOptions) {
 
         checkNotNull(inputStream, "expected non-null inputStream");
 
@@ -207,7 +210,7 @@ public class BatchCore implements TransactionalBatch {
     @Override
     public TransactionalBatch upsertItemStream(
         @Nonnull final InputStream inputStream,
-        final RequestOptions requestOptions) {
+        @Nullable final RequestOptions requestOptions) {
 
         checkNotNull(inputStream, "expected non-null inputStream");
 

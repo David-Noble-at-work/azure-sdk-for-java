@@ -16,7 +16,6 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.atomic.AtomicReference;
 
-import static com.azure.cosmos.batch.PartitionKeyRangeServerBatchRequest.createAsync;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
@@ -41,7 +40,7 @@ public class BatchAsyncBatcher {
     private static final Logger logger = LoggerFactory.getLogger(BatchAsyncBatcher.class);
 
     private final Semaphore interlockIncrementCheck = new Semaphore(1);
-    private final ArrayList<ItemBatchOperation> batchOperations;
+    private final ArrayList<ItemBatchOperation<?>> operations;
     private long currentSize = 0;
     private boolean dispatched = false;
     private final BatchAsyncBatcherExecutor executor;
@@ -69,7 +68,7 @@ public class BatchAsyncBatcher {
         checkNotNull(executor, "expected non-null executor");
         checkNotNull(retrier, "expected non-null retrier");
 
-        this.batchOperations = new ArrayList<>(maxBatchOperationCount);
+        this.operations = new ArrayList<>(maxBatchOperationCount);
         this.maxBatchOperationCount = maxBatchOperationCount;
         this.maxBatchByteSize = maxBatchByteSize;
         this.serializerCore = serializerCore;
@@ -78,22 +77,19 @@ public class BatchAsyncBatcher {
     }
 
     public final boolean isEmpty() {
-        return this.batchOperations.isEmpty();
+        return this.operations.isEmpty();
     }
 
-    public CompletableFuture<ServerOperationBatchRequest> createServerRequestAsync() {
+    public CompletableFuture<ServerOperationBatchRequest> createBatchRequestAsync() {
 
         // All operations must be for the same partition key range
 
-        final String partitionKeyRangeId = this.batchOperations.get(0).getContext().getPartitionKeyRangeId();
+        final String partitionKeyRangeId = this.operations.get(0).getContext().getPartitionKeyRangeId();
+        final List<ItemBatchOperation<?>> operations = Collections.unmodifiableList(new ArrayList<>(this.operations));
 
-        final List<ItemBatchOperation<?>> itemBatchOperations = Collections.unmodifiableList(
-            new ArrayList<>(this.batchOperations)
-        );
-
-        return createAsync(
+        return PartitionKeyRangeServerBatchRequest.createAsync(
             partitionKeyRangeId,
-            itemBatchOperations,
+            operations,
             this.maxBatchByteSize,
             this.maxBatchOperationCount,
             false,
@@ -102,10 +98,13 @@ public class BatchAsyncBatcher {
 
     public CompletableFuture<Void> dispatchAsync() {
 
+        // TODO (DANOBLE) revise this method based on a review of the .NET implementation
+        //  This implementation dates back to the early days of my port and looks suspicious to me on 2020-02-19
+
         checkState(interlockIncrementCheck.tryAcquire(), "failed to acquire dispatch permit");
         final CompletableFuture<Void> dispatchFuture = new CompletableFuture<>();
 
-        this.createServerRequestAsync().whenComplete((batchRequest, creationError) -> {
+        this.createBatchRequestAsync().whenComplete((batchRequest, creationError) -> {
 
             if (creationError != null) {
                 dispatchFuture.completeExceptionally(creationError);
@@ -136,7 +135,7 @@ public class BatchAsyncBatcher {
             if (aggregateException != null) {
 
                 for (ItemBatchOperation<?> batchOperation : batchOperations) {
-                    batchOperation.getContext().Fail(this, aggregateException);
+                    batchOperation.getContext().fail(this, aggregateException);
                 }
 
                 dispatchFuture.completeExceptionally(aggregateException);
@@ -162,67 +161,62 @@ public class BatchAsyncBatcher {
                         dispatchFuture.complete(null);
                     } else {
                         for (ItemBatchOperation<?> itemBatchOperation : request.getBatchOperations()) {
-                            itemBatchOperation.getContext().Fail(this, error);
+                            itemBatchOperation.getContext().fail(this, error);
                         }
                         dispatchFuture.completeExceptionally(error);
                     }
                 });
 
-                try (PartitionKeyRangeBatchResponse response = new PartitionKeyRangeBatchResponse(
-                    operationCount, batchResponse, this.serializerCore)) {
+                PartitionKeyRangeBatchResponse response = new PartitionKeyRangeBatchResponse(
+                    operationCount, batchResponse, this.serializerCore);
 
-                    // TODO (DANOBLE) Is it OK to auto-close a PartitionKeyRangeBatchResponse before all responses are
-                    //  complete or should we close at some point in the future? What should happen when
-                    //  PartitionKeyRangeBatchResponse.close throws?
+                // TODO (DANOBLE) Is it OK to auto-close a PartitionKeyRangeBatchResponse before all responses are
+                //  complete or should we close at some point in the future? What should happen when
+                //  PartitionKeyRangeBatchResponse.close throws?
 
-                    int i = -1;
+                int i = -1;
 
-                    for (ItemBatchOperation<?> operation : response.getBatchOperations()) {
+                for (ItemBatchOperation<?> operation : response.getBatchOperations()) {
 
-                        final CompletableFuture<?> future = futures[++i];
-                        final int operationIndex = operation.getOperationIndex();
-                        final TransactionalBatchOperationResult<?> result = response.get(operationIndex);
+                    final CompletableFuture<?> future = futures[++i];
+                    final int operationIndex = operation.getOperationIndex();
+                    final TransactionalBatchOperationResult<?> operationResult = response.get(operationIndex);
 
-                        // TODO (DANOBLE) wire up diagnostics
-                        // Bulk has diagnostics per item operation.
-                        // Batch has a single diagnostics for the execute operation
-//
-//                        if (operation.getDiagnosticsContext() != null) {
-//                            result.setDiagnosticsContext(operation.getDiagnosticsContext());
-//                            result.getDiagnosticsContext().Append(result.getDiagnosticsContext());
-//                        } else {
-//                            result.setDiagnosticsContext(result.getDiagnosticsContext());
-//                        }
+                    // TODO (DANOBLE) wire up diagnostics
+                    // Bulk has diagnostics per item operation.
+                    // Batch has a single diagnostics for the execute operation
+                    //
+                    //                        if (operation.getDiagnosticsContext() != null) {
+                    //                            operationResult.setDiagnosticsContext(operation.getDiagnosticsContext());
+                    //                            operationResult.getDiagnosticsContext().Append(operationResult.getDiagnosticsContext());
+                    //                        } else {
+                    //                            operationResult.setDiagnosticsContext(operationResult.getDiagnosticsContext());
+                    //                        }
 
-                        final ItemBatchOperationContext context = operation.getContext();
+                    final ItemBatchOperationContext context = operation.getContext();
 
-                        if (result.isSuccessStatusCode()) {
+                    if (operationResult.isSuccessStatusCode()) {
 
-                            context.Complete(this, result);
-                            future.complete(null);
+                        context.complete(this, operationResult);
+                        future.complete(null);
 
-                        } else {
+                    } else {
 
-                            context.ShouldRetryAsync(result).whenComplete((shouldRetry, error) -> {
-                                if (error != null) {
-                                    future.completeExceptionally(error);
-                                }
-                            }).thenApply(shouldRetry -> {
-                                if (shouldRetry.shouldRetry) {
+                        context.shouldRetry(operationResult).subscribe(
+                            result -> {
+                                if (result.shouldRetry) {
                                     this.retrier.apply(operation).whenComplete((voidResult, error) -> {
                                         if (error == null) {
-                                            context.Complete(this, result);
+                                            context.complete(this, operationResult);
                                             future.complete(null);
                                         } else {
                                             future.completeExceptionally(error);
                                         }
                                     });
                                 }
-                            });
-                        }
+                            },
+                            future::completeExceptionally);
                     }
-
-                } catch (final Exception error) {
                 }
             }));
 
@@ -230,12 +224,12 @@ public class BatchAsyncBatcher {
             if (error != null) {
                 logger.error("dispatch failed due to ", error);
             }
-            this.batchOperations.clear();
+            this.operations.clear();
             this.dispatched = true;
         });
     }
 
-    public boolean tryAdd(ItemBatchOperation operation) {
+    public boolean tryAdd(ItemBatchOperation<?> operation) {
 
         checkNotNull(operation, "expected non-null operation");
         checkNotNull(operation.getContext(), "expected non-null operation context");
@@ -245,14 +239,14 @@ public class BatchAsyncBatcher {
             return false;
         }
 
-        if (this.batchOperations.size() == this.maxBatchOperationCount) {
+        if (this.operations.size() == this.maxBatchOperationCount) {
             logger.info("Batch is full - Max operation count {} reached.", this.maxBatchOperationCount);
             return false;
         }
 
         int itemByteSize = operation.getApproximateSerializedLength();
 
-        if (!this.batchOperations.isEmpty() && itemByteSize + this.currentSize > this.maxBatchByteSize) {
+        if (!this.operations.isEmpty() && itemByteSize + this.currentSize > this.maxBatchByteSize) {
             logger.info("Batch is full - Max byte size {} reached.", this.maxBatchByteSize);
             return false;
         }
@@ -261,8 +255,8 @@ public class BatchAsyncBatcher {
 
         // Operation index is in the scope of the current batch
 
-        operation.setOperationIndex(this.batchOperations.size()).getContext().setCurrentBatcher(this);
-        this.batchOperations.add(operation);
+        operation.setOperationIndex(this.operations.size()).getContext().setCurrentBatcher(this);
+        this.operations.add(operation);
 
         return true;
     }

@@ -83,7 +83,7 @@ public class TransactionalBatchResponse implements AutoCloseable, List<Transacti
         HttpResponseStatus responseStatus,
         int subStatusCode,
         String errorMessage,
-        List<ItemBatchOperation> operations,
+        List<ItemBatchOperation<?>> operations,
         CosmosDiagnosticsContext diagnosticsContext) {
 
         this(responseStatus, subStatusCode, errorMessage, 0.0D, null, EMPTY_UUID, diagnosticsContext, operations, null);
@@ -282,15 +282,25 @@ public class TransactionalBatchResponse implements AutoCloseable, List<Transacti
     public static CompletableFuture<TransactionalBatchResponse> fromResponseMessageAsync(
         ResponseMessage responseMessage,
         ServerBatchRequest serverRequest,
-        CosmosSerializerCore serializer) throws IOException {
+        CosmosSerializerCore serializer) {
         return fromResponseMessageAsync(responseMessage, serverRequest, serializer, true);
     }
 
+    /** Creates a transactional batch response} from a response message
+     *
+     * @param message the {@link ResponseMessage response message}.
+     * @param request the {@link ServerBatchRequest batch request} that produced {@code message}.
+     * @param serializer a serializer that will be used to deserialize {@code message} content.
+     * @param shouldPromoteOperationStatus indicates whether the operation status should be promoted.
+     *
+     * @return a future that provides the {@link TransactionalBatchResponse transactional batch response} created
+     * from {@link ResponseMessage message} when the asynchronous operation completes.
+     */
     public static CompletableFuture<TransactionalBatchResponse> fromResponseMessageAsync(
         @Nonnull final ResponseMessage message,
         @Nonnull final ServerBatchRequest request,
         @Nonnull final CosmosSerializerCore serializer,
-        final boolean shouldPromoteOperationStatus) throws IOException {
+        final boolean shouldPromoteOperationStatus) {
 
         try {
 
@@ -389,7 +399,7 @@ public class TransactionalBatchResponse implements AutoCloseable, List<Transacti
 
                         // Propagate the RetryAfter into the individual operations
 
-                        String value = message.Headers.get(HttpHeaders.RETRY_AFTER_IN_MILLISECONDS);
+                        String value = message.getHeaders().get(HttpHeaders.RETRY_AFTER_IN_MILLISECONDS);
 
                         if (value == null) {
                             retryAfterMilliseconds = 0;
@@ -412,8 +422,10 @@ public class TransactionalBatchResponse implements AutoCloseable, List<Transacti
             return future;
 
         } catch (IOException error) {
+            CompletableFuture<TransactionalBatchResponse> future = new CompletableFuture<>();
+            future.completeExceptionally(error);
             message.close();
-            throw error;
+            return future;
         }
     }
 
@@ -440,6 +452,7 @@ public class TransactionalBatchResponse implements AutoCloseable, List<Transacti
      *
      * @return Result of batch operation that contains a Resource deserialized to specified type.
      */
+    @SuppressWarnings("unchecked")
     public <T> TransactionalBatchOperationResult<T> getOperationResultAtIndex(
         final int index,
         @Nonnull final Class<T> type) throws IOException {
@@ -447,11 +460,11 @@ public class TransactionalBatchResponse implements AutoCloseable, List<Transacti
         checkArgument(index >= 0, "expected non-negative index");
         checkNotNull(type, "expected non-null type");
 
-        TransactionalBatchOperationResult<T> result = this.results.get(index);
+        TransactionalBatchOperationResult<T> result = (TransactionalBatchOperationResult<T>) this.results.get(index);
         T resource = null;
 
         if (result.getResourceStream() != null) {
-            resource = this.getSerializer().<T>fromStream(result.getResourceStream(), type);
+            resource = this.getSerializer().fromStream(result.getResourceStream(), type);
         }
 
         return new TransactionalBatchOperationResult<T>(result, resource);

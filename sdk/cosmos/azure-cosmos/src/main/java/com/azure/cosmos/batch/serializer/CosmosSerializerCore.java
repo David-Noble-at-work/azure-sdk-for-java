@@ -30,20 +30,20 @@ public class CosmosSerializerCore {
     private static final CosmosSerializer DEFAULT_SERIALIZER = new CosmosSerializerWrapper(
         new CosmosJacksonSerializer((CosmosSerializationOptions) null));
 
-    private final CosmosSerializer serializer;
+    private final CosmosSerializer objectSerializer;
     private final CosmosSerializer sqlQuerySpecSerializer;
 
     public CosmosSerializerCore() {
-        this.serializer = null;
+        this.objectSerializer = null;
         this.sqlQuerySpecSerializer = null;
     }
 
     public CosmosSerializerCore(final CosmosSerializer serializer) {
 
-        this.serializer = new CosmosSerializerWrapper(serializer);
+        this.objectSerializer = new CosmosSerializerWrapper(serializer);
 
         this.sqlQuerySpecSerializer = CosmosSqlQuerySpecJsonConverter.CreateSqlQuerySpecSerializer(
-            this.serializer,
+            this.objectSerializer,
             CosmosSerializerCore.DEFAULT_SERIALIZER);
     }
 
@@ -79,7 +79,7 @@ public class CosmosSerializerCore {
         // Public resource types that support query use the current serializer while internal resource types such as
         // offers use the default serializer
 
-        final CosmosSerializer serializer = this.serializer != null && (resourceType == ResourceType.Database
+        final CosmosSerializer serializer = this.objectSerializer != null && (resourceType == ResourceType.Database
             || resourceType == ResourceType.DocumentCollection
             || resourceType == ResourceType.Document
             || resourceType == ResourceType.Trigger
@@ -102,7 +102,7 @@ public class CosmosSerializerCore {
             SqlQuerySpec.class.getSimpleName(),
             SqlQuerySpec.class.getSimpleName());
 
-        if (this.serializer == null) {
+        if (this.objectSerializer == null) {
             return CosmosSerializerCore.DEFAULT_SERIALIZER;
         }
 
@@ -121,6 +121,6 @@ public class CosmosSerializerCore {
             return CosmosSerializerCore.DEFAULT_SERIALIZER;
         }
 
-        return this.serializer;
+        return this.objectSerializer;
     }
 }

@@ -10,6 +10,7 @@ import com.azure.cosmos.batch.serializer.CosmosSerializerCore;
 import io.netty.handler.codec.http.HttpResponseStatus;
 
 import javax.annotation.Nonnull;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.stream.Stream;
@@ -26,7 +27,7 @@ public class PartitionKeyRangeBatchResponse extends TransactionalBatchResponse {
 
     // Results sorted in the order operations had been added.
 
-    private final TransactionalBatchOperationResult[] resultsByOperationIndex;
+    private final TransactionalBatchOperationResult<?>[] resultsByOperationIndex;
     private final TransactionalBatchResponse serverResponse;
 
     // endregion
@@ -65,7 +66,7 @@ public class PartitionKeyRangeBatchResponse extends TransactionalBatchResponse {
         for (int index = 0; index < serverResponse.getBatchOperations().size(); index++) {
 
             final int operationIndex = serverResponse.getBatchOperations().get(index).getOperationIndex();
-            final TransactionalBatchOperationResult result = this.resultsByOperationIndex[operationIndex];
+            final TransactionalBatchOperationResult<?> result = this.resultsByOperationIndex[operationIndex];
 
             if (result == null || result.getResponseStatus() == HttpResponseStatus.TOO_MANY_REQUESTS) {
                 this.resultsByOperationIndex[operationIndex] = serverResponse.get(index);
@@ -105,9 +106,10 @@ public class PartitionKeyRangeBatchResponse extends TransactionalBatchResponse {
      *
      * @return Result of batch operation that contains a Resource deserialized to specified type.
      */
+    @SuppressWarnings("unchecked")
     @Override
     public <T> TransactionalBatchOperationResult<T> getOperationResultAtIndex(
-        final int index, @Nonnull final Class<T> type) {
+        final int index, @Nonnull final Class<T> type) throws IOException {
 
         checkArgument(0 <= index && index < this.size(), "expected index in range [0, %s), not %s",
             this.size(),
@@ -115,14 +117,13 @@ public class PartitionKeyRangeBatchResponse extends TransactionalBatchResponse {
 
         checkNotNull(type, "expected non-null type");
 
-        final TransactionalBatchOperationResult result = this.resultsByOperationIndex[index];
+        final TransactionalBatchOperationResult<?> result = this.resultsByOperationIndex[index];
         T resource = null;
 
         if (result.getResourceStream() != null) {
             resource = this.getSerializer().<T>fromStream(result.getResourceStream(), type);
         }
-
-        return new TransactionalBatchOperationResult<T>(result, resource);
+        return new TransactionalBatchOperationResult<T>((TransactionalBatchOperationResult<T>) result, resource);
     }
 
     // endregion
@@ -138,7 +139,7 @@ public class PartitionKeyRangeBatchResponse extends TransactionalBatchResponse {
     }
 
     @Override
-    public TransactionalBatchOperationResult get(int index) {
+    public TransactionalBatchOperationResult<?> get(int index) {
         return this.resultsByOperationIndex[index];
     }
 
@@ -148,7 +149,7 @@ public class PartitionKeyRangeBatchResponse extends TransactionalBatchResponse {
      * @return Enumerator over the operation results.
      */
     @Override
-    public Iterator<TransactionalBatchOperationResult> iterator() {
+    public Iterator<TransactionalBatchOperationResult<?>> iterator() {
         return Stream.of(this.resultsByOperationIndex).iterator();
     }
 

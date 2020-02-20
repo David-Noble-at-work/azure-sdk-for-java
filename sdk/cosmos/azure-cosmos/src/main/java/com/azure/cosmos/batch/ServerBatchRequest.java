@@ -22,6 +22,7 @@ import java.util.concurrent.CompletableFuture;
 
 import static com.azure.cosmos.base.Preconditions.checkArgument;
 import static com.azure.cosmos.base.Preconditions.checkNotNull;
+import static com.azure.cosmos.base.Preconditions.checkState;
 import static java.lang.Math.max;
 
 public abstract class ServerBatchRequest {
@@ -59,9 +60,14 @@ public abstract class ServerBatchRequest {
      *
      * @return Body stream.
      */
+    @Nonnull
     public final InputStream transferBodyStream() {
+
+        checkState(this.bodyStream != null, "expected non-null body stream");
+
         ByteBufInputStream inputStream = new ByteBufInputStream(this.bodyStream.buffer(), true);
         this.bodyStream = null;
+
         return inputStream;
     }
 

@@ -87,8 +87,6 @@ public final class BatchExecutor {
         final Out<CosmosDiagnosticScope> responseScope = new Out<>();
         final InputStream payload = request.transferBodyStream();
 
-        checkState(payload != null, "expected non-null payload");
-
         return this.clientContext.processResourceOperationStreamAsync(
             this.container.getLink(),
             ResourceType.Document,

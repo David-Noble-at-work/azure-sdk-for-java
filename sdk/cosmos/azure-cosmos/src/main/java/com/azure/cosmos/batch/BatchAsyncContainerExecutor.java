@@ -121,20 +121,23 @@ public class BatchAsyncContainerExecutor implements AutoCloseable {
         checkNotNull(operation, "expected non-null operation");
 
         return this.validateOperationAsync(operation, options).thenComposeAsync(
-            (Void result) -> this.ResolvePartitionKeyRangeIdAsync(operation)
+            (Void result) -> this.resolvePartitionKeyRangeIdAsync(operation)
 
         ).thenComposeAsync((String resolvedPartitionKeyRangeId) -> {
 
             final BatchAsyncStreamer streamer = this.getOrAddStreamerForPartitionKeyRange(resolvedPartitionKeyRangeId);
 
+            // TODO (DANOBLE) create a future to put into the ItemBatchOperationContext; one that is completed when this
+            //  batch operation completes
+
             final ItemBatchOperationContext context = new ItemBatchOperationContext(
                 resolvedPartitionKeyRangeId,
-                BatchAsyncContainerExecutor.GetRetryPolicy(this.retryOptions));
+                BatchAsyncContainerExecutor.getRetryPolicy(this.retryOptions));
 
             operation.attachContext(context);
             streamer.add(operation);
 
-            return context.getOperationTask();
+            return context.getOperationResultFuture();
         });
     }
 
@@ -161,13 +164,13 @@ public class BatchAsyncContainerExecutor implements AutoCloseable {
                 && options.getPostTriggerInclude() == null
                 && options.getPreTriggerInclude() == null
                 && options.getSessionToken() == null);
-            checkState(BatchAsyncContainerExecutor.ValidateOperationEPK(operation, options));
+            checkState(BatchAsyncContainerExecutor.validateOperationEpk(operation, options));
         }
 
         return operation.materializeResource(this.clientContext.getSerializerCore());
     }
 
-    public CompletableFuture<Void> validateOperationAsync(ItemBatchOperation operation) {
+    public CompletableFuture<Void> validateOperationAsync(ItemBatchOperation<?> operation) {
         return validateOperationAsync(operation, null);
     }
 
@@ -238,22 +241,22 @@ public class BatchAsyncContainerExecutor implements AutoCloseable {
         });
     }
 
-    private static DocumentClientRetryPolicy GetRetryPolicy(RetryOptions retryOptions) {
+    private static DocumentClientRetryPolicy getRetryPolicy(RetryOptions retryOptions) {
         return new BulkPartitionKeyRangeGoneRetryPolicy(
             new ResourceThrottleRetryPolicy(
                 retryOptions.getMaxRetryAttemptsOnThrottledRequests(),
                 retryOptions.getMaxRetryWaitTimeInSeconds()));
     }
 
-    private CompletableFuture<Void> ReBatchAsync(ItemBatchOperation operation) {
-        return this.ResolvePartitionKeyRangeIdAsync(operation).thenApplyAsync((String resolvedPartitionKeyRangeId) -> {
+    private CompletableFuture<Void> ReBatchAsync(ItemBatchOperation<?> operation) {
+        return this.resolvePartitionKeyRangeIdAsync(operation).thenApplyAsync((String resolvedPartitionKeyRangeId) -> {
             BatchAsyncStreamer streamer = this.getOrAddStreamerForPartitionKeyRange(resolvedPartitionKeyRangeId);
             streamer.add(operation);
             return null;
         });
     }
 
-    private CompletableFuture<String> ResolvePartitionKeyRangeIdAsync(@Nonnull final ItemBatchOperation operation) {
+    private CompletableFuture<String> resolvePartitionKeyRangeIdAsync(@Nonnull final ItemBatchOperation<?> operation) {
 
         checkNotNull(operation, "expected non-null operation");
 
@@ -286,8 +289,8 @@ public class BatchAsyncContainerExecutor implements AutoCloseable {
         });
     }
 
-    private static boolean ValidateOperationEPK(
-        @Nonnull final ItemBatchOperation operation,
+    private static boolean validateOperationEpk(
+        @Nonnull final ItemBatchOperation<?> operation,
         @Nonnull final RequestOptions options) {
 
         checkNotNull(operation, "expected non-null operation");
@@ -340,7 +343,7 @@ public class BatchAsyncContainerExecutor implements AutoCloseable {
     }
 
     private CompletableFuture<PartitionKeyInternal> getPartitionKeyInternalAsync(
-        @Nonnull final ItemBatchOperation operation) {
+        @Nonnull final ItemBatchOperation<?> operation) {
 
         checkNotNull(operation, "expected non-null operation");
 
@@ -352,6 +355,15 @@ public class BatchAsyncContainerExecutor implements AutoCloseable {
             return CompletableFuture.completedFuture(partitionKeyInternal);
         }
 
+        // TODO (DANOBLE) QUESTION: In the .NET code we obtain the NoneValue from ContainerProperties. How can I obtain
+        //  this value from CosmosAsyncContainer?
+        //  The C# code looks like this:
+        //    ContainerProperties containerProperties = await this.GetCachedContainerPropertiesAsync(cancellationToken);
+        //    return containerProperties.GetNoneValue();
+        //  In the absence of a getNonePartitionKeyValueAsync method I thought that I would be access
+        //  CosmosContainerProperties from a CosmosAsyncContainer like this:
+        //    container.getCachedContainerProperties();
+        //  I found no such accessor.
         return /*await*/ this.container.GetNonePartitionKeyValueAsync();
     }
 

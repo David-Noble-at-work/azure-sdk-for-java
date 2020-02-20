@@ -3,10 +3,12 @@
 
 package com.azure.cosmos.batch;
 
+import com.azure.cosmos.batch.unimplemented.ResponseMessage;
 import com.azure.cosmos.implementation.DocumentClientRetryPolicy;
 import com.azure.cosmos.implementation.IRetryPolicy.ShouldRetryResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import reactor.core.publisher.Mono;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -21,6 +23,7 @@ public class ItemBatchOperationContext implements AutoCloseable {
 
     private static final Logger logger = LoggerFactory.getLogger(ItemBatchOperationContext.class);
 
+    private final CompletableFuture<TransactionalBatchOperationResult<?>> operationResultFuture;
     private BatchAsyncBatcher currentBatcher;
     private final String partitionKeyRangeId;
     private final DocumentClientRetryPolicy retryPolicy;
@@ -33,6 +36,7 @@ public class ItemBatchOperationContext implements AutoCloseable {
         @Nonnull final String partitionKeyRangeId, @Nullable final DocumentClientRetryPolicy retryPolicy) {
 
         checkNotNull(partitionKeyRangeId, "expected non-null partitionKeyRangeId");
+        this.operationResultFuture = new CompletableFuture<>();
         this.partitionKeyRangeId = partitionKeyRangeId;
         this.retryPolicy = retryPolicy;
     }
@@ -45,24 +49,24 @@ public class ItemBatchOperationContext implements AutoCloseable {
         currentBatcher = value;
     }
 
-    public final CompletableFuture<TransactionalBatchOperationResult<?>> getOperationTask() {
-        return this.taskCompletionSource.Task;
+    public final CompletableFuture<TransactionalBatchOperationResult<?>> getOperationResultFuture() {
+        return this.operationResultFuture;
     }
 
     public final String getPartitionKeyRangeId() {
         return partitionKeyRangeId;
     }
 
-    public final void Complete(BatchAsyncBatcher completer, TransactionalBatchOperationResult<?> result) {
-        if (this.AssertBatcher(completer)) {
-            this.taskCompletionSource.SetResult(result);
+    public final void complete(BatchAsyncBatcher completer, TransactionalBatchOperationResult<?> result) {
+        if (this.assertBatcher(completer)) {
+            this.operationResultFuture.complete(result);
         }
         this.close();
     }
 
-    public final void Fail(BatchAsyncBatcher completer, Throwable error) {
-        if (this.AssertBatcher(completer, error)) {
-            this.taskCompletionSource.SetException(error);
+    public final void fail(BatchAsyncBatcher completer, Throwable error) {
+        if (this.assertBatcher(completer, error)) {
+            this.operationResultFuture.completeExceptionally(error);
         }
         this.close();
     }
@@ -71,36 +75,42 @@ public class ItemBatchOperationContext implements AutoCloseable {
      * Based on the Retry Policy, if a failed response should retry.
      *
      * @param result result of batch operation.
+     *
+     * @return indicates whether a retry should be attempted.
      */
-    public final CompletableFuture<ShouldRetryResult> ShouldRetryAsync(
-        @Nonnull final TransactionalBatchOperationResult<?> result) {
+    public final Mono<ShouldRetryResult> shouldRetry(@Nonnull final TransactionalBatchOperationResult<?> result) {
 
         checkNotNull(result, "expected non-null result");
 
         if (this.retryPolicy == null || result.isSuccessStatusCode()) {
-            return CompletableFuture.completedFuture(ShouldRetryResult.noRetry());
+            return Mono.just(ShouldRetryResult.noRetry());
         }
 
         ResponseMessage responseMessage = result.toResponseMessage();
-        return this.retryPolicy.ShouldRetryAsync(responseMessage);
+        return this.retryPolicy.shouldRetry(responseMessage);
     }
 
     public final void close() {
+        this.operationResultFuture.cancel(true);
         this.setCurrentBatcher(null);
     }
 
-    private boolean AssertBatcher(BatchAsyncBatcher completer) {
-        return AssertBatcher(completer, null);
+    // region Privates
+
+    private boolean assertBatcher(BatchAsyncBatcher completer) {
+        return assertBatcher(completer, null);
     }
 
-    private boolean AssertBatcher(BatchAsyncBatcher completer, Throwable error) {
+    private boolean assertBatcher(BatchAsyncBatcher completer, Throwable error) {
         if (completer != this.getCurrentBatcher()) {
-            logger.error("Operation was completed by incorrect batcher");
-            this.taskCompletionSource.SetException(
-                new RuntimeException("Operation was completed by incorrect batcher."),
-                error);
+            final String message = "operation was completed by incorrect batcher";
+            logger.error(message);
+            this.operationResultFuture.completeExceptionally(
+                new RuntimeException(message, error));
             return false;
         }
         return true;
     }
+
+    // endregion
 }
