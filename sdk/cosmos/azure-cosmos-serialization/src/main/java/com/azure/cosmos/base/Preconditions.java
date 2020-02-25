@@ -165,9 +165,12 @@ public final class Preconditions {
 
     /**
      * Ensures the truth of an expression involving one or more parameters to the calling method.
+     * <p>
+     * See {@link #checkArgument(boolean, String, Object...)} for details.
      *
-     * <p>See {@link #checkArgument(boolean, String, Object...)} for details.
-     *
+     * @param b
+     * @param errorMessageTemplate
+     * @param p1
      * @since 20.0 (varargs overload since 2.0)
      */
     public static void checkArgument(boolean b, @Nullable String errorMessageTemplate, char p1) {

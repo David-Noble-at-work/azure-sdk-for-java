@@ -61,9 +61,9 @@ import com.azure.cosmos.serialization.hybridrow.layouts.TypeArgumentList;
 import com.azure.cosmos.serialization.hybridrow.layouts.UpdateOptions;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufAllocator;
-
-import org.jetbrains.annotations.NotNull;;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -82,6 +82,8 @@ import static com.azure.cosmos.base.Preconditions.checkArgument;
 import static com.azure.cosmos.base.Preconditions.checkNotNull;
 import static com.azure.cosmos.base.Preconditions.checkState;
 import static com.azure.cosmos.base.Strings.lenientFormat;
+
+;
 
 // import com.azure.data.cosmos.serialization.hybridrow.RowBuffer.UniqueIndexItem;
 
@@ -322,13 +324,16 @@ public final class RowBuffer {
     }
 
     /**
-     * Initializes a row to the minimal size for the given layout.
-     *  @param version The version of the Hybrid Row format to use for encoding this row.
+     * Initializes a {@link RowBuffer row buffer} to the minimal size for the given layout.
+     *
+     * @param version The version of the Hybrid Row format to use for encoding this row.
      * @param layout The layout that describes the column layout of the row.
      * @param resolver The resolver for UDTs.
- * <p>
- * The row is initialized to default row for the given layout.  All fixed columns have their default values. All
-     * @return
+     * <p>
+     * The {@link RowBuffer row buffer} is initialized to default {@link RowBuffer row buffer} for the given layout. All
+     * fixed columns have their default values.
+     *
+     * @return a {@link RowBuffer row buffer} with the minimal size for the given layout.
      */
     public RowBuffer initLayout(HybridRowVersion version, Layout layout, LayoutResolver resolver) {
 
