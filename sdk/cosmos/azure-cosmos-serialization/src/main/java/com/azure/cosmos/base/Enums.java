@@ -21,6 +21,7 @@ import java.lang.reflect.Field;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 import java.util.WeakHashMap;
 
 import static com.azure.cosmos.base.Preconditions.checkNotNull;
@@ -44,6 +45,10 @@ public final class Enums {
      * Description} annotation on the {@code GOLF} constant of enum {@code Sport}, use {@code
      * Enums.getField(Sport.GOLF).getAnnotation(Description.class)}.
      *
+     * @param enumValue an {@code enum} value.
+     *
+     * @return the {@link Field field} in which {@code enumValue} is defined.
+     *
      * @since 12.0
      */
     public static Field getField(Enum<?> enumValue) {
@@ -57,9 +62,15 @@ public final class Enums {
 
     /**
      * Returns an optional enum constant for the given type, using {@link Enum#valueOf}. If the
-     * constant does not exist, {@link Optional#absent} is returned. A common use case is for parsing
+     * constant does not exist, {@link Optional#empty} is returned. A common use case is for parsing
      * user input or falling back to a default enum constant. For example, {@code
      * Enums.getIfPresent(Country.class, countryInput).or(Country.DEFAULT);}
+     *
+     * @param <T> the type of {@code enum}.
+     * @param enumClass the {@link Class class} representing the {@code enum} type.
+     * @param value the string to be converted to an {@code enum} of type {@code {<T>}} value.
+     *
+     * @return an optional enum constant for the given type.
      *
      * @since 12.0
      */
@@ -74,6 +85,11 @@ public final class Enums {
      * enumClass} using {@link Enum#valueOf(Class, String)} and {@link Enum#name()}. The converter
      * will throw an {@code IllegalArgumentException} if the argument is not the name of any enum
      * constant in the specified enum.
+     *
+     * @param <T> the type of {@code enum}.
+     * @param enumClass the {@link Class class} representing the {@code enum} type.
+     *
+     * @return a converter that converts between strings and {@code enum} values of type {@code enumClass}.
      *
      * @since 16.0
      */

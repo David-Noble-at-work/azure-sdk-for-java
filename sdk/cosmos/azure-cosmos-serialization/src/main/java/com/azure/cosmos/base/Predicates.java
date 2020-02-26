@@ -20,7 +20,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
+import java.util.Objects;
 import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.regex.Pattern;
 
 import static com.azure.cosmos.base.Preconditions.checkNotNull;
@@ -43,205 +45,300 @@ public final class Predicates {
     // TODO(kevinb): considering having these implement a VisitablePredicate
     // interface which specifies an accept(PredicateVisitor) method.
 
-    /** Returns a predicate that always evaluates to {@code false}. */
-    public static <T> com.azure.cosmos.base.Predicate<T> alwaysFalse() {
+    /**
+     * Returns a predicate that always evaluates to {@code false}.
+     *
+     * @param <T> the predicate type.
+     *
+     * @return a predicate that always evaluates to {@code false}.
+     */
+    public static <T> Predicate<T> alwaysFalse() {
         return ObjectPredicate.ALWAYS_FALSE.withNarrowedType();
     }
 
-    /** Returns a predicate that always evaluates to {@code true}. */
-    public static <T> com.azure.cosmos.base.Predicate<T> alwaysTrue() {
+    /**
+     * Returns a predicate that always evaluates to {@code true}.
+     *
+     * @param <T> the predicate type.
+     *
+     * @return a predicate that always evaluates to {@code false}.
+     */
+    public static <T> Predicate<T> alwaysTrue() {
         return ObjectPredicate.ALWAYS_TRUE.withNarrowedType();
     }
 
     /**
-     * Returns a predicate that evaluates to {@code true} if each of its components evaluates to
-     * {@code true}. The components are evaluated in order, and evaluation will be "short-circuited"
-     * as soon as a false predicate is found. It defensively copies the iterable passed in, so future
-     * changes to it won't alter the behavior of this predicate. If {@code components} is empty, the
-     * returned predicate will always evaluate to {@code true}.
+     * Returns a predicate that evaluates to {@code true} if each of its components evaluates to {@code true}.
+     * <p>
+     * The components are evaluated in order, and evaluation will be "short-circuited" as soon as a false predicate is
+     * found. It defensively copies the iterable passed in, so future changes to it won't alter the behavior of this
+     * predicate. If {@code components} is empty, the returned predicate will always evaluate to {@code true}.
+     *
+     * @param <T> the predicate type.
+     * @param components an {@link Iterable iterable} over the components to evaluate.
+     *
+     * @return a predicate that evaluates to {@code true} if each of the {@code components} evaluates to {@code true}.
      */
-    public static <T> com.azure.cosmos.base.Predicate<T> and(Iterable<? extends com.azure.cosmos.base.Predicate<?
+    public static <T> Predicate<T> and(Iterable<? extends Predicate<?
         super T>> components) {
         return new AndPredicate<T>(defensiveCopy(components));
     }
 
     /**
-     * Returns a predicate that evaluates to {@code true} if each of its components evaluates to
-     * {@code true}. The components are evaluated in order, and evaluation will be "short-circuited"
-     * as soon as a false predicate is found. It defensively copies the array passed in, so future
-     * changes to it won't alter the behavior of this predicate. If {@code components} is empty, the
-     * returned predicate will always evaluate to {@code true}.
+     * Returns a predicate that evaluates to {@code true} if each of its components evaluates to {@code true}.
+     * <p>
+     * The components are evaluated in order, and evaluation will be "short-circuited" as soon as a false predicate is
+     * found. It defensively copies the array passed in, so future changes to it won't alter the behavior of this
+     * predicate. If {@code components} is empty, the returned predicate will always evaluate to {@code true}.
+     *
+     * @param <T> the predicate type.
+     * @param components a variable argument list of the components to evaluate.
+     *
+     * @return a predicate that evaluates to {@code true} if each of the {@code components} evaluates to {@code true}.
      */
     @SafeVarargs
     @SuppressWarnings("varargs")
-    public static <T> com.azure.cosmos.base.Predicate<T> and(com.azure.cosmos.base.Predicate<? super T>... components) {
+    public static <T> Predicate<T> and(Predicate<? super T>... components) {
         return new AndPredicate<T>(defensiveCopy(components));
     }
 
     /**
-     * Returns a predicate that evaluates to {@code true} if both of its components evaluate to {@code
-     * true}. The components are evaluated in order, and evaluation will be "short-circuited" as soon
-     * as a false predicate is found.
+     * Returns a predicate that evaluates to {@code true} if both of its components evaluate to {@code true}.
+     * <p>
+     * The components are evaluated in order, and evaluation will be "short-circuited" as soon as a false predicate is
+     * found.
+     *
+     * @param <T> the predicate type.
+     * @param first the first component predicate to evaluate.
+     * @param second the second component predicate to evaluate.
+     *
+     * @return a predicate that evaluates to {@code true} if the {@code first} and {@code second} component predicates
+     * evaluate to {@code true}.
      */
-    public static <T> com.azure.cosmos.base.Predicate<T> and(com.azure.cosmos.base.Predicate<? super T> first,
-                                                             com.azure.cosmos.base.Predicate<? super T> second) {
+    public static <T> Predicate<T> and(Predicate<? super T> first, Predicate<? super T> second) {
         return new AndPredicate<T>(Predicates.asList(checkNotNull(first), checkNotNull(second)));
     }
 
     /**
-     * Returns the composition of a function and a predicate. For every {@code x}, the generated
-     * predicate returns {@code predicate(function(x))}.
+     * Returns the composition of a function and a predicate.
+     * <p>
+     * For every {@code x}, the generated predicate returns {@code predicate(function(x))}.
      *
-     * @return the composition of the provided function and predicate
+     * @param <A> the type of the input to the function and the predicate.
+     * @param <B> the type of the result of the function.
+     * @param predicate the predicate.
+     * @param function the function.
+     *
+     * @return the composition of the provided function and predicate.
      */
-    public static <A, B> com.azure.cosmos.base.Predicate<A> compose(
-        com.azure.cosmos.base.Predicate<B> predicate, Function<A, ? extends B> function) {
+    public static <A, B> Predicate<A> compose(Predicate<B> predicate, Function<A, ? extends B> function) {
         return new CompositionPredicate<>(predicate, function);
     }
 
     /**
-     * Returns a predicate that evaluates to {@code true} if the {@code CharSequence} being tested
-     * contains any match for the given regular expression pattern. The test used is equivalent to
-     * {@code pattern.matcher(arg).find()}
+     * Returns a predicate that evaluates to {@code true} if the {@link CharSequence} being tested contains any match
+     * for the given regular expression pattern.
+     * <p>
+     * The test used is equivalent to {@code pattern.matcher(arg).find()}.
+     *
+     * @param pattern the regular expression pattern.
+     *
+     * @return a predicate that evaluates to {@code true} if the {@link CharSequence} being tested contains any match
+     * for {@code pattern}.
      *
      * @since 3.0
      */
-    public static com.azure.cosmos.base.Predicate<CharSequence> contains(Pattern pattern) {
+    public static Predicate<CharSequence> contains(Pattern pattern) {
         return new ContainsPatternPredicate(new com.azure.cosmos.base.JdkPattern(pattern));
     }
 
     /**
-     * Returns a predicate that evaluates to {@code true} if the {@code CharSequence} being tested
-     * contains any match for the given regular expression pattern. The test used is equivalent to
-     * {@code Pattern.compile(pattern).matcher(arg).find()}
+     * Returns a predicate that evaluates to {@code true} if the {@code CharSequence} being tested contains any match
+     * for the given regular expression pattern.
+     * <p>
+     * The test used is equivalent to {@code Pattern.compile(pattern).matcher(arg).find()}.
+     *
+     * @param pattern the regular expression pattern.
+     *
+     * @return a predicate that evaluates to {@code true} if the {@code CharSequence} being tested contains any match
+     * for {@code pattern}.
      *
      * @throws IllegalArgumentException if the pattern is invalid
      * @since 3.0
      */
-    public static com.azure.cosmos.base.Predicate<CharSequence> containsPattern(String pattern) {
+    public static Predicate<CharSequence> containsPattern(String pattern) {
         return new ContainsPatternFromStringPredicate(pattern);
     }
 
     /**
-     * Returns a predicate that evaluates to {@code true} if the object being tested {@code equals()}
-     * the given target or both are null.
+     * Returns a predicate that evaluates to {@code true} if the object being tested {@code equals()} the given target
+     * or both are null.
+     *
+     * @param <T> the type of the input to the predicate.
+     * @param target the target.
+     *
+     * @return a predicate that evaluates to {@code true} if the object being tested {@code equals()} the given target
+     * or both are null.
      */
-    public static <T> com.azure.cosmos.base.Predicate<T> equalTo(@Nullable T target) {
+    public static <T> Predicate<T> equalTo(@Nullable T target) {
         return (target == null) ? Predicates.isNull() : new IsEqualToPredicate<T>(target);
     }
 
     /**
-     * Returns a predicate that evaluates to {@code true} if the object reference being tested is a
-     * member of the given collection. It does not defensively copy the collection passed in, so
-     * future changes to it will alter the behavior of the predicate.
+     * Returns a predicate that evaluates to {@code true} if the object reference being tested is a member of the given
+     * collection. It does not defensively copy the collection passed in, so future changes to it will alter the
+     * behavior of the predicate.
      *
      * <p>This method can technically accept any {@code Collection<?>}, but using a typed collection
-     * helps prevent bugs. This approach doesn't block any potential users since it is always possible
-     * to use {@code Predicates.<Object>in()}.
+     * helps prevent bugs. This approach doesn't block any potential users since it is always possible to use {@code
+     * Predicates.<Object>in()}.
      *
+     * @param <T> the type of the input to the predicate.
      * @param target the collection that may contain the function input
+     *
+     * @return the predicate
      */
-    public static <T> com.azure.cosmos.base.Predicate<T> in(Collection<? extends T> target) {
+    public static <T> Predicate<T> in(Collection<? extends T> target) {
         return new InPredicate<T>(target);
     }
 
     /**
-     * Returns a predicate that evaluates to {@code true} if the object being tested is an instance of
-     * the given class. If the object being tested is {@code null} this predicate evaluates to {@code
-     * false}.
+     * Returns a predicate that evaluates to {@code true} if the object being tested is an instance of the given class.
+     * If the object being tested is {@code null} this predicate evaluates to {@code false}*.
      *
      * <p>If you want to filter an {@code Iterable} to narrow its type, consider using {@link
-     * com.google.common.collect.Iterables#filter(Iterable, Class)} in preference.
+     * com.google.common.collect.Iterables#filter(Iterable, Class)}* in preference.
      *
      * <p><b>Warning:</b> contrary to the typical assumptions about predicates (as documented at
-     * {@link com.azure.cosmos.base.Predicate#apply}), the returned predicate may not be <i>consistent with
-     * equals</i>. For
-     * example, {@code instanceOf(ArrayList.class)} will yield different results for the two equal
-     * instances {@code Lists.newArrayList(1)} and {@code Arrays.asList(1)}.
+     * {@link Predicate#test}), the returned predicate may not be <i>consistent with equals</i>. For example, {@code
+     * instanceOf(ArrayList.class)} will yield different results for the two equal instances {@code
+     * Lists.newArrayList(1)} and {@code Arrays.asList(1)}.
+     *
+     * @param clazz the clazz
+     *
+     * @return the predicate
      */
-    public static com.azure.cosmos.base.Predicate<Object> instanceOf(Class<?> clazz) {
+    public static Predicate<Object> instanceOf(Class<?> clazz) {
         return new InstanceOfPredicate(clazz);
     }
 
     /**
-     * Returns a predicate that evaluates to {@code true} if the object reference being tested is
-     * null.
+     * Returns a predicate that evaluates to {@code true} if the object reference being tested is null.
+     *
+     * @param <T> the type of the input to the predicate.
+     *
+     * @return the predicate
      */
-    public static <T> com.azure.cosmos.base.Predicate<T> isNull() {
+    public static <T> Predicate<T> isNull() {
         return ObjectPredicate.IS_NULL.withNarrowedType();
     }
 
     /**
-     * Returns a predicate that evaluates to {@code true} if the given predicate evaluates to {@code
-     * false}.
+     * Returns a predicate that evaluates to {@code true} if the given predicate evaluates to {@code false}*.
+     *
+     * @param <T> the type of the input to the predicate.
+     * @param predicate the predicate
+     *
+     * @return the predicate
      */
-    public static <T> com.azure.cosmos.base.Predicate<T> not(com.azure.cosmos.base.Predicate<T> predicate) {
+    public static <T> Predicate<T> not(Predicate<T> predicate) {
         return new NotPredicate<T>(predicate);
     }
 
     /**
-     * Returns a predicate that evaluates to {@code true} if the object reference being tested is not
-     * null.
+     * Returns a predicate that evaluates to {@code true} if the object reference being tested is not null.
+     *
+     * @param <T> the type of the input to the predicate.
+     *
+     * @return the predicate
      */
-    public static <T> com.azure.cosmos.base.Predicate<T> notNull() {
+    public static <T> Predicate<T> notNull() {
         return ObjectPredicate.NOT_NULL.withNarrowedType();
     }
 
     /**
-     * Returns a predicate that evaluates to {@code true} if any one of its components evaluates to
-     * {@code true}. The components are evaluated in order, and evaluation will be "short-circuited"
-     * as soon as a true predicate is found. It defensively copies the iterable passed in, so future
-     * changes to it won't alter the behavior of this predicate. If {@code components} is empty, the
-     * returned predicate will always evaluate to {@code false}.
+     * Returns a predicate that evaluates to {@code true} if any one of its components evaluates to {@code true}. The
+     * components are evaluated in order, and evaluation will be "short-circuited" as soon as a true predicate is found.
+     * It defensively copies the iterable passed in, so future changes to it won't alter the behavior of this predicate.
+     * If {@code components} is empty, the returned predicate will always evaluate to {@code false}.
+     *
+     * @param <T> the type of the input to the predicate.
+     * @param components the components
+     *
+     * @return the predicate
      */
-    public static <T> com.azure.cosmos.base.Predicate<T> or(Iterable<? extends com.azure.cosmos.base.Predicate<?
+    public static <T> Predicate<T> or(Iterable<? extends Predicate<?
         super T>> components) {
         return new OrPredicate<T>(defensiveCopy(components));
     }
 
     /**
-     * Returns a predicate that evaluates to {@code true} if any one of its components evaluates to
-     * {@code true}. The components are evaluated in order, and evaluation will be "short-circuited"
-     * as soon as a true predicate is found. It defensively copies the array passed in, so future
-     * changes to it won't alter the behavior of this predicate. If {@code components} is empty, the
-     * returned predicate will always evaluate to {@code false}.
+     * Returns a predicate that evaluates to {@code true} if any one of its components evaluates to {@code true}.
+     * <p>
+     * The components are evaluated in order, and evaluation will be "short-circuited" as soon as a true predicate is
+     * found. It defensively copies the array passed in, so future changes to it won't alter the behavior of this
+     * predicate. If {@code components} is empty, the returned predicate will always evaluate to {@code false}.
+     *
+     * @param <T> the type of the predicate.
+     * @param components the components to be evaluated.
+     *
+     * @return a predicate that evaluates to {@code true} if any one of its components evaluates to {@code true}.
      */
     @SafeVarargs
     @SuppressWarnings("varargs")
-    public static <T> com.azure.cosmos.base.Predicate<T> or(com.azure.cosmos.base.Predicate<? super T>... components) {
+    public static <T> Predicate<T> or(Predicate<? super T>... components) {
         return new OrPredicate<T>(defensiveCopy(components));
     }
 
     /**
-     * Returns a predicate that evaluates to {@code true} if either of its components evaluates to
-     * {@code true}. The components are evaluated in order, and evaluation will be "short-circuited"
-     * as soon as a true predicate is found.
+     * Returns a predicate that evaluates to {@code true} if either of its components evaluates to {@code true}.
+     * <p>
+     * The components are evaluated in order, and evaluation will be "short-circuited" as soon as a true predicate is
+     * found.
+     *
+     * @param <T> the type of the predicate.
+     * @param first the first component to be evaluated.
+     * @param second the second component to be evaluated.
+     *
+     * @return a predicate that evaluates to {@code true} if any one of its components evaluates to {@code true}.
      */
-    public static <T> com.azure.cosmos.base.Predicate<T> or(com.azure.cosmos.base.Predicate<? super T> first,
-                                                            com.azure.cosmos.base.Predicate<? super T> second) {
+    public static <T> Predicate<T> or(Predicate<? super T> first,
+                                      Predicate<? super T> second) {
         return new OrPredicate<T>(Predicates.asList(checkNotNull(first), checkNotNull(second)));
     }
 
     /**
-     * Returns a predicate that evaluates to {@code true} if the class being tested is assignable to
-     * (is a subtype of) {@code clazz}. Example:
+     * Returns a predicate that evaluates to {@code true} if the class being tested is assignable to (is a subtype of)
+     * {@code clazz}. Example:
      *
      * <pre>{@code
      * List<Class<?>> classes = Arrays.asList(
      *     Object.class, String.class, Number.class, Long.class);
      * return Iterables.filter(classes, subtypeOf(Number.class));
-     * }</pre>
-     *
+     * }*</pre>
+     * <p>
      * The code above returns an iterable containing {@code Number.class} and {@code Long.class}.
+     *
+     * @param clazz the clazz
+     *
+     * @return the predicate
      *
      * @since 20.0 (since 10.0 under the incorrect name {@code assignableFrom})
      */
-    public static com.azure.cosmos.base.Predicate<Class<?>> subtypeOf(Class<?> clazz) {
+    public static Predicate<Class<?>> subtypeOf(Class<?> clazz) {
         return new SubtypeOfPredicate(clazz);
     }
 
     // End public API, begin private implementation classes.
 
+    /**
+     * Defensive copy list.
+     *
+     * @param <T> the type of the input to the predicate.
+     * @param iterable the iterable
+     *
+     * @return the list
+     */
     static <T> List<T> defensiveCopy(Iterable<T> iterable) {
         ArrayList<T> list = new ArrayList<T>();
         for (T element : iterable) {
@@ -250,8 +347,8 @@ public final class Predicates {
         return list;
     }
 
-    private static <T> List<com.azure.cosmos.base.Predicate<? super T>> asList(
-        com.azure.cosmos.base.Predicate<? super T> first, com.azure.cosmos.base.Predicate<? super T> second) {
+    private static <T> List<Predicate<? super T>> asList(
+        Predicate<? super T> first, Predicate<? super T> second) {
         // TODO(kevinb): understand why we still get a warning despite @SafeVarargs!
         return Arrays.asList(first, second);
     }
@@ -275,12 +372,19 @@ public final class Predicates {
         return builder.append(')').toString();
     }
 
+    /**
+     * The enum Object predicate.
+     */
     // Package private for GWT serialization.
-    enum ObjectPredicate implements com.azure.cosmos.base.Predicate<Object> {
-        /** @see Predicates#alwaysTrue() */
+    enum ObjectPredicate implements Predicate<Object> {
+        /**
+         * The Always true.
+         *
+         * @see Predicates#alwaysTrue() Predicates#alwaysTrue()
+         */
         ALWAYS_TRUE {
             @Override
-            public boolean apply(@Nullable Object o) {
+            public boolean test(@Nullable Object o) {
                 return true;
             }
 
@@ -289,10 +393,14 @@ public final class Predicates {
                 return "Predicates.alwaysTrue()";
             }
         },
-        /** @see Predicates#alwaysFalse() */
+        /**
+         * The Always false.
+         *
+         * @see Predicates#alwaysFalse() Predicates#alwaysFalse()
+         */
         ALWAYS_FALSE {
             @Override
-            public boolean apply(@Nullable Object o) {
+            public boolean test(@Nullable Object o) {
                 return false;
             }
 
@@ -301,10 +409,14 @@ public final class Predicates {
                 return "Predicates.alwaysFalse()";
             }
         },
-        /** @see Predicates#isNull() */
+        /**
+         * The Is null.
+         *
+         * @see Predicates#isNull() Predicates#isNull()
+         */
         IS_NULL {
             @Override
-            public boolean apply(@Nullable Object o) {
+            public boolean test(@Nullable Object o) {
                 return o == null;
             }
 
@@ -313,10 +425,14 @@ public final class Predicates {
                 return "Predicates.isNull()";
             }
         },
-        /** @see Predicates#notNull() */
+        /**
+         * The Not null.
+         *
+         * @see Predicates#notNull() Predicates#notNull()
+         */
         NOT_NULL {
             @Override
-            public boolean apply(@Nullable Object o) {
+            public boolean test(@Nullable Object o) {
                 return o != null;
             }
 
@@ -326,27 +442,34 @@ public final class Predicates {
             }
         };
 
+        /**
+         * With narrowed type predicate.
+         *
+         * @param <T> the type of the input to the predicate.
+         *
+         * @return the predicate
+         */
         @SuppressWarnings("unchecked")
             // safe contravariant cast
-        <T> com.azure.cosmos.base.Predicate<T> withNarrowedType() {
-            return (com.azure.cosmos.base.Predicate<T>) this;
+        <T> Predicate<T> withNarrowedType() {
+            return (Predicate<T>) this;
         }
     }
 
     /** @see Predicates#and(Iterable) */
-    private static class AndPredicate<T> implements com.azure.cosmos.base.Predicate<T>, Serializable {
+    private static class AndPredicate<T> implements Predicate<T>, Serializable {
         private static final long serialVersionUID = 0;
-        private final List<? extends com.azure.cosmos.base.Predicate<? super T>> components;
+        private final List<? extends Predicate<? super T>> components;
 
-        private AndPredicate(List<? extends com.azure.cosmos.base.Predicate<? super T>> components) {
+        private AndPredicate(List<? extends Predicate<? super T>> components) {
             this.components = components;
         }
 
         @Override
-        public boolean apply(@Nullable T t) {
+        public boolean test(@Nullable T t) {
             // Avoid using the Iterator to avoid generating garbage (issue 820).
             for (int i = 0; i < components.size(); i++) {
-                if (!components.get(i).apply(t)) {
+                if (!components.get(i).test(t)) {
                     return false;
                 }
             }
@@ -374,20 +497,26 @@ public final class Predicates {
         }
     }
 
-    /** @see Predicates#compose(com.azure.cosmos.base.Predicate, Function) */
-    private static class CompositionPredicate<A, B> implements com.azure.cosmos.base.Predicate<A>, Serializable {
+    /** @see Predicates#compose(Predicate, Function) */
+    private static class CompositionPredicate<A, B> implements Predicate<A>, Serializable {
         private static final long serialVersionUID = 0;
+        /**
+         * The F.
+         */
         final Function<A, ? extends B> f;
-        final com.azure.cosmos.base.Predicate<B> p;
+        /**
+         * The P.
+         */
+        final Predicate<B> p;
 
-        private CompositionPredicate(com.azure.cosmos.base.Predicate<B> p, Function<A, ? extends B> f) {
+        private CompositionPredicate(Predicate<B> p, Function<A, ? extends B> f) {
             this.p = checkNotNull(p);
             this.f = checkNotNull(f);
         }
 
         @Override
-        public boolean apply(@Nullable A a) {
-            return p.apply(f.apply(a));
+        public boolean test(@Nullable A a) {
+            return p.test(f.apply(a));
         }
 
         @Override
@@ -416,6 +545,11 @@ public final class Predicates {
 
         private static final long serialVersionUID = 0;
 
+        /**
+         * Instantiates a new Contains pattern from string predicate.
+         *
+         * @param string the string
+         */
         ContainsPatternFromStringPredicate(String string) {
             super(com.azure.cosmos.base.Platform.compilePattern(string));
         }
@@ -427,17 +561,25 @@ public final class Predicates {
     }
 
     /** @see Predicates#contains(Pattern) */
-    private static class ContainsPatternPredicate implements com.azure.cosmos.base.Predicate<CharSequence>,
+    private static class ContainsPatternPredicate implements Predicate<CharSequence>,
         Serializable {
         private static final long serialVersionUID = 0;
+        /**
+         * The Pattern.
+         */
         final com.azure.cosmos.base.CommonPattern pattern;
 
+        /**
+         * Instantiates a new Contains pattern predicate.
+         *
+         * @param pattern the pattern
+         */
         ContainsPatternPredicate(com.azure.cosmos.base.CommonPattern pattern) {
             this.pattern = checkNotNull(pattern);
         }
 
         @Override
-        public boolean apply(CharSequence t) {
+        public boolean test(CharSequence t) {
             return pattern.matcher(t).find();
         }
 
@@ -448,7 +590,7 @@ public final class Predicates {
 
                 // Pattern uses Object (identity) equality, so we have to reach
                 // inside to compare individual fields.
-                return Objects.equal(pattern.pattern(), that.pattern.pattern())
+                return Objects.equals(pattern.pattern(), that.pattern.pattern())
                     && pattern.flags() == that.pattern.flags();
             }
             return false;
@@ -459,7 +601,7 @@ public final class Predicates {
             // Pattern uses Object.hashCode, so we have to reach
             // inside to build a hashCode consistent with equals.
 
-            return com.azure.cosmos.base.Objects.hashCode(pattern.pattern(), pattern.flags());
+            return Objects.hash(pattern.pattern(), pattern.flags());
         }
 
         @Override
@@ -474,7 +616,7 @@ public final class Predicates {
     }
 
     /** @see Predicates#in(Collection) */
-    private static class InPredicate<T> implements com.azure.cosmos.base.Predicate<T>, Serializable {
+    private static class InPredicate<T> implements Predicate<T>, Serializable {
         private static final long serialVersionUID = 0;
         private final Collection<?> target;
 
@@ -483,7 +625,7 @@ public final class Predicates {
         }
 
         @Override
-        public boolean apply(@Nullable T t) {
+        public boolean test(@Nullable T t) {
             try {
                 return target.contains(t);
             } catch (NullPointerException | ClassCastException e) {
@@ -512,7 +654,7 @@ public final class Predicates {
     }
 
     /** @see Predicates#instanceOf(Class) */
-    private static class InstanceOfPredicate implements com.azure.cosmos.base.Predicate<Object>, Serializable {
+    private static class InstanceOfPredicate implements Predicate<Object>, Serializable {
         private static final long serialVersionUID = 0;
         private final Class<?> clazz;
 
@@ -521,7 +663,7 @@ public final class Predicates {
         }
 
         @Override
-        public boolean apply(@Nullable Object o) {
+        public boolean test(@Nullable Object o) {
             return clazz.isInstance(o);
         }
 
@@ -546,7 +688,7 @@ public final class Predicates {
     }
 
     /** @see Predicates#equalTo(Object) */
-    private static class IsEqualToPredicate<T> implements com.azure.cosmos.base.Predicate<T>, Serializable {
+    private static class IsEqualToPredicate<T> implements Predicate<T>, Serializable {
         private static final long serialVersionUID = 0;
         private final T target;
 
@@ -555,7 +697,7 @@ public final class Predicates {
         }
 
         @Override
-        public boolean apply(T t) {
+        public boolean test(T t) {
             return target.equals(t);
         }
 
@@ -579,18 +721,26 @@ public final class Predicates {
         }
     }
 
-    /** @see Predicates#not(com.azure.cosmos.base.Predicate) */
-    private static class NotPredicate<T> implements com.azure.cosmos.base.Predicate<T>, Serializable {
+    /** @see Predicates#not(Predicate) */
+    private static class NotPredicate<T> implements Predicate<T>, Serializable {
         private static final long serialVersionUID = 0;
-        final com.azure.cosmos.base.Predicate<T> predicate;
+        /**
+         * The Predicate.
+         */
+        final Predicate<T> predicate;
 
-        NotPredicate(com.azure.cosmos.base.Predicate<T> predicate) {
+        /**
+         * Instantiates a new Not predicate.
+         *
+         * @param predicate the predicate
+         */
+        NotPredicate(Predicate<T> predicate) {
             this.predicate = checkNotNull(predicate);
         }
 
         @Override
-        public boolean apply(@Nullable T t) {
-            return !predicate.apply(t);
+        public boolean test(@Nullable T t) {
+            return !predicate.test(t);
         }
 
         @Override
@@ -614,19 +764,19 @@ public final class Predicates {
     }
 
     /** @see Predicates#or(Iterable) */
-    private static class OrPredicate<T> implements com.azure.cosmos.base.Predicate<T>, Serializable {
+    private static class OrPredicate<T> implements Predicate<T>, Serializable {
         private static final long serialVersionUID = 0;
-        private final List<? extends com.azure.cosmos.base.Predicate<? super T>> components;
+        private final List<? extends Predicate<? super T>> components;
 
-        private OrPredicate(List<? extends com.azure.cosmos.base.Predicate<? super T>> components) {
+        private OrPredicate(List<? extends Predicate<? super T>> components) {
             this.components = components;
         }
 
         @Override
-        public boolean apply(@Nullable T t) {
+        public boolean test(@Nullable T t) {
             // Avoid using the Iterator to avoid generating garbage (issue 820).
             for (int i = 0; i < components.size(); i++) {
-                if (components.get(i).apply(t)) {
+                if (components.get(i).test(t)) {
                     return true;
                 }
             }
@@ -655,7 +805,7 @@ public final class Predicates {
     }
 
     /** @see Predicates#subtypeOf(Class) */
-    private static class SubtypeOfPredicate implements com.azure.cosmos.base.Predicate<Class<?>>, Serializable {
+    private static class SubtypeOfPredicate implements Predicate<Class<?>>, Serializable {
         private static final long serialVersionUID = 0;
         private final Class<?> clazz;
 
@@ -664,7 +814,7 @@ public final class Predicates {
         }
 
         @Override
-        public boolean apply(Class<?> input) {
+        public boolean test(Class<?> input) {
             return clazz.isAssignableFrom(input);
         }
 

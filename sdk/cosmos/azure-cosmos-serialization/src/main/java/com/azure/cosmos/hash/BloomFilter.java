@@ -14,8 +14,6 @@
 
 package com.azure.cosmos.hash;
 
-import com.azure.cosmos.base.Objects;
-import com.azure.cosmos.base.Predicate;
 import com.azure.cosmos.hash.BloomFilterStrategies.LockFreeBitArray;
 import com.google.common.math.DoubleMath;
 import com.google.common.primitives.SignedBytes;
@@ -30,6 +28,8 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.Serializable;
 import java.math.RoundingMode;
+import java.util.Objects;
+import java.util.function.Predicate;
 import java.util.stream.Collector;
 
 import static com.azure.cosmos.base.Preconditions.checkArgument;
@@ -151,8 +151,8 @@ public final class BloomFilter<T> implements Predicate<T>, Serializable {
    */
   @Deprecated
   @Override
-  public boolean apply(T input) {
-    return mightContain(input);
+  public boolean test(T input) {
+    return this.mightContain(input);
   }
 
   /**
@@ -307,7 +307,7 @@ public final class BloomFilter<T> implements Predicate<T>, Serializable {
 
   @Override
   public int hashCode() {
-    return Objects.hashCode(numHashFunctions, funnel, strategy, bits);
+    return Objects.hash(numHashFunctions, funnel, strategy, bits);
   }
 
   /**

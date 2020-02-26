@@ -39,10 +39,11 @@ public final class UnixDateTime {
     }
 
     /**
-     * {@code> true} if this value is the same as another value.
+     * {@code true} if this value is the same as another value.
      *
      * @param other value to compare.
-     * @return {code true} if this value is the same as the {code other}, {@code false} otherwise.
+     *
+     * @return {@code true} if this value is the same as the {@code other}, {@code false} otherwise.
      */
     public boolean equals(UnixDateTime other) {
         if (other == null) {

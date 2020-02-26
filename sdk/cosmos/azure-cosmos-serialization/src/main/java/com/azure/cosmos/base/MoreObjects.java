@@ -13,10 +13,10 @@
 
 package com.azure.cosmos.base;
 
-import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Arrays;
+import java.util.Optional;
 
 import static com.azure.cosmos.base.Preconditions.checkNotNull;
 
@@ -44,15 +44,20 @@ public final class MoreObjects {
      * Predicates.notNull())}, static importing as necessary.
      *
      * <p><b>Note:</b> if {@code first} is represented as an {@link Optional}, this can be
-     * accomplished with {@link Optional#or(Object) first.or(second)}. That approach also allows for
-     * lazy evaluation of the fallback instance, using {@link Optional#or(Supplier)
-     * first.or(supplier)}.
+     * accomplished with {@link java.util.Optional#orElse(Object) first.or(second)}. That approach also allows for
+     * lazy evaluation of the fallback instance, using {@link java.util.Optional#orElse(Object) first.orElse(supplier)}.
      *
      * <p><b>Java 9 users:</b> use {@code java.util.Objects.requireNonNullElse(first, second)}
      * instead.
      *
-     * @return {@code first} if it is non-null; otherwise {@code second} if it is non-null
-     * @throws NullPointerException if both {@code first} and {@code second} are null
+     * @param <T> the type of the two input objects and the result of this method.
+     * @param first first object.
+     * @param second second object.
+     *
+     * @return {@code first} if it is non-null; otherwise {@code second} if it is non-null.
+     *
+     * @throws NullPointerException if both {@code first} and {@code second} are null.
+     *
      * @since 18.0 (since 3.0 as {@code Objects.firstNonNull()}).
      */
     public static <T> T firstNonNull(@Nullable T first, @Nullable T second) {
@@ -101,8 +106,10 @@ public final class MoreObjects {
      *
      * <p>Note that in GWT, class names are often obfuscated.
      *
-     * @param self the object to generate the string for (typically {@code this}), used only for its
-     *     class name
+     * @param self the object to generate the string for (typically {@code this}), used only for its class name.
+     *
+     * @return a new instance of {@link ToStringHelper}.
+     *
      * @since 18.0 (since 2.0 as {@code Objects.toStringHelper()}).
      */
     public static ToStringHelper toStringHelper(Object self) {
@@ -116,7 +123,10 @@ public final class MoreObjects {
      *
      * <p>Note that in GWT, class names are often obfuscated.
      *
-     * @param clazz the {@link Class} of the instance
+     * @param clazz the {@link Class} of the instance.
+     *
+     * @return a new instance of {@link ToStringHelper}.
+     *
      * @since 18.0 (since 7.0 as {@code Objects.toStringHelper()}).
      */
     public static ToStringHelper toStringHelper(Class<?> clazz) {
@@ -128,7 +138,10 @@ public final class MoreObjects {
      * #toStringHelper(Object)}, but using {@code className} instead of using an instance's {@link
      * Object#getClass()}.
      *
-     * @param className the name of the instance type
+     * @param className the name of the instance type.
+     *
+     * @return a new instance of {@link ToStringHelper}.
+     *
      * @since 18.0 (since 7.0 as {@code Objects.toStringHelper()}).
      */
     public static ToStringHelper toStringHelper(String className) {
@@ -156,8 +169,12 @@ public final class MoreObjects {
          * Adds a name/value pair to the formatted output in {@code name=value} format. If {@code value}
          * is {@code null}, the string {@code "null"} is used, unless {@link #omitNullValues()} is
          * called, in which case this name/value pair will not be added.
+         *
+         * @param name the name to add to the formatted output.
+         * @param value the value to add to the format output.
+         *
+         * @return a reference to this {@link ToStringHelper}.
          */
-        @CanIgnoreReturnValue
         public ToStringHelper add(String name, @Nullable Object value) {
             return addHolder(name, value);
         }
@@ -165,9 +182,13 @@ public final class MoreObjects {
         /**
          * Adds a name/value pair to the formatted output in {@code name=value} format.
          *
+         * @param name the name to add to the formatted output.
+         * @param value the value to add to the format output.
+         *
+         * @return a reference to this {@link ToStringHelper}.
+         *
          * @since 18.0 (since 11.0 as {@code Objects.ToStringHelper.add()}).
          */
-        @CanIgnoreReturnValue
         public ToStringHelper add(String name, boolean value) {
             return addHolder(name, String.valueOf(value));
         }
@@ -175,9 +196,13 @@ public final class MoreObjects {
         /**
          * Adds a name/value pair to the formatted output in {@code name=value} format.
          *
+         * @param name the name to add to the formatted output.
+         * @param value the value to add to the format output.
+         *
+         * @return a reference to this {@link ToStringHelper}.
+         *
          * @since 18.0 (since 11.0 as {@code Objects.ToStringHelper.add()}).
          */
-        @CanIgnoreReturnValue
         public ToStringHelper add(String name, char value) {
             return addHolder(name, String.valueOf(value));
         }
@@ -185,9 +210,13 @@ public final class MoreObjects {
         /**
          * Adds a name/value pair to the formatted output in {@code name=value} format.
          *
+         * @param name the name to add to the formatted output.
+         * @param value the value to add to the format output.
+         *
+         * @return a reference to this {@link ToStringHelper}.
+         *
          * @since 18.0 (since 11.0 as {@code Objects.ToStringHelper.add()}).
          */
-        @CanIgnoreReturnValue
         public ToStringHelper add(String name, double value) {
             return addHolder(name, String.valueOf(value));
         }
@@ -195,9 +224,13 @@ public final class MoreObjects {
         /**
          * Adds a name/value pair to the formatted output in {@code name=value} format.
          *
+         * @param name the name to add to the formatted output.
+         * @param value the value to add to the format output.
+         *
+         * @return a reference to this {@link ToStringHelper}.
+         *
          * @since 18.0 (since 11.0 as {@code Objects.ToStringHelper.add()}).
          */
-        @CanIgnoreReturnValue
         public ToStringHelper add(String name, float value) {
             return addHolder(name, String.valueOf(value));
         }
@@ -205,9 +238,13 @@ public final class MoreObjects {
         /**
          * Adds a name/value pair to the formatted output in {@code name=value} format.
          *
+         * @param name the name to add to the formatted output.
+         * @param value the value to add to the format output.
+         *
+         * @return a reference to this {@link ToStringHelper}.
+         *
          * @since 18.0 (since 11.0 as {@code Objects.ToStringHelper.add()}).
          */
-        @CanIgnoreReturnValue
         public ToStringHelper add(String name, int value) {
             return addHolder(name, String.valueOf(value));
         }
@@ -215,110 +252,131 @@ public final class MoreObjects {
         /**
          * Adds a name/value pair to the formatted output in {@code name=value} format.
          *
+         * @param name the name to add to the formatted output.
+         * @param value the value to add to the format output.
+         *
+         * @return a reference to this {@link ToStringHelper}.
+         *
          * @since 18.0 (since 11.0 as {@code Objects.ToStringHelper.add()}).
          */
-        @CanIgnoreReturnValue
         public ToStringHelper add(String name, long value) {
             return addHolder(name, String.valueOf(value));
         }
 
         /**
          * Adds an unnamed value to the formatted output.
+         * <p>
+         * It is strongly encouraged to use {@link #add(String, Object)} instead and give {@code value} a readable name.
          *
-         * <p>It is strongly encouraged to use {@link #add(String, Object)} instead and give value a
-         * readable name.
+         * @param value the value to add to the format output.
+         *
+         * @return a reference to this {@link ToStringHelper}.
          */
-        @CanIgnoreReturnValue
         public ToStringHelper addValue(@Nullable Object value) {
             return addHolder(value);
         }
 
         /**
          * Adds an unnamed value to the formatted output.
+         * <p>
+         * It is strongly encouraged to use {@link #add(String, Object)} instead and give {@code value} a readable name.
          *
-         * <p>It is strongly encouraged to use {@link #add(String, boolean)} instead and give value a
-         * readable name.
+         * @param value the value to add to the format output.
+         *
+         * @return a reference to this {@link ToStringHelper}.
          *
          * @since 18.0 (since 11.0 as {@code Objects.ToStringHelper.addValue()}).
          */
-        @CanIgnoreReturnValue
         public ToStringHelper addValue(boolean value) {
             return addHolder(String.valueOf(value));
         }
 
         /**
          * Adds an unnamed value to the formatted output.
+         * <p>
+         * It is strongly encouraged to use {@link #add(String, Object)} instead and give {@code value} a readable name.
          *
-         * <p>It is strongly encouraged to use {@link #add(String, char)} instead and give value a
-         * readable name.
+         * @param value the value to add to the format output.
+         *
+         * @return a reference to this {@link ToStringHelper}.
          *
          * @since 18.0 (since 11.0 as {@code Objects.ToStringHelper.addValue()}).
          */
-        @CanIgnoreReturnValue
         public ToStringHelper addValue(char value) {
             return addHolder(String.valueOf(value));
         }
 
         /**
          * Adds an unnamed value to the formatted output.
+         * <p>
+         * It is strongly encouraged to use {@link #add(String, Object)} instead and give {@code value} a readable name.
          *
-         * <p>It is strongly encouraged to use {@link #add(String, double)} instead and give value a
-         * readable name.
+         * @param value the value to add to the format output.
+         *
+         * @return a reference to this {@link ToStringHelper}.
          *
          * @since 18.0 (since 11.0 as {@code Objects.ToStringHelper.addValue()}).
          */
-        @CanIgnoreReturnValue
         public ToStringHelper addValue(double value) {
             return addHolder(String.valueOf(value));
         }
 
         /**
          * Adds an unnamed value to the formatted output.
+         * <p>
+         * It is strongly encouraged to use {@link #add(String, Object)} instead and give {@code value} a readable name.
          *
-         * <p>It is strongly encouraged to use {@link #add(String, float)} instead and give value a
-         * readable name.
+         * @param value the value to add to the format output.
+         *
+         * @return a reference to this {@link ToStringHelper}.
          *
          * @since 18.0 (since 11.0 as {@code Objects.ToStringHelper.addValue()}).
          */
-        @CanIgnoreReturnValue
         public ToStringHelper addValue(float value) {
             return addHolder(String.valueOf(value));
         }
 
         /**
          * Adds an unnamed value to the formatted output.
+         * <p>
+         * It is strongly encouraged to use {@link #add(String, Object)} instead and give {@code value} a readable name.
          *
-         * <p>It is strongly encouraged to use {@link #add(String, int)} instead and give value a
-         * readable name.
+         * @param value the value to add to the format output.
+         *
+         * @return a reference to this {@link ToStringHelper}.
          *
          * @since 18.0 (since 11.0 as {@code Objects.ToStringHelper.addValue()}).
          */
-        @CanIgnoreReturnValue
         public ToStringHelper addValue(int value) {
             return addHolder(String.valueOf(value));
         }
 
         /**
          * Adds an unnamed value to the formatted output.
+         * <p>
+         * It is strongly encouraged to use {@link #add(String, Object)} instead and give {@code value} a readable name.
          *
-         * <p>It is strongly encouraged to use {@link #add(String, long)} instead and give value a
-         * readable name.
+         * @param value the value to add to the format output.
+         *
+         * @return a reference to this {@link ToStringHelper}.
          *
          * @since 18.0 (since 11.0 as {@code Objects.ToStringHelper.addValue()}).
          */
-        @CanIgnoreReturnValue
         public ToStringHelper addValue(long value) {
             return addHolder(String.valueOf(value));
         }
 
         /**
-         * Configures the {@link ToStringHelper} so {@link #toString()} will ignore properties with null
-         * value. The order of calling this method, relative to the {@code add()}/{@code addValue()}
-         * methods, is not significant.
+         * Configures the {@link ToStringHelper} so {@link #toString()} will ignore properties with a {@code }null}
+         * value.
+         * <p>
+         * The order of calling this method, relative to the {@code add()}/{@code addValue()} methods, is not
+         * significant.
+         *
+         * @return a reference to this {@link ToStringHelper}.
          *
          * @since 18.0 (since 12.0 as {@code Objects.ToStringHelper.omitNullValues()}).
          */
-        @CanIgnoreReturnValue
         public ToStringHelper omitNullValues() {
             omitNullValues = true;
             return this;

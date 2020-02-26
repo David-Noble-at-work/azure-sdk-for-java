@@ -325,13 +325,13 @@ public final class RowBuffer {
 
     /**
      * Initializes a {@link RowBuffer row buffer} to the minimal size for the given layout.
-     *
-     * @param version The version of the Hybrid Row format to use for encoding this row.
-     * @param layout The layout that describes the column layout of the row.
-     * @param resolver The resolver for UDTs.
      * <p>
-     * The {@link RowBuffer row buffer} is initialized to default {@link RowBuffer row buffer} for the given layout. All
-     * fixed columns have their default values.
+     * The {@link RowBuffer row buffer} is initialized to the default {@link RowBuffer row buffer} for the given layout.
+     * All fixed columns have their default values.
+     *
+     * @param version the version of the Hybrid Row format to use for encoding this row.
+     * @param layout the layout that describes the column layout of the row.
+     * @param resolver the resolver for UDTs.
      *
      * @return a {@link RowBuffer row buffer} with the minimal size for the given layout.
      */

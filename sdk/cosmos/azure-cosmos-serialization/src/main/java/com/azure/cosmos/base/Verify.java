@@ -31,7 +31,7 @@ import static com.azure.cosmos.base.Strings.lenientFormat;
  * // In case bug 12345 happens again we'd rather just die
  * Verify.verify(bill.status() == Status.UNPAID,
  *     "Unexpected bill status: %s", bill.status());
- * }</pre>
+ * }*</pre>
  *
  * <h3>Comparison to alternatives</h3>
  *
@@ -49,7 +49,7 @@ import static com.azure.cosmos.base.Strings.lenientFormat;
  *       considered "compiled comments."
  *   <li>An explicit {@code if/throw} (as illustrated below) is always acceptable; we still
  *       recommend using our {@link VerifyException} exception type. Throwing a plain {@link
- *       RuntimeException} is frowned upon.
+ *       RuntimeException}* is frowned upon.
  *   <li>Use of {@link java.util.Objects#requireNonNull(Object)} is generally discouraged, since
  *       {@link #verifyNotNull(Object)} and {@link Preconditions#checkNotNull(Object)} perform the
  *       same function with more clarity.
@@ -67,7 +67,7 @@ import static com.azure.cosmos.base.Strings.lenientFormat;
  * if (bill.status() != Status.UNPAID) {
  *   throw new VerifyException("Unexpected bill status: " + bill.status());
  * }
- * }</pre>
+ * }*</pre>
  *
  * <h3>Only {@code %s} is supported</h3>
  *
@@ -92,8 +92,10 @@ public final class Verify {
     /**
      * Ensures that {@code expression} is {@code true}, throwing a {@code VerifyException} with no message otherwise.
      *
+     * @param expression the expression
+     *
      * @throws VerifyException if {@code expression} is {@code false}
-     * @see Preconditions#checkState Preconditions.checkState()
+     * @see Preconditions#checkState Preconditions#checkStatePreconditions.checkState()
      */
     public static void verify(boolean expression) {
         if (!expression) {
@@ -114,7 +116,7 @@ public final class Verify {
      * strings using {@link String#valueOf(Object)}.
      *
      * @throws VerifyException if {@code expression} is {@code false}
-     * @see Preconditions#checkState Preconditions.checkState()
+     * @see Preconditions#checkState Preconditions#checkStatePreconditions.checkState()
      */
     public static void verify(
         boolean expression,
@@ -131,6 +133,10 @@ public final class Verify {
      *
      * <p>See {@link #verify(boolean, String, Object...)} for details.
      *
+     * @param expression the expression
+     * @param errorMessageTemplate the error message template
+     * @param p1 the p 1
+     *
      * @since 23.1 (varargs overload since 17.0)
      */
     public static void verify(boolean expression, @Nullable String errorMessageTemplate, char p1) {
@@ -144,6 +150,10 @@ public final class Verify {
      * otherwise.
      *
      * <p>See {@link #verify(boolean, String, Object...)} for details.
+     *
+     * @param expression the expression
+     * @param errorMessageTemplate the error message template
+     * @param p1 the p 1
      *
      * @since 23.1 (varargs overload since 17.0)
      */
@@ -159,6 +169,10 @@ public final class Verify {
      *
      * <p>See {@link #verify(boolean, String, Object...)} for details.
      *
+     * @param expression the expression
+     * @param errorMessageTemplate the error message template
+     * @param p1 the p 1
+     *
      * @since 23.1 (varargs overload since 17.0)
      */
     public static void verify(boolean expression, @Nullable String errorMessageTemplate, long p1) {
@@ -172,6 +186,10 @@ public final class Verify {
      * otherwise.
      *
      * <p>See {@link #verify(boolean, String, Object...)} for details.
+     *
+     * @param expression the expression
+     * @param errorMessageTemplate the error message template
+     * @param p1 the p 1
      *
      * @since 23.1 (varargs overload since 17.0)
      */
@@ -188,6 +206,11 @@ public final class Verify {
      *
      * <p>See {@link #verify(boolean, String, Object...)} for details.
      *
+     * @param expression the expression
+     * @param errorMessageTemplate the error message template
+     * @param p1 the p 1
+     * @param p2 the p 2
+     *
      * @since 23.1 (varargs overload since 17.0)
      */
     public static void verify(
@@ -202,6 +225,11 @@ public final class Verify {
      * otherwise.
      *
      * <p>See {@link #verify(boolean, String, Object...)} for details.
+     *
+     * @param expression the expression
+     * @param errorMessageTemplate the error message template
+     * @param p1 the p 1
+     * @param p2 the p 2
      *
      * @since 23.1 (varargs overload since 17.0)
      */
@@ -218,6 +246,11 @@ public final class Verify {
      *
      * <p>See {@link #verify(boolean, String, Object...)} for details.
      *
+     * @param expression the expression
+     * @param errorMessageTemplate the error message template
+     * @param p1 the p 1
+     * @param p2 the p 2
+     *
      * @since 23.1 (varargs overload since 17.0)
      */
     public static void verify(
@@ -232,6 +265,11 @@ public final class Verify {
      * otherwise.
      *
      * <p>See {@link #verify(boolean, String, Object...)} for details.
+     *
+     * @param expression the expression
+     * @param errorMessageTemplate the error message template
+     * @param p1 the p 1
+     * @param p2 the p 2
      *
      * @since 23.1 (varargs overload since 17.0)
      */
@@ -248,6 +286,11 @@ public final class Verify {
      *
      * <p>See {@link #verify(boolean, String, Object...)} for details.
      *
+     * @param expression the expression
+     * @param errorMessageTemplate the error message template
+     * @param p1 the p 1
+     * @param p2 the p 2
+     *
      * @since 23.1 (varargs overload since 17.0)
      */
     public static void verify(
@@ -262,6 +305,11 @@ public final class Verify {
      * otherwise.
      *
      * <p>See {@link #verify(boolean, String, Object...)} for details.
+     *
+     * @param expression the expression
+     * @param errorMessageTemplate the error message template
+     * @param p1 the p 1
+     * @param p2 the p 2
      *
      * @since 23.1 (varargs overload since 17.0)
      */
@@ -278,6 +326,11 @@ public final class Verify {
      *
      * <p>See {@link #verify(boolean, String, Object...)} for details.
      *
+     * @param expression the expression
+     * @param errorMessageTemplate the error message template
+     * @param p1 the p 1
+     * @param p2 the p 2
+     *
      * @since 23.1 (varargs overload since 17.0)
      */
     public static void verify(
@@ -292,6 +345,11 @@ public final class Verify {
      * otherwise.
      *
      * <p>See {@link #verify(boolean, String, Object...)} for details.
+     *
+     * @param expression the expression
+     * @param errorMessageTemplate the error message template
+     * @param p1 the p 1
+     * @param p2 the p 2
      *
      * @since 23.1 (varargs overload since 17.0)
      */
@@ -308,6 +366,11 @@ public final class Verify {
      *
      * <p>See {@link #verify(boolean, String, Object...)} for details.
      *
+     * @param expression the expression
+     * @param errorMessageTemplate the error message template
+     * @param p1 the p 1
+     * @param p2 the p 2
+     *
      * @since 23.1 (varargs overload since 17.0)
      */
     public static void verify(
@@ -322,6 +385,11 @@ public final class Verify {
      * otherwise.
      *
      * <p>See {@link #verify(boolean, String, Object...)} for details.
+     *
+     * @param expression the expression
+     * @param errorMessageTemplate the error message template
+     * @param p1 the p 1
+     * @param p2 the p 2
      *
      * @since 23.1 (varargs overload since 17.0)
      */
@@ -338,6 +406,11 @@ public final class Verify {
      *
      * <p>See {@link #verify(boolean, String, Object...)} for details.
      *
+     * @param expression the expression
+     * @param errorMessageTemplate the error message template
+     * @param p1 the p 1
+     * @param p2 the p 2
+     *
      * @since 23.1 (varargs overload since 17.0)
      */
     public static void verify(
@@ -352,6 +425,11 @@ public final class Verify {
      * otherwise.
      *
      * <p>See {@link #verify(boolean, String, Object...)} for details.
+     *
+     * @param expression the expression
+     * @param errorMessageTemplate the error message template
+     * @param p1 the p 1
+     * @param p2 the p 2
      *
      * @since 23.1 (varargs overload since 17.0)
      */
@@ -368,6 +446,11 @@ public final class Verify {
      *
      * <p>See {@link #verify(boolean, String, Object...)} for details.
      *
+     * @param expression the expression
+     * @param errorMessageTemplate the error message template
+     * @param p1 the p 1
+     * @param p2 the p 2
+     *
      * @since 23.1 (varargs overload since 17.0)
      */
     public static void verify(
@@ -382,6 +465,11 @@ public final class Verify {
      * otherwise.
      *
      * <p>See {@link #verify(boolean, String, Object...)} for details.
+     *
+     * @param expression the expression
+     * @param errorMessageTemplate the error message template
+     * @param p1 the p 1
+     * @param p2 the p 2
      *
      * @since 23.1 (varargs overload since 17.0)
      */
@@ -398,6 +486,11 @@ public final class Verify {
      *
      * <p>See {@link #verify(boolean, String, Object...)} for details.
      *
+     * @param expression the expression
+     * @param errorMessageTemplate the error message template
+     * @param p1 the p 1
+     * @param p2 the p 2
+     *
      * @since 23.1 (varargs overload since 17.0)
      */
     public static void verify(
@@ -412,6 +505,11 @@ public final class Verify {
      * otherwise.
      *
      * <p>See {@link #verify(boolean, String, Object...)} for details.
+     *
+     * @param expression the expression
+     * @param errorMessageTemplate the error message template
+     * @param p1 the p 1
+     * @param p2 the p 2
      *
      * @since 23.1 (varargs overload since 17.0)
      */
@@ -430,6 +528,12 @@ public final class Verify {
      * otherwise.
      *
      * <p>See {@link #verify(boolean, String, Object...)} for details.
+     *
+     * @param expression the expression
+     * @param errorMessageTemplate the error message template
+     * @param p1 the p 1
+     * @param p2 the p 2
+     * @param p3 the p 3
      *
      * @since 23.1 (varargs overload since 17.0)
      */
@@ -450,6 +554,13 @@ public final class Verify {
      *
      * <p>See {@link #verify(boolean, String, Object...)} for details.
      *
+     * @param expression the expression
+     * @param errorMessageTemplate the error message template
+     * @param p1 the p 1
+     * @param p2 the p 2
+     * @param p3 the p 3
+     * @param p4 the p 4
+     *
      * @since 23.1 (varargs overload since 17.0)
      */
     public static void verify(
@@ -467,10 +578,13 @@ public final class Verify {
     /**
      * Ensures that {@code reference} is non-null, throwing a {@code VerifyException} with a default message otherwise.
      *
+     * @param <T> the type parameter
+     * @param reference the reference
+     *
      * @return {@code reference}, guaranteed to be non-null, for convenience
      *
      * @throws VerifyException if {@code reference} is {@code null}
-     * @see Preconditions#checkNotNull Preconditions.checkNotNull()
+     * @see Preconditions#checkNotNull Preconditions#checkNotNullPreconditions.checkNotNull()
      */
     @CanIgnoreReturnValue
     public static <T> T verifyNotNull(@Nullable T reference) {
@@ -483,6 +597,8 @@ public final class Verify {
     /**
      * Ensures that {@code reference} is non-null, throwing a {@code VerifyException} with a custom message otherwise.
      *
+     * @param <T> the type parameter
+     * @param reference the reference
      * @param errorMessageTemplate a template for the exception message should the check fail. The message is formed by
      * replacing each {@code %s} placeholder in the template with an argument. These are matched by position - the first
      * {@code %s} gets {@code errorMessageArgs[0]}, etc. Unmatched arguments will be appended to the formatted message
@@ -493,7 +609,7 @@ public final class Verify {
      * @return {@code reference}, guaranteed to be non-null, for convenience
      *
      * @throws VerifyException if {@code reference} is {@code null}
-     * @see Preconditions#checkNotNull Preconditions.checkNotNull()
+     * @see Preconditions#checkNotNull Preconditions#checkNotNullPreconditions.checkNotNull()
      */
     @CanIgnoreReturnValue
     public static <T> T verifyNotNull(

@@ -17,6 +17,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.lang.ref.WeakReference;
 import java.util.Locale;
+import java.util.Optional;
 import java.util.ServiceConfigurationError;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -71,7 +72,7 @@ final class Platform {
 
     static <T extends Enum<T>> Optional<T> getEnumIfPresent(Class<T> enumClass, String value) {
         WeakReference<? extends Enum<?>> ref = Enums.getEnumConstants(enumClass).get(value);
-        return ref == null ? Optional.absent() : Optional.of(enumClass.cast(ref.get()));
+        return ref == null ? Optional.empty() : Optional.of(enumClass.cast(ref.get()));
     }
 
     static String nullToEmpty(@Nullable String string) {

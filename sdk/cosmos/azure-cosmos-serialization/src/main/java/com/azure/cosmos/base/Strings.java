@@ -36,8 +36,14 @@ public final class Strings {
 
     /**
      * Returns the longest string {@code prefix} such that {@code a.toString().startsWith(prefix) &&
-     * b.toString().startsWith(prefix)}, taking care not to split surrogate pairs. If {@code a} and {@code b} have no
-     * common prefix, returns the empty string.
+     * b.toString().startsWith(prefix)}**, taking care not to split surrogate pairs.
+     * <p>
+     * If {@code a} and {@code b} have no common prefix, returns the empty string.
+     *
+     * @param a the a
+     * @param b the b
+     *
+     * @return the string
      *
      * @since 11.0
      */
@@ -58,8 +64,13 @@ public final class Strings {
 
     /**
      * Returns the longest string {@code suffix} such that {@code a.toString().endsWith(suffix) &&
-     * b.toString().endsWith(suffix)}, taking care not to split surrogate pairs. If {@code a} and {@code b} have no
+     * b.toString().endsWith(suffix)}*, taking care not to split surrogate pairs. If {@code a} and {@code b} have no
      * common suffix, returns the empty string.
+     *
+     * @param a the a
+     * @param b the b
+     *
+     * @return the string
      *
      * @since 11.0
      */
@@ -132,6 +143,8 @@ public final class Strings {
      * substituted for the first occurrence of {@code "%s"} in the template, and so forth. A {@code null} argument is
      * converted to the four-character string {@code "null"}; non-null values are converted to strings using {@link
      * Object#toString()}.
+     *
+     * @return the string
      *
      * @since 25.1
      */
@@ -251,7 +264,7 @@ public final class Strings {
 
     /**
      * Returns a string consisting of a specific number of concatenated copies of an input string. For example, {@code
-     * repeat("hey", 3)} returns the string {@code "heyheyhey"}.
+     * repeat("hey", 3)}* returns the string {@code "heyheyhey"}.
      *
      * @param string any non-null string
      * @param count the number of times to repeat it; a nonnegative integer
@@ -290,6 +303,11 @@ public final class Strings {
     /**
      * True when a valid surrogate pair starts at the given {@code index} in the given {@code string}. Out-of-range
      * indexes return false.
+     *
+     * @param string the string
+     * @param index the index
+     *
+     * @return the boolean
      */
     @TestOnly
     static boolean validSurrogatePairAt(CharSequence string, int index) {

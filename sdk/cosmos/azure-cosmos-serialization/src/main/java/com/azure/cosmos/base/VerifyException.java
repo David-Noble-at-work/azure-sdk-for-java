@@ -16,25 +16,33 @@ package com.azure.cosmos.base;
 import org.jetbrains.annotations.Nullable;
 
 /**
- * Exception thrown upon the failure of a <a
- * href="https://github.com/google/guava/wiki/ConditionalFailuresExplained">verification check</a>,
- * including those performed by the convenience methods of the {@link Verify} class.
+ * Exception thrown upon the failure of a
+ * <a href="https://github.com/google/guava/wiki/ConditionalFailuresExplained">verification
+ * check</a>, including those performed by the convenience methods of the {@link Verify} class.
  *
  * @since 17.0
  */
 public class VerifyException extends RuntimeException {
-    /** Constructs a {@code VerifyException} with no message. */
+    /**
+     * Constructs a {@code VerifyException} with no message.
+     */
     public VerifyException() {
     }
 
-    /** Constructs a {@code VerifyException} with the message {@code message}. */
+    /**
+     * Constructs a {@code VerifyException} with the message {@code message}.  @param message the message
+     *
+     * @param message the message
+     */
     public VerifyException(@Nullable String message) {
         super(message);
     }
 
     /**
-     * Constructs a {@code VerifyException} with the cause {@code cause} and a message that is {@code null} if
-     * {@code cause} is null, and {@code cause.toString()} otherwise.
+     * Constructs a {@code VerifyException} with the cause {@code cause} and a message that is {@code null} if {@code
+     * cause}* is null, and {@code cause.toString()} otherwise.
+     *
+     * @param cause the cause
      *
      * @since 19.0
      */
@@ -44,6 +52,9 @@ public class VerifyException extends RuntimeException {
 
     /**
      * Constructs a {@code VerifyException} with the message {@code message} and the cause {@code cause}.
+     *
+     * @param message the message
+     * @param cause the cause
      *
      * @since 19.0
      */

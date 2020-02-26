@@ -3,6 +3,7 @@
 
 package com.azure.cosmos.core;
 
+import com.azure.cosmos.base.Suppliers;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonParseException;
@@ -15,17 +16,16 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
 import com.fasterxml.jackson.databind.node.JsonNodeType;
 import com.fasterxml.jackson.databind.ser.std.StdSerializer;
-import com.azure.cosmos.base.Objects;
-import com.azure.cosmos.base.Suppliers;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufHolder;
 import io.netty.buffer.Unpooled;
 import io.netty.util.ByteProcessor;
-
-import org.jetbrains.annotations.NotNull;;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+
 import java.io.IOException;
 import java.util.NoSuchElementException;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.PrimitiveIterator;
 import java.util.Spliterator;
@@ -39,6 +39,8 @@ import static com.azure.cosmos.base.Preconditions.checkArgument;
 import static com.azure.cosmos.base.Preconditions.checkNotNull;
 import static com.azure.cosmos.base.Strings.lenientFormat;
 import static java.nio.charset.StandardCharsets.UTF_8;
+
+;
 
 /**
  * The {@link Utf8String} class represents UTF-8 encoded character strings.
@@ -341,7 +343,7 @@ public final class Utf8String implements ByteBufHolder, CharSequence, Comparable
      * Utf8String}, {@code false} otherwise.
      */
     public boolean equals(ByteBuf other) {
-        return Objects.equal(this.buffer, other);
+        return Objects.equals(this.buffer, other);
     }
 
     /**
@@ -380,7 +382,7 @@ public final class Utf8String implements ByteBufHolder, CharSequence, Comparable
         if (null == other) {
             return false;
         }
-        return Objects.equal(this.buffer, other.buffer);
+        return Objects.equals(this.buffer, other.buffer);
     }
 
     /**
@@ -403,7 +405,7 @@ public final class Utf8String implements ByteBufHolder, CharSequence, Comparable
             return false;
         }
         Utf8String that = (Utf8String) other;
-        return Objects.equal(this.buffer, that.buffer);
+        return Objects.equals(this.buffer, that.buffer);
     }
 
     /**
