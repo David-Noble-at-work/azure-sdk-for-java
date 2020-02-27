@@ -167,12 +167,6 @@ Licensed under the MIT License.
         <configuration>
           <source>1.8</source>
           <target>1.8</target>
-<!--
-          <compilerArgs>
-            <arg>&#45;&#45;addExports java.base/jdk.internal.misc=ALL-UNNAMED</arg>
-            <arg>-Xlint:all,-options,-path</arg>
-          </compilerArgs>
--->
           <failOnWarning>false</failOnWarning>
         </configuration>
       </plugin>
