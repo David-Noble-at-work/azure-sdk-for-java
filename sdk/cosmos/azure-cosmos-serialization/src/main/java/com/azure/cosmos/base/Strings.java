@@ -272,10 +272,13 @@ public final class Strings {
      * @return a string containing {@code string} repeated {@code count} times (the empty string if {@code count} is
      * zero)
      *
-     * @throws IllegalArgumentException if {@code count} is negative
+     * @throws ArrayIndexOutOfBoundsException if {@code count * string.length() > Integer.MAX_VALUE}.
+     * @throws IllegalArgumentException if {@code count} is negative.
+     * @throws NullPointerException if {@code string} is {@code null}.
      */
     public static String repeat(String string, int count) {
-        checkNotNull(string); // eager for GWT.
+
+        checkNotNull(string, "expected non-null string");
 
         if (count <= 1) {
             checkArgument(count >= 0, "invalid count: %s", count);
@@ -287,7 +290,7 @@ public final class Strings {
         final long longSize = (long) len * (long) count;
         final int size = (int) longSize;
         if (size != longSize) {
-            throw new ArrayIndexOutOfBoundsException("Required array size too large: " + longSize);
+            throw new ArrayIndexOutOfBoundsException("required array size too large: " + longSize);
         }
 
         final char[] array = new char[size];

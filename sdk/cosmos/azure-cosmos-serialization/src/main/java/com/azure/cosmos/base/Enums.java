@@ -41,9 +41,10 @@ public final class Enums {
     }
 
     /**
-     * Returns the {@link Field} in which {@code enumValue} is defined. For example, to get the {@code Description}
-     * annotation on the {@code GOLF} constant of enum {@code Sport}, use {@code Enums.getField(Sport.GOLF)
-     * .getAnnotation(Description.class)}.
+     * Returns the {@link Field} in which {@code enumValue} is defined.
+     * <p>
+     * For example, to get the {@code Description} annotation on the {@code GOLF} constant of enum {@code Sport},
+     * use {@code Enums.getField(Sport.GOLF).getAnnotation(Description.class)}.
      *
      * @param enumValue an {@code enum} value.
      *

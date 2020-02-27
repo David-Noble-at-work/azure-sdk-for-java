@@ -26,12 +26,14 @@ public final class RecordSerializer {
     // TODO (DANOBLE) Consider moving the methods of this type to the RowReader class.
 
     /**
-     * Reads a HybridRow record.
+     * Reads a HybridRow {@link Record record}.
      *
      * @param reader the reader from which the record will be read.
      * @param record the record, if the operation is successful.
      *
      * @return {@link Result#SUCCESS}, if the operation is successful; an error {@link Result} otherwise.
+     *
+     * @throws IllegalStateException if an illegal state is encountered while processing data from {@code reader}.
      */
     @NotNull
     public static Result read(@NotNull final RowReader reader, @NotNull final Out<Record> record) {
@@ -46,7 +48,7 @@ public final class RecordSerializer {
             checkState(path != null);
             Result result;
 
-            // TODO: use Path tokens here
+            // TODO (DANOBLE) Use Path tokens here
 
             switch (path) {
 
@@ -74,7 +76,7 @@ public final class RecordSerializer {
 
                 default:
 
-                    throw new IllegalStateException("Unexpected value: " + path);
+                    throw new IllegalStateException("unexpected value: " + path);
             }
         }
 

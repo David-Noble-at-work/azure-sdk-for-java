@@ -43,12 +43,14 @@ public final class SegmentSerializer {
     }
 
     /**
-     * Read result.
+     * Reads a HybridRow {@link Segment segment}.
      *
-     * @param reader the reader
-     * @param segment the segment
+     * @param reader the reader from which the segment will be read.
+     * @param segment the segment, if the operation is successful.
      *
-     * @return the result
+     * @return {@link Result#SUCCESS}, if the operation is successful; an error {@link Result} otherwise.
+     *
+     * @throws IllegalStateException if an illegal state is encountered while processing data from {@code reader}.
      */
     public static Result read(RowReader reader, Out<Segment> segment) {
 

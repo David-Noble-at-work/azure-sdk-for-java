@@ -339,9 +339,9 @@ public abstract class Converter<A, B> implements Function<A, B> {
     }
 
     /**
-     * Package-private non-final implementation of andThen() so only we can override it.  @param <C>  the type
-     * parameter
+     * Package-private non-final implementation of andThen() so only we can override it.
      *
+     * @param <C>  the type parameter
      * @param secondConverter the second converter
      *
      * @return the converter

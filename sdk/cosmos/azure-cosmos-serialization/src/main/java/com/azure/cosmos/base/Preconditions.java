@@ -153,7 +153,7 @@ public final class Preconditions {
      * <p>
      * Arguments are converted to strings using {@link String#valueOf(Object)}.
      *
-     * @throws IllegalArgumentException if {@code expression} is false
+     * @throws IllegalArgumentException if {@code expression} is false.
      */
     public static void checkArgument(
         boolean expression,
@@ -173,6 +173,8 @@ public final class Preconditions {
      * @param errorMessageTemplate a template for the exception message should the check fail.
      * @param p1 a {@code char} to be substituted into the message template.
      *
+     * @throws IllegalArgumentException if {@code b} is false.
+     *
      * @since 20.0 (varargs overload since 2.0)
      */
     public static void checkArgument(boolean b, @Nullable String errorMessageTemplate, char p1) {
@@ -189,6 +191,8 @@ public final class Preconditions {
      * @param b a boolean expression.
      * @param errorMessageTemplate a template for the exception message should the check fail.
      * @param p1 an {@code int} to be substituted into the message template.
+     *
+     * @throws IllegalArgumentException if {@code b} is false.
      *
      * @since 20.0 (varargs overload since 2.0)
      */
@@ -207,6 +211,8 @@ public final class Preconditions {
      * @param errorMessageTemplate a template for the exception message should the check fail.
      * @param p1 a {@code long} to be substituted into the message template.
      *
+     * @throws IllegalArgumentException if {@code b} is false.
+     *
      * @since 20.0 (varargs overload since 2.0)
      */
     public static void checkArgument(boolean b, @Nullable String errorMessageTemplate, long p1) {
@@ -223,6 +229,8 @@ public final class Preconditions {
      * @param b a boolean expression.
      * @param errorMessageTemplate a template for the exception message should the check fail.
      * @param p1 a {@link Nullable nullable} {@link Object} to be substituted into the message template.
+     *
+     * @throws IllegalArgumentException if {@code b} is false.
      *
      * @since 20.0 (varargs overload since 2.0)
      */
@@ -243,6 +251,8 @@ public final class Preconditions {
      * @param p1 a {@code char} to be substituted into the message template.
      * @param p2 another {@code char} to be substituted into the message template.
      *
+     * @throws IllegalArgumentException if {@code b} is false.
+     *
      * @since 20.0 (varargs overload since 2.0)
      */
     public static void checkArgument(
@@ -261,6 +271,8 @@ public final class Preconditions {
      * @param errorMessageTemplate a template for the exception message should the check fail.
      * @param p1 a {@code char} to be substituted into the message template.
      * @param p2 an {@code int} to be substituted into the message template.
+     *
+     * @throws IllegalArgumentException if {@code b} is false.
      *
      * @since 20.0 (varargs overload since 2.0)
      */
@@ -281,6 +293,8 @@ public final class Preconditions {
      * @param p1 a {@code char} to be substituted into the message template.
      * @param p2 a {@code long} to be substituted into the message template.
      *
+     * @throws IllegalArgumentException if {@code b} is false.
+     *
      * @since 20.0 (varargs overload since 2.0)
      */
     public static void checkArgument(
@@ -299,6 +313,8 @@ public final class Preconditions {
      * @param errorMessageTemplate a template for the exception message should the check fail.
      * @param p1 a {@code char} to be substituted into the message template.
      * @param p2 a {@link Nullable nullable} {@link Object} to be substituted into the message template.
+     *
+     * @throws IllegalArgumentException if {@code b} is false.
      *
      * @since 20.0 (varargs overload since 2.0)
      */
@@ -319,6 +335,8 @@ public final class Preconditions {
      * @param p1 an {@code int} to be substituted into the message template.
      * @param p2 a {@code char} to be substituted into the message template.
      *
+     * @throws IllegalArgumentException if {@code b} is false.
+     *
      * @since 20.0 (varargs overload since 2.0)
      */
     public static void checkArgument(
@@ -337,6 +355,8 @@ public final class Preconditions {
      * @param errorMessageTemplate a template for the exception message should the check fail.
      * @param p1 an {@code int} to be substituted into the message template.
      * @param p2 another {@code int} to be substituted into the message template.
+     *
+     * @throws IllegalArgumentException if {@code b} is false.
      *
      * @since 20.0 (varargs overload since 2.0)
      */
@@ -357,6 +377,8 @@ public final class Preconditions {
      * @param p1 an {@code int} to be substituted into the message template.
      * @param p2 a {@code long} to be substituted into the message template.
      *
+     * @throws IllegalArgumentException if {@code b} is false.
+     *
      * @since 20.0 (varargs overload since 2.0)
      */
     public static void checkArgument(
@@ -375,6 +397,8 @@ public final class Preconditions {
      * @param errorMessageTemplate a template for the exception message should the check fail.
      * @param p1 an {@code int} to be substituted into the message template.
      * @param p2 a {@link Nullable nullable} {@link Object} to be substituted into the message template.
+     *
+     * @throws IllegalArgumentException if {@code b} is false.
      *
      * @since 20.0 (varargs overload since 2.0)
      */
@@ -395,6 +419,8 @@ public final class Preconditions {
      * @param p1 a {@code long} to be substituted into the message template.
      * @param p2 a {@code char} to be substituted into the message template.
      *
+     * @throws IllegalArgumentException if {@code b} is false.
+     *
      * @since 20.0 (varargs overload since 2.0)
      */
     public static void checkArgument(
@@ -413,6 +439,8 @@ public final class Preconditions {
      * @param errorMessageTemplate a template for the exception message should the check fail.
      * @param p1 a {@code long} to be substituted into the message template.
      * @param p2 an {@code int} to be substituted into the message template.
+     *
+     * @throws IllegalArgumentException if {@code b} is false.
      *
      * @since 20.0 (varargs overload since 2.0)
      */
@@ -433,6 +461,8 @@ public final class Preconditions {
      * @param p1 a {@code long} to be substituted into the message template.
      * @param p2 another {@code long} to be substituted into the message template.
      *
+     * @throws IllegalArgumentException if {@code b} is false.
+     *
      * @since 20.0 (varargs overload since 2.0)
      */
     public static void checkArgument(
@@ -451,6 +481,8 @@ public final class Preconditions {
      * @param errorMessageTemplate a template for the exception message should the check fail.
      * @param p1 a {@code long} to be substituted into the message template.
      * @param p2 a {@link Nullable nullable} {@link Object} to be substituted into the message template.
+     *
+     * @throws IllegalArgumentException if {@code b} is false.
      *
      * @since 20.0 (varargs overload since 2.0)
      */
@@ -471,6 +503,8 @@ public final class Preconditions {
      * @param p1 a {@link Nullable nullable} {@link Object} to be substituted into the message template.
      * @param p2 a {@code char} to be substituted into the message template.
      *
+     * @throws IllegalArgumentException if {@code b} is false.
+     *
      * @since 20.0 (varargs overload since 2.0)
      */
     public static void checkArgument(
@@ -489,6 +523,8 @@ public final class Preconditions {
      * @param errorMessageTemplate a template for the exception message should the check fail.
      * @param p1 a {@link Nullable nullable} {@link Object} to be substituted into the message template.
      * @param p2 an {@code int} to be substituted into the message template.
+     *
+     * @throws IllegalArgumentException if {@code b} is false.
      *
      * @since 20.0 (varargs overload since 2.0)
      */
@@ -509,6 +545,8 @@ public final class Preconditions {
      * @param p1 a {@link Nullable nullable} {@link Object} to be substituted into the message template.
      * @param p2 a {@code long} to be substituted into the message template.
      *
+     * @throws IllegalArgumentException if {@code b} is false.
+     *
      * @since 20.0 (varargs overload since 2.0)
      */
     public static void checkArgument(
@@ -527,6 +565,8 @@ public final class Preconditions {
      * @param errorMessageTemplate a template for the exception message should the check fail.
      * @param p1 a {@link Nullable nullable} {@link Object} to be substituted into the message template.
      * @param p2 another {@link Nullable nullable} {@link Object} to be substituted into the message template.
+     *
+     * @throws IllegalArgumentException if {@code b} is false.
      *
      * @since 20.0 (varargs overload since 2.0)
      */
@@ -547,6 +587,8 @@ public final class Preconditions {
      * @param p1 a {@link Nullable nullable} {@link Object} to be substituted into the message template.
      * @param p2 another {@link Nullable nullable} {@link Object} to be substituted into the message template.
      * @param p3 a final {@link Nullable nullable} {@link Object} to be substituted into the message template.
+     *
+     * @throws IllegalArgumentException if {@code b} is false.
      *
      * @since 20.0 (varargs overload since 2.0)
      */
@@ -572,6 +614,8 @@ public final class Preconditions {
      * @param p2 another {@link Nullable nullable} {@link Object} to be substituted into the message template.
      * @param p3 a third {@link Nullable nullable} {@link Object} to be substituted into the message template.
      * @param p4 a final {@link Nullable nullable} {@link Object} to be substituted into the message template.
+     *
+     * @throws IllegalArgumentException if {@code b} is false.
      *
      * @since 20.0 (varargs overload since 2.0)
      */
@@ -635,7 +679,8 @@ public final class Preconditions {
      * @throws NullPointerException if {@code reference} is null
      * @see Verify#verifyNotNull Verify.verifyNotNull()
      */
-    public static <T extends @NotNull Object> T checkNotNull(T reference) {
+    @NotNull
+    public static <T> T checkNotNull(@Nullable T reference) {
         if (reference == null) {
             throw new NullPointerException();
         }
@@ -655,8 +700,8 @@ public final class Preconditions {
      * @throws NullPointerException if {@code reference} is null
      * @see Verify#verifyNotNull Verify.verifyNotNull()
      */
-    public static <T extends @NotNull Object> T checkNotNull(
-        T reference, @Nullable Object errorMessage) {
+    @NotNull
+    public static <T> T checkNotNull(@Nullable T reference, @Nullable Object errorMessage) {
         if (reference == null) {
             throw new NullPointerException(String.valueOf(errorMessage));
         }
@@ -678,10 +723,12 @@ public final class Preconditions {
      * @return the non-null reference that was validated
      *
      * @throws NullPointerException if {@code reference} is null.
+     *
      * @see Verify#verifyNotNull Verify.verifyNotNull()
      */
-    public static <T extends @NotNull Object> T checkNotNull(
-        T reference,
+    @NotNull
+    public static <T> T checkNotNull(
+        @Nullable T reference,
         @Nullable String errorMessageTemplate,
         @Nullable Object... errorMessageArgs) {
         if (reference == null) {
@@ -696,20 +743,22 @@ public final class Preconditions {
      * <p>See {@link #checkNotNull(Object, String, Object...)} for details.
      *
      * @param <T> the type of the object.
-     * @param obj the object reference.
+     * @param reference the object reference.
      * @param errorMessageTemplate a template for the exception message should the check fail.
      * @param p1 a {@code char} to be substituted into the message template.
      *
      * @return the non-null reference that was validated.
      *
+     * @throws NullPointerException if {@code reference} is null.
+     *
      * @since 20.0 (varargs overload since 2.0)
      */
-    public static <T extends @NotNull Object> T checkNotNull(
-        T obj, @Nullable String errorMessageTemplate, char p1) {
-        if (obj == null) {
+    @NotNull
+    public static <T > T checkNotNull(@Nullable T reference, @Nullable String errorMessageTemplate, char p1) {
+        if (reference == null) {
             throw new NullPointerException(lenientFormat(errorMessageTemplate, p1));
         }
-        return obj;
+        return reference;
     }
 
     /**
@@ -718,20 +767,22 @@ public final class Preconditions {
      * <p>See {@link #checkNotNull(Object, String, Object...)} for details.
      *
      * @param <T> the type of the object.
-     * @param obj the object reference.
+     * @param reference the object reference.
      * @param errorMessageTemplate a template for the exception message should the check fail.
      * @param p1 an {@code int} to be substituted into the message template.
      *
      * @return the non-null reference that was validated.
      *
+     * @throws NullPointerException if {@code reference} is null.
+     *
      * @since 20.0 (varargs overload since 2.0)
      */
-    public static <T extends @NotNull Object> T checkNotNull(
-        T obj, @Nullable String errorMessageTemplate, int p1) {
-        if (obj == null) {
+    @NotNull
+    public static <T> T checkNotNull(@Nullable T reference, @Nullable String errorMessageTemplate, int p1) {
+        if (reference == null) {
             throw new NullPointerException(lenientFormat(errorMessageTemplate, p1));
         }
-        return obj;
+        return reference;
     }
 
     /**
@@ -740,20 +791,22 @@ public final class Preconditions {
      * <p>See {@link #checkNotNull(Object, String, Object...)} for details.
      *
      * @param <T> the type of the object.
-     * @param obj the object reference.
+     * @param reference the object reference.
      * @param errorMessageTemplate a template for the exception message should the check fail.
      * @param p1 a {@code long} to be substituted into the message template.
      *
      * @return the non-null reference that was validated.
      *
+     * @throws NullPointerException if {@code reference} is null.
+     *
      * @since 20.0 (varargs overload since 2.0)
      */
-    public static <T extends @NotNull Object> T checkNotNull(
-        T obj, @Nullable String errorMessageTemplate, long p1) {
-        if (obj == null) {
+    @NotNull
+    public static <T> T checkNotNull(@Nullable T reference, @Nullable String errorMessageTemplate, long p1) {
+        if (reference == null) {
             throw new NullPointerException(lenientFormat(errorMessageTemplate, p1));
         }
-        return obj;
+        return reference;
     }
 
     /**
@@ -762,20 +815,23 @@ public final class Preconditions {
      * <p>See {@link #checkNotNull(Object, String, Object...)} for details.
      *
      * @param <T> the type of the object.
-     * @param obj the object reference.
+     * @param reference the object reference.
      * @param errorMessageTemplate a template for the exception message should the check fail.
      * @param p1 a {@link Nullable nullable} {@link Object} to be substituted into the message template.
      *
      * @return the non-null reference that was validated.
      *
+     * @throws NullPointerException if {@code reference} is null.
+     *
      * @since 20.0 (varargs overload since 2.0)
      */
-    public static <T extends @NotNull Object> T checkNotNull(
-        T obj, @Nullable String errorMessageTemplate, @Nullable Object p1) {
-        if (obj == null) {
+    @NotNull
+    public static <T> T checkNotNull(
+        @Nullable T reference, @Nullable String errorMessageTemplate, @Nullable Object p1) {
+        if (reference == null) {
             throw new NullPointerException(lenientFormat(errorMessageTemplate, p1));
         }
-        return obj;
+        return reference;
     }
 
     /**
@@ -784,21 +840,23 @@ public final class Preconditions {
      * <p>See {@link #checkNotNull(Object, String, Object...)} for details.
      *
      * @param <T> the type of the object.
-     * @param obj the object reference.
+     * @param reference the object reference.
      * @param errorMessageTemplate a template for the exception message should the check fail.
      * @param p1 a {@code char} to be substituted into the message template.
      * @param p2 another {@code char} to be substituted into the message template.
      *
      * @return the non-null reference that was validated.
      *
+     * @throws NullPointerException if {@code reference} is null.
+     *
      * @since 20.0 (varargs overload since 2.0)
      */
-    public static <T extends @NotNull Object> T checkNotNull(
-        T obj, @Nullable String errorMessageTemplate, char p1, char p2) {
-        if (obj == null) {
+    @NotNull
+    public static <T> T checkNotNull(@Nullable T reference, @Nullable String errorMessageTemplate, char p1, char p2) {
+        if (reference == null) {
             throw new NullPointerException(lenientFormat(errorMessageTemplate, p1, p2));
         }
-        return obj;
+        return reference;
     }
 
     /**
@@ -807,21 +865,24 @@ public final class Preconditions {
      * <p>See {@link #checkNotNull(Object, String, Object...)} for details.
      *
      * @param <T> the type of the object.
-     * @param obj the object reference.
+     * @param reference the object reference.
      * @param errorMessageTemplate a template for the exception message should the check fail.
      * @param p1 a {@code char} to be substituted into the message template.
      * @param p2 an {@code int} to be substituted into the message template.
      *
      * @return the non-null reference that was validated.
      *
+     * @throws NullPointerException if {@code reference} is null.
+     *
      * @since 20.0 (varargs overload since 2.0)
      */
-    public static <T extends @NotNull Object> T checkNotNull(
-        T obj, @Nullable String errorMessageTemplate, char p1, int p2) {
-        if (obj == null) {
+    @NotNull
+    public static <T> T checkNotNull(
+        @Nullable T reference, @Nullable String errorMessageTemplate, char p1, int p2) {
+        if (reference == null) {
             throw new NullPointerException(lenientFormat(errorMessageTemplate, p1, p2));
         }
-        return obj;
+        return reference;
     }
 
     /**
@@ -830,21 +891,23 @@ public final class Preconditions {
      * <p>See {@link #checkNotNull(Object, String, Object...)} for details.
      *
      * @param <T> the type of the object.
-     * @param obj the object reference.
+     * @param reference the object reference.
      * @param errorMessageTemplate a template for the exception message should the check fail.
      * @param p1 a {@code char} to be substituted into the message template.
      * @param p2 a {@code long} to be substituted into the message template.
      *
      * @return the non-null reference that was validated.
      *
+     * @throws NullPointerException if {@code reference} is null.
+     *
      * @since 20.0 (varargs overload since 2.0)
      */
-    public static <T extends @NotNull Object> T checkNotNull(
-        T obj, @Nullable String errorMessageTemplate, char p1, long p2) {
-        if (obj == null) {
+    @NotNull
+    public static <T> T checkNotNull(@Nullable T reference, @Nullable String errorMessageTemplate, char p1, long p2) {
+        if (reference == null) {
             throw new NullPointerException(lenientFormat(errorMessageTemplate, p1, p2));
         }
-        return obj;
+        return reference;
     }
 
     /**
@@ -853,21 +916,24 @@ public final class Preconditions {
      * <p>See {@link #checkNotNull(Object, String, Object...)} for details.
      *
      * @param <T> the type of the object.
-     * @param obj the object reference.
+     * @param reference the object reference.
      * @param errorMessageTemplate a template for the exception message should the check fail.
      * @param p1 a {@code char} to be substituted into the message template.
      * @param p2 a {@link Nullable nullable} {@link Object} to be substituted into the message template.
      *
      * @return the non-null reference that was validated.
      *
+     * @throws NullPointerException if {@code reference} is null.
+     *
      * @since 20.0 (varargs overload since 2.0)
      */
-    public static <T extends @NotNull Object> T checkNotNull(
-        T obj, @Nullable String errorMessageTemplate, char p1, @Nullable Object p2) {
-        if (obj == null) {
+    @NotNull
+    public static <T> T checkNotNull(
+        @Nullable T reference, @Nullable String errorMessageTemplate, char p1, @Nullable Object p2) {
+        if (reference == null) {
             throw new NullPointerException(lenientFormat(errorMessageTemplate, p1, p2));
         }
-        return obj;
+        return reference;
     }
 
     /**
@@ -876,21 +942,24 @@ public final class Preconditions {
      * <p>See {@link #checkNotNull(Object, String, Object...)} for details.
      *
      * @param <T> the type of the object.
-     * @param obj the object reference.
+     * @param reference the object reference.
      * @param errorMessageTemplate a template for the exception message should the check fail.
      * @param p1 an {@code int} to be substituted into the message template.
      * @param p2 a {@code char} to be substituted into the message template.
      *
      * @return the non-null reference that was validated.
      *
+     * @throws NullPointerException if {@code reference} is null.
+     *
      * @since 20.0 (varargs overload since 2.0)
      */
-    public static <T extends @NotNull Object> T checkNotNull(
-        T obj, @Nullable String errorMessageTemplate, int p1, char p2) {
-        if (obj == null) {
+    @NotNull
+    public static <T> T checkNotNull(
+        @Nullable T reference, @Nullable String errorMessageTemplate, int p1, char p2) {
+        if (reference == null) {
             throw new NullPointerException(lenientFormat(errorMessageTemplate, p1, p2));
         }
-        return obj;
+        return reference;
     }
 
     /**
@@ -899,21 +968,24 @@ public final class Preconditions {
      * <p>See {@link #checkNotNull(Object, String, Object...)} for details.
      *
      * @param <T> the type of the object.
-     * @param obj the object reference.
+     * @param reference the object reference.
      * @param errorMessageTemplate a template for the exception message should the check fail.
      * @param p1 an {@code int} to be substituted into the message template.
      * @param p2 another {@code int} to be substituted into the message template.
      *
      * @return the non-null reference that was validated.
      *
+     * @throws NullPointerException if {@code reference} is null.
+     *
      * @since 20.0 (varargs overload since 2.0)
      */
-    public static <T extends @NotNull Object> T checkNotNull(
-        T obj, @Nullable String errorMessageTemplate, int p1, int p2) {
-        if (obj == null) {
+    @NotNull
+    public static <T> T checkNotNull(
+        @Nullable T reference, @Nullable String errorMessageTemplate, int p1, int p2) {
+        if (reference == null) {
             throw new NullPointerException(lenientFormat(errorMessageTemplate, p1, p2));
         }
-        return obj;
+        return reference;
     }
 
     /**
@@ -922,21 +994,24 @@ public final class Preconditions {
      * <p>See {@link #checkNotNull(Object, String, Object...)} for details.
      *
      * @param <T> the type of the object.
-     * @param obj the object reference.
+     * @param reference the object reference.
      * @param errorMessageTemplate a template for the exception message should the check fail.
      * @param p1 an {@code int} to be substituted into the message template.
      * @param p2 a {@code long} to be substituted into the message template.
      *
      * @return the non-null reference that was validated.
      *
+     * @throws NullPointerException if {@code reference} is null.
+     *
      * @since 20.0 (varargs overload since 2.0)
      */
-    public static <T extends @NotNull Object> T checkNotNull(
-        T obj, @Nullable String errorMessageTemplate, int p1, long p2) {
-        if (obj == null) {
+    @NotNull
+    public static <T> T checkNotNull(
+        @Nullable T reference, @Nullable String errorMessageTemplate, int p1, long p2) {
+        if (reference == null) {
             throw new NullPointerException(lenientFormat(errorMessageTemplate, p1, p2));
         }
-        return obj;
+        return reference;
     }
 
     /**
@@ -945,21 +1020,24 @@ public final class Preconditions {
      * <p>See {@link #checkNotNull(Object, String, Object...)} for details.
      *
      * @param <T> the type of the object.
-     * @param obj the object reference.
+     * @param reference the object reference.
      * @param errorMessageTemplate a template for the exception message should the check fail.
      * @param p1 an {@code int} to be substituted into the message template.
      * @param p2 a {@link Nullable nullable} {@link Object} to be substituted into the message template.
      *
      * @return the non-null reference that was validated.
      *
+     * @throws NullPointerException if {@code reference} is null.
+     *
      * @since 20.0 (varargs overload since 2.0)
      */
-    public static <T extends @NotNull Object> T checkNotNull(
-        T obj, @Nullable String errorMessageTemplate, int p1, @Nullable Object p2) {
-        if (obj == null) {
+    @NotNull
+    public static <T> T checkNotNull(
+        @Nullable T reference, @Nullable String errorMessageTemplate, int p1, @Nullable Object p2) {
+        if (reference == null) {
             throw new NullPointerException(lenientFormat(errorMessageTemplate, p1, p2));
         }
-        return obj;
+        return reference;
     }
 
     /**
@@ -968,21 +1046,24 @@ public final class Preconditions {
      * <p>See {@link #checkNotNull(Object, String, Object...)} for details.
      *
      * @param <T> the type of the object.
-     * @param obj the object reference.
+     * @param reference the object reference.
      * @param errorMessageTemplate a template for the exception message should the check fail.
      * @param p1 a {@code long} to be substituted into the message template.
      * @param p2 a {@code char} to be substituted into the message template.
      *
      * @return the non-null reference that was validated.
      *
+     * @throws NullPointerException if {@code reference} is null.
+     *
      * @since 20.0 (varargs overload since 2.0)
      */
-    public static <T extends @NotNull Object> T checkNotNull(
-        T obj, @Nullable String errorMessageTemplate, long p1, char p2) {
-        if (obj == null) {
+    @NotNull
+    public static <T> T checkNotNull(
+        @Nullable T reference, @Nullable String errorMessageTemplate, long p1, char p2) {
+        if (reference == null) {
             throw new NullPointerException(lenientFormat(errorMessageTemplate, p1, p2));
         }
-        return obj;
+        return reference;
     }
 
     /**
@@ -991,21 +1072,24 @@ public final class Preconditions {
      * <p>See {@link #checkNotNull(Object, String, Object...)} for details.
      *
      * @param <T> the type of the object.
-     * @param obj the object reference.
+     * @param reference the object reference.
      * @param errorMessageTemplate a template for the exception message should the check fail.
      * @param p1 a {@code long} to be substituted into the message template.
      * @param p2 an {@code int} to be substituted into the message template.
      *
      * @return the non-null reference that was validated.
      *
+     * @throws NullPointerException if {@code reference} is null.
+     *
      * @since 20.0 (varargs overload since 2.0)
      */
-    public static <T extends @NotNull Object> T checkNotNull(
-        T obj, @Nullable String errorMessageTemplate, long p1, int p2) {
-        if (obj == null) {
+    @NotNull
+    public static <T> T checkNotNull(
+        @Nullable T reference, @Nullable String errorMessageTemplate, long p1, int p2) {
+        if (reference == null) {
             throw new NullPointerException(lenientFormat(errorMessageTemplate, p1, p2));
         }
-        return obj;
+        return reference;
     }
 
     /**
@@ -1014,21 +1098,24 @@ public final class Preconditions {
      * <p>See {@link #checkNotNull(Object, String, Object...)} for details.
      *
      * @param <T> the type of the object.
-     * @param obj the object reference.
+     * @param reference the object reference.
      * @param errorMessageTemplate a template for the exception message should the check fail.
      * @param p1 a {@code long} to be substituted into the message template.
      * @param p2 another {@code long} to be substituted into the message template.
      *
      * @return the non-null reference that was validated.
      *
+     * @throws NullPointerException if {@code reference} is null.
+     *
      * @since 20.0 (varargs overload since 2.0)
      */
-    public static <T extends @NotNull Object> T checkNotNull(
-        T obj, @Nullable String errorMessageTemplate, long p1, long p2) {
-        if (obj == null) {
+    @NotNull
+    public static <T> T checkNotNull(
+        @Nullable T reference, @Nullable String errorMessageTemplate, long p1, long p2) {
+        if (reference == null) {
             throw new NullPointerException(lenientFormat(errorMessageTemplate, p1, p2));
         }
-        return obj;
+        return reference;
     }
 
     /**
@@ -1037,21 +1124,24 @@ public final class Preconditions {
      * <p>See {@link #checkNotNull(Object, String, Object...)} for details.
      *
      * @param <T> the type of the object.
-     * @param obj the object reference.
+     * @param reference the object reference.
      * @param errorMessageTemplate a template for the exception message should the check fail.
      * @param p1 a {@code long} to be substituted into the message template.
      * @param p2 a {@link Nullable nullable} {@link Object} to be substituted into the message template.
      *
      * @return the non-null reference that was validated.
      *
+     * @throws NullPointerException if {@code reference} is null.
+     *
      * @since 20.0 (varargs overload since 2.0)
      */
-    public static <T extends @NotNull Object> T checkNotNull(
-        T obj, @Nullable String errorMessageTemplate, long p1, @Nullable Object p2) {
-        if (obj == null) {
+    @NotNull
+    public static <T> T checkNotNull(
+        @Nullable T reference, @Nullable String errorMessageTemplate, long p1, @Nullable Object p2) {
+        if (reference == null) {
             throw new NullPointerException(lenientFormat(errorMessageTemplate, p1, p2));
         }
-        return obj;
+        return reference;
     }
 
     /**
@@ -1060,21 +1150,24 @@ public final class Preconditions {
      * <p>See {@link #checkNotNull(Object, String, Object...)} for details.
      *
      * @param <T> the type of the object.
-     * @param obj the object reference.
+     * @param reference the object reference.
      * @param errorMessageTemplate a template for the exception message should the check fail.
      * @param p1 a {@link Nullable nullable} {@link Object} to be substituted into the message template.
      * @param p2 a {@code char} to be substituted into the message template.
      *
      * @return the non-null reference that was validated.
      *
+     * @throws NullPointerException if {@code reference} is null.
+     *
      * @since 20.0 (varargs overload since 2.0)
      */
-    public static <T extends @NotNull Object> T checkNotNull(
-        T obj, @Nullable String errorMessageTemplate, @Nullable Object p1, char p2) {
-        if (obj == null) {
+    @NotNull
+    public static <T> T checkNotNull(
+        @Nullable T reference, @Nullable String errorMessageTemplate, @Nullable Object p1, char p2) {
+        if (reference == null) {
             throw new NullPointerException(lenientFormat(errorMessageTemplate, p1, p2));
         }
-        return obj;
+        return reference;
     }
 
     /**
@@ -1083,21 +1176,24 @@ public final class Preconditions {
      * <p>See {@link #checkNotNull(Object, String, Object...)} for details.
      *
      * @param <T> the type of the object.
-     * @param obj the object reference.
+     * @param reference the object reference.
      * @param errorMessageTemplate a template for the exception message should the check fail.
      * @param p1 a {@link Nullable nullable} {@link Object} to be substituted into the message template.
      * @param p2 an {@code int} to be substituted into the message template.
      *
      * @return the non-null reference that was validated.
      *
+     * @throws NullPointerException if {@code reference} is null.
+     *
      * @since 20.0 (varargs overload since 2.0)
      */
-    public static <T extends @NotNull Object> T checkNotNull(
-        T obj, @Nullable String errorMessageTemplate, @Nullable Object p1, int p2) {
-        if (obj == null) {
+    @NotNull
+    public static <T> T checkNotNull(
+        @Nullable T reference, @Nullable String errorMessageTemplate, @Nullable Object p1, int p2) {
+        if (reference == null) {
             throw new NullPointerException(lenientFormat(errorMessageTemplate, p1, p2));
         }
-        return obj;
+        return reference;
     }
 
     /**
@@ -1106,21 +1202,24 @@ public final class Preconditions {
      * <p>See {@link #checkNotNull(Object, String, Object...)} for details.
      *
      * @param <T> the type of the object.
-     * @param obj the object reference.
+     * @param reference the object reference.
      * @param errorMessageTemplate a template for the exception message should the check fail.
      * @param p1 a {@link Nullable nullable} {@link Object} to be substituted into the message template.
      * @param p2 a {@code long} to be substituted into the message template.
      *
      * @return the non-null reference that was validated.
      *
+     * @throws NullPointerException if {@code reference} is null.
+     *
      * @since 20.0 (varargs overload since 2.0)
      */
-    public static <T extends @NotNull Object> T checkNotNull(
-        T obj, @Nullable String errorMessageTemplate, @Nullable Object p1, long p2) {
-        if (obj == null) {
+    @NotNull
+    public static <T> T checkNotNull(
+        @Nullable T reference, @Nullable String errorMessageTemplate, @Nullable Object p1, long p2) {
+        if (reference == null) {
             throw new NullPointerException(lenientFormat(errorMessageTemplate, p1, p2));
         }
-        return obj;
+        return reference;
     }
 
     /**
@@ -1129,21 +1228,24 @@ public final class Preconditions {
      * <p>See {@link #checkNotNull(Object, String, Object...)} for details.
      *
      * @param <T> the type of the object.
-     * @param obj the object reference.
+     * @param reference the object reference.
      * @param errorMessageTemplate a template for the exception message should the check fail.
      * @param p1 a {@link Nullable nullable} {@link Object} to be substituted into the message template.
      * @param p2 another {@link Nullable nullable} {@link Object} to be substituted into the message template.
      *
      * @return the non-null reference that was validated.
      *
+     * @throws NullPointerException if {@code reference} is null.
+     *
      * @since 20.0 (varargs overload since 2.0)
      */
-    public static <T extends @NotNull Object> T checkNotNull(
-        T obj, @Nullable String errorMessageTemplate, @Nullable Object p1, @Nullable Object p2) {
-        if (obj == null) {
+    @NotNull
+    public static <T> T checkNotNull(
+        @Nullable T reference, @Nullable String errorMessageTemplate, @Nullable Object p1, @Nullable Object p2) {
+        if (reference == null) {
             throw new NullPointerException(lenientFormat(errorMessageTemplate, p1, p2));
         }
-        return obj;
+        return reference;
     }
 
     /**
@@ -1152,7 +1254,7 @@ public final class Preconditions {
      * <p>See {@link #checkNotNull(Object, String, Object...)} for details.
      *
      * @param <T> the type of the object.
-     * @param obj the object reference.
+     * @param reference the object reference.
      * @param errorMessageTemplate a template for the exception message should the check fail.
      * @param p1 a {@link Nullable nullable} {@link Object} to be substituted into the message template.
      * @param p2 another {@link Nullable nullable} {@link Object} to be substituted into the message template.
@@ -1160,18 +1262,21 @@ public final class Preconditions {
      *
      * @return the non-null reference that was validated.
      *
+     * @throws NullPointerException if {@code reference} is null.
+     *
      * @since 20.0 (varargs overload since 2.0)
      */
-    public static <T extends @NotNull Object> T checkNotNull(
-        T obj,
+    @NotNull
+    public static <T> T checkNotNull(
+        @Nullable T reference,
         @Nullable String errorMessageTemplate,
         @Nullable Object p1,
         @Nullable Object p2,
         @Nullable Object p3) {
-        if (obj == null) {
+        if (reference == null) {
             throw new NullPointerException(lenientFormat(errorMessageTemplate, p1, p2, p3));
         }
-        return obj;
+        return reference;
     }
 
     /**
@@ -1180,7 +1285,7 @@ public final class Preconditions {
      * <p>See {@link #checkNotNull(Object, String, Object...)} for details.
      *
      * @param <T> the type of the object.
-     * @param obj the object reference.
+     * @param reference the object reference.
      * @param errorMessageTemplate a template for the exception message should the check fail.
      * @param p1 a {@link Nullable nullable} {@link Object} to be substituted into the message template.
      * @param p2 another {@link Nullable nullable} {@link Object} to be substituted into the message template.
@@ -1189,19 +1294,22 @@ public final class Preconditions {
      *
      * @return the non-null reference that was validated.
      *
+     * @throws NullPointerException if {@code reference} is null.
+     *
      * @since 20.0 (varargs overload since 2.0)
      */
-    public static <T extends @NotNull Object> T checkNotNull(
-        T obj,
+    @NotNull
+    public static <T> T checkNotNull(
+        @Nullable T reference,
         @Nullable String errorMessageTemplate,
         @Nullable Object p1,
         @Nullable Object p2,
         @Nullable Object p3,
         @Nullable Object p4) {
-        if (obj == null) {
+        if (reference == null) {
             throw new NullPointerException(lenientFormat(errorMessageTemplate, p1, p2, p3, p4));
         }
-        return obj;
+        return reference;
     }
 
     /**
@@ -1266,7 +1374,8 @@ public final class Preconditions {
      *
      * @param expression a boolean expression
      *
-     * @throws IllegalStateException if {@code expression} is false
+     * @throws IllegalStateException if {@code expression} is {@code false}.
+     *
      * @see Verify#verify Verify.verify()
      */
     public static void checkState(boolean expression) {
@@ -1283,7 +1392,7 @@ public final class Preconditions {
      * @param errorMessage the exception message to use if the check fails; will be converted to a string using {@link
      * String#valueOf(Object)}
      *
-     * @throws IllegalStateException if {@code expression} is false
+     * @throws IllegalStateException if {@code expression} is {@code false}.
      * @see Verify#verify Verify.verify()
      */
     public static void checkState(boolean expression, @Nullable Object errorMessage) {
@@ -1304,7 +1413,8 @@ public final class Preconditions {
      * @param errorMessageArgs the arguments to be substituted into the message template. Arguments are converted to
      * strings using {@link String#valueOf(Object)}.
      *
-     * @throws IllegalStateException if {@code expression} is false
+     * @throws IllegalStateException if {@code expression} is {@code false}.
+     *
      * @see Verify#verify Verify.verify()
      */
     public static void checkState(
@@ -1326,6 +1436,8 @@ public final class Preconditions {
      * @param errorMessageTemplate a template for the exception message should the check fail.
      * @param p1 a {@code char} to be substituted into the message template.
      *
+     * @throws IllegalStateException if {@code b} is {@code false}
+     *
      * @since 20.0 (varargs overload since 2.0)
      */
     public static void checkState(boolean b, @Nullable String errorMessageTemplate, char p1) {
@@ -1343,6 +1455,8 @@ public final class Preconditions {
      * @param b a boolean expression.
      * @param errorMessageTemplate a template for the exception message should the check fail.
      * @param p1 an {@code int} to be substituted into the message template.
+     *
+     * @throws IllegalStateException if {@code b} is {@code false}
      *
      * @since 20.0 (varargs overload since 2.0)
      */
@@ -1362,6 +1476,8 @@ public final class Preconditions {
      * @param errorMessageTemplate a template for the exception message should the check fail.
      * @param p1 a {@code long} to be substituted into the message template.
      *
+     * @throws IllegalStateException if {@code b} is {@code false}
+     *
      * @since 20.0 (varargs overload since 2.0)
      */
     public static void checkState(boolean b, @Nullable String errorMessageTemplate, long p1) {
@@ -1379,6 +1495,8 @@ public final class Preconditions {
      * @param b a boolean expression.
      * @param errorMessageTemplate a template for the exception message should the check fail.
      * @param p1 a {@link Nullable nullable} {@link Object} to be substituted into the message template.
+     *
+     * @throws IllegalStateException if {@code b} is {@code false}
      *
      * @since 20.0 (varargs overload since 2.0)
      */
@@ -1400,6 +1518,8 @@ public final class Preconditions {
      * @param p1 a {@code char} to be substituted into the message template.
      * @param p2 another {@code char} to be substituted into the message template.
      *
+     * @throws IllegalStateException if {@code b} is {@code false}
+     *
      * @since 20.0 (varargs overload since 2.0)
      */
     public static void checkState(
@@ -1420,6 +1540,8 @@ public final class Preconditions {
      * @param p1 a {@code char} to be substituted into the message template.
      * @param p2 an {@code int} to be substituted into the message template.
      *
+     * @throws IllegalStateException if {@code b} is {@code false}
+     *
      * @since 20.0 (varargs overload since 2.0)
      */
     public static void checkState(boolean b, @Nullable String errorMessageTemplate, char p1, int p2) {
@@ -1438,6 +1560,8 @@ public final class Preconditions {
      * @param errorMessageTemplate a template for the exception message should the check fail.
      * @param p1 a {@code char} to be substituted into the message template.
      * @param p2 a {@code long} to be substituted into the message template.
+     *
+     * @throws IllegalStateException if {@code b} is {@code false}
      *
      * @since 20.0 (varargs overload since 2.0)
      */
@@ -1459,6 +1583,8 @@ public final class Preconditions {
      * @param p1 a {@code char} to be substituted into the message template.
      * @param p2 a {@link Nullable nullable} {@link Object} to be substituted into the message template.
      *
+     * @throws IllegalStateException if {@code b} is {@code false}
+     *
      * @since 20.0 (varargs overload since 2.0)
      */
     public static void checkState(
@@ -1479,6 +1605,8 @@ public final class Preconditions {
      * @param p1 an {@code int} to be substituted into the message template.
      * @param p2 a {@code char} to be substituted into the message template.
      *
+     * @throws IllegalStateException if {@code b} is {@code false}
+     *
      * @since 20.0 (varargs overload since 2.0)
      */
     public static void checkState(boolean b, @Nullable String errorMessageTemplate, int p1, char p2) {
@@ -1497,6 +1625,8 @@ public final class Preconditions {
      * @param errorMessageTemplate a template for the exception message should the check fail.
      * @param p1 an {@code int} to be substituted into the message template.
      * @param p2 another {@code int} to be substituted into the message template.
+     *
+     * @throws IllegalStateException if {@code b} is {@code false}
      *
      * @since 20.0 (varargs overload since 2.0)
      */
@@ -1517,6 +1647,8 @@ public final class Preconditions {
      * @param p1 an {@code int} to be substituted into the message template.
      * @param p2 a {@code long} to be substituted into the message template.
      *
+     * @throws IllegalStateException if {@code b} is {@code false}
+     *
      * @since 20.0 (varargs overload since 2.0)
      */
     public static void checkState(boolean b, @Nullable String errorMessageTemplate, int p1, long p2) {
@@ -1535,6 +1667,8 @@ public final class Preconditions {
      * @param errorMessageTemplate a template for the exception message should the check fail.
      * @param p1 an {@code int} to be substituted into the message template.
      * @param p2 a {@link Nullable nullable} {@link Object} to be substituted into the message template.
+     *
+     * @throws IllegalStateException if {@code b} is {@code false}
      *
      * @since 20.0 (varargs overload since 2.0)
      */
@@ -1556,6 +1690,8 @@ public final class Preconditions {
      * @param p1 a {@code long} to be substituted into the message template.
      * @param p2 a {@code char} to be substituted into the message template.
      *
+     * @throws IllegalStateException if {@code b} is {@code false}
+     *
      * @since 20.0 (varargs overload since 2.0)
      */
     public static void checkState(
@@ -1576,6 +1712,8 @@ public final class Preconditions {
      * @param p1 a {@code long} to be substituted into the message template.
      * @param p2 an {@code int} to be substituted into the message template.
      *
+     * @throws IllegalStateException if {@code b} is {@code false}
+     *
      * @since 20.0 (varargs overload since 2.0)
      */
     public static void checkState(boolean b, @Nullable String errorMessageTemplate, long p1, int p2) {
@@ -1594,6 +1732,8 @@ public final class Preconditions {
      * @param errorMessageTemplate a template for the exception message should the check fail.
      * @param p1 a {@code long} to be substituted into the message template.
      * @param p2 another {@code long} to be substituted into the message template.
+     *
+     * @throws IllegalStateException if {@code b} is {@code false}
      *
      * @since 20.0 (varargs overload since 2.0)
      */
@@ -1615,6 +1755,8 @@ public final class Preconditions {
      * @param p1 a {@code long} to be substituted into the message template.
      * @param p2 a {@link Nullable nullable} {@link Object} to be substituted into the message template.
      *
+     * @throws IllegalStateException if {@code b} is {@code false}
+     *
      * @since 20.0 (varargs overload since 2.0)
      */
     public static void checkState(
@@ -1634,6 +1776,8 @@ public final class Preconditions {
      * @param errorMessageTemplate a template for the exception message should the check fail.
      * @param p1 a {@link Nullable nullable} {@link Object} to be substituted into the message template.
      * @param p2 a {@code char} to be substituted into the message template.
+     *
+     * @throws IllegalStateException if {@code b} is {@code false}
      *
      * @since 20.0 (varargs overload since 2.0)
      */
@@ -1681,6 +1825,8 @@ public final class Preconditions {
      * @param p1 a {@link Nullable nullable} {@link Object} to be substituted into the message template.
      * @param p2 an{@code int} to be substituted into the message template.
      *
+     * @throws IllegalStateException if {@code b} is {@code false}
+     *
      * @since 20.0 (varargs overload since 2.0)
      */
     public static void checkState(
@@ -1700,6 +1846,8 @@ public final class Preconditions {
      * @param errorMessageTemplate a template for the exception message should the check fail.
      * @param p1 a {@link Nullable nullable} {@link Object} to be substituted into the message template.
      * @param p2 a {@code long} to be substituted into the message template.
+     *
+     * @throws IllegalStateException if {@code b} is {@code false}
      *
      * @since 20.0 (varargs overload since 2.0)
      */
@@ -1721,6 +1869,8 @@ public final class Preconditions {
      * @param p1 a {@link Nullable nullable} {@link Object} to be substituted into the message template.
      * @param p2 another {@link Nullable nullable} {@link Object} to be substituted into the message template.
      *
+     * @throws IllegalStateException if {@code b} is {@code false}
+     *
      * @since 20.0 (varargs overload since 2.0)
      */
     public static void checkState(
@@ -1741,6 +1891,8 @@ public final class Preconditions {
      * @param p1 a {@link Nullable nullable} {@link Object} to be substituted into the message template.
      * @param p2 another {@link Nullable nullable} {@link Object} to be substituted into the message template.
      * @param p3 a final {@link Nullable nullable} {@link Object} to be substituted into the message template.
+     *
+     * @throws IllegalStateException if {@code b} is {@code false}
      *
      * @since 20.0 (varargs overload since 2.0)
      */
@@ -1767,6 +1919,8 @@ public final class Preconditions {
      * @param p2 another {@link Nullable nullable} {@link Object} to be substituted into the message template.
      * @param p3 a third {@link Nullable nullable} {@link Object} to be substituted into the message template.
      * @param p4 a final {@link Nullable nullable} {@link Object} to be substituted into the message template.
+     *
+     * @throws IllegalStateException if {@code b} is {@code false}
      *
      * @since 20.0 (varargs overload since 2.0)
      */

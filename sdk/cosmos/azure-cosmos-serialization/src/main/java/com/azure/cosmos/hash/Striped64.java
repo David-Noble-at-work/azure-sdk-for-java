@@ -16,6 +16,7 @@ package com.azure.cosmos.hash;
 import org.jetbrains.annotations.Nullable;
 import sun.misc.Unsafe;
 
+import java.lang.reflect.Field;
 import java.security.AccessController;
 import java.security.PrivilegedActionException;
 import java.security.PrivilegedExceptionAction;
@@ -97,54 +98,9 @@ abstract class Striped64 extends Number {
      * provided.
      */
     static final class Cell {
-        /**
-         * The P 0.
-         */
-        volatile long p0, /**
-         * The P 1.
-         */
-        p1, /**
-         * The P 2.
-         */
-        p2, /**
-         * The P 3.
-         */
-        p3, /**
-         * The P 4.
-         */
-        p4, /**
-         * The P 5.
-         */
-        p5, /**
-         * The P 6.
-         */
-        p6;
-        /**
-         * The Value.
-         */
+        volatile long p0, p1, p2, p3, p4, p5, p6;
         volatile long value;
-        /**
-         * The Q 0.
-         */
-        volatile long q0, /**
-         * The Q 1.
-         */
-        q1, /**
-         * The Q 2.
-         */
-        q2, /**
-         * The Q 3.
-         */
-        q3, /**
-         * The Q 4.
-         */
-        q4, /**
-         * The Q 5.
-         */
-        q5, /**
-         * The Q 6.
-         */
-        q6;
+        volatile long q0, q1, q2, q3, q4, q5, q6;
 
         /**
          * Instantiates a new Cell.
@@ -229,14 +185,14 @@ abstract class Striped64 extends Number {
      *
      * @return the boolean
      */
-    final boolean casBase(long cmp, long val) {
+    boolean casBase(long cmp, long val) {
         return UNSAFE.compareAndSwapLong(this, baseOffset, cmp, val);
     }
 
     /**
      * CASes the busy field from 0 to 1 to acquire lock.  @return the boolean
      */
-    final boolean casBusy() {
+    boolean casBusy() {
         return UNSAFE.compareAndSwapInt(this, busyOffset, 0, 1);
     }
 
@@ -260,7 +216,7 @@ abstract class Striped64 extends Number {
      * @param hc the hash code holder
      * @param wasUncontended false if CAS failed before call
      */
-    final void retryUpdate(long x, @Nullable int[] hc, boolean wasUncontended) {
+    void retryUpdate(long x, @Nullable int[] hc, boolean wasUncontended) {
         int h;
         if (hc == null) {
             threadHashCode.set(hc = new int[1]); // Initialize randomly
@@ -350,7 +306,7 @@ abstract class Striped64 extends Number {
     /**
      * Sets base and all cells to the given value.  @param initialValue the initial value
      */
-    final void internalReset(long initialValue) {
+    void internalReset(long initialValue) {
         Cell[] as = cells;
         base = initialValue;
         if (as != null) {
@@ -366,7 +322,6 @@ abstract class Striped64 extends Number {
 
     // Unsafe mechanics
     private static final Unsafe UNSAFE;
-    //private static final sun.misc.Unsafe UNSAFE;
     private static final long baseOffset;
     private static final long busyOffset;
 
@@ -382,30 +337,33 @@ abstract class Striped64 extends Number {
     }
 
     /**
-     * Returns a sun.misc.Unsafe. Suitable for use in a 3rd party package. Replace with a simple call to
-     * Unsafe.getUnsafe when integrating into a jdk.
+     * Returns an {@link Unsafe} instance.
+     * <p>
+     * This is suitable for use in a 3rd party package. Replace with a simple call to Unsafe.getUnsafe when integrating
+     * into a JDK.
      *
-     * @return a sun.misc.Unsafe
+     * @return an {@link Unsafe} instance.
+     *
+     * @throws NoSuchFieldError if there is no {@link Unsafe} instance.
+     * @throws RuntimeException if an {@link Unsafe} instance cannot be obtained.
      */
     private static Unsafe getUnsafe() {
         try {
             return Unsafe.getUnsafe();
-        } catch (SecurityException tryReflectionInstead) {
+        } catch (SecurityException ignored) {
         }
         try {
             return AccessController.doPrivileged(
-                new PrivilegedExceptionAction<Unsafe>() {
-                    public Unsafe run() throws Exception {
-                        Class<Unsafe> k = Unsafe.class;
-                        for (java.lang.reflect.Field f : k.getDeclaredFields()) {
-                            f.setAccessible(true);
-                            Object x = f.get(null);
-                            if (k.isInstance(x)) {
-                                return k.cast(x);
-                            }
+                (PrivilegedExceptionAction<Unsafe>) () -> {
+                    Class<Unsafe> k = Unsafe.class;
+                    for (Field f : k.getDeclaredFields()) {
+                        f.setAccessible(true);
+                        Object x = f.get(null);
+                        if (k.isInstance(x)) {
+                            return k.cast(x);
                         }
-                        throw new NoSuchFieldError("the Unsafe");
                     }
+                    throw new NoSuchFieldError("the Unsafe");
                 });
         } catch (PrivilegedActionException e) {
             throw new RuntimeException("Could not initialize intrinsics", e.getCause());

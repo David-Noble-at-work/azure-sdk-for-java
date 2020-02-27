@@ -191,6 +191,8 @@ public abstract class LayoutTypeScope extends LayoutType {
      * Sets implicit type code.
      *
      * @param edit the edit
+     *
+     * @throws UnsupportedOperationException because this method is not supported by this abstract type.
      */
     public void setImplicitTypeCode(@NotNull final RowCursor edit) {
         throw new UnsupportedOperationException();
