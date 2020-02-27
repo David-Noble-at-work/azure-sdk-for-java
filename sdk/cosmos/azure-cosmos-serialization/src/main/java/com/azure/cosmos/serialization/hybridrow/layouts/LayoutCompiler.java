@@ -3,6 +3,7 @@
 
 package com.azure.cosmos.serialization.hybridrow.layouts;
 
+import com.azure.cosmos.base.Strings;
 import com.azure.cosmos.core.Out;
 import com.azure.cosmos.serialization.hybridrow.SchemaId;
 import com.azure.cosmos.serialization.hybridrow.schemas.ArrayPropertyType;
@@ -19,9 +20,8 @@ import com.azure.cosmos.serialization.hybridrow.schemas.TaggedPropertyType;
 import com.azure.cosmos.serialization.hybridrow.schemas.TuplePropertyType;
 import com.azure.cosmos.serialization.hybridrow.schemas.TypeKind;
 import com.azure.cosmos.serialization.hybridrow.schemas.UdtPropertyType;
-import com.azure.cosmos.base.Strings;
+import org.jetbrains.annotations.NotNull;
 
-import org.jetbrains.annotations.NotNull;;
 import java.util.List;
 import java.util.Optional;
 

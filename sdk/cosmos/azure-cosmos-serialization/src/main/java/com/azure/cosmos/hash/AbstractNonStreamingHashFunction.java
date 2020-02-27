@@ -23,110 +23,139 @@ import java.nio.charset.Charset;
 import java.util.Arrays;
 
 /**
- * Skeleton implementation of {@link HashFunction}, appropriate for non-streaming algorithms. All
- * the hash computation done using {@linkplain #newHasher()} are delegated to the {@linkplain
- * #hashBytes(byte[], int, int)} method.
+ * Skeleton implementation of {@link HashFunction}, appropriate for non-streaming algorithms. All the hash computation
+ * done using {@linkplain #newHasher()} are delegated to the {@linkplain #hashBytes(byte[], int, int)}* method.
  *
  * @author Dimitris Andreou
  */
 abstract class AbstractNonStreamingHashFunction extends AbstractHashFunction {
-  @Override
-  public Hasher newHasher() {
-    return newHasher(32);
-  }
-
-  @Override
-  public Hasher newHasher(int expectedInputSize) {
-    Preconditions.checkArgument(expectedInputSize >= 0);
-    return new BufferingHasher(expectedInputSize);
-  }
-
-  @Override
-  public HashCode hashInt(int input) {
-    return hashBytes(ByteBuffer.allocate(4).order(ByteOrder.LITTLE_ENDIAN).putInt(input).array());
-  }
-
-  @Override
-  public HashCode hashLong(long input) {
-    return hashBytes(ByteBuffer.allocate(8).order(ByteOrder.LITTLE_ENDIAN).putLong(input).array());
-  }
-
-  @Override
-  public HashCode hashUnencodedChars(CharSequence input) {
-    int len = input.length();
-    ByteBuffer buffer = ByteBuffer.allocate(len * 2).order(ByteOrder.LITTLE_ENDIAN);
-    for (int i = 0; i < len; i++) {
-      buffer.putChar(input.charAt(i));
-    }
-    return hashBytes(buffer.array());
-  }
-
-  @Override
-  public HashCode hashString(CharSequence input, Charset charset) {
-    return hashBytes(input.toString().getBytes(charset));
-  }
-
-  @Override
-  public abstract HashCode hashBytes(byte[] input, int off, int len);
-
-  @Override
-  public HashCode hashBytes(ByteBuffer input) {
-    return newHasher(input.remaining()).putBytes(input).hash();
-  }
-
-  /** In-memory stream-based implementation of Hasher. */
-  private final class BufferingHasher extends AbstractHasher {
-    final ExposedByteArrayOutputStream stream;
-
-    BufferingHasher(int expectedInputSize) {
-      this.stream = new ExposedByteArrayOutputStream(expectedInputSize);
+    @Override
+    public Hasher newHasher() {
+        return newHasher(32);
     }
 
     @Override
-    public Hasher putByte(byte b) {
-      stream.write(b);
-      return this;
+    public Hasher newHasher(int expectedInputSize) {
+        Preconditions.checkArgument(expectedInputSize >= 0);
+        return new BufferingHasher(expectedInputSize);
     }
 
     @Override
-    public Hasher putBytes(byte[] bytes, int off, int len) {
-      stream.write(bytes, off, len);
-      return this;
+    public HashCode hashInt(int input) {
+        return hashBytes(ByteBuffer.allocate(4).order(ByteOrder.LITTLE_ENDIAN).putInt(input).array());
     }
 
     @Override
-    public Hasher putBytes(ByteBuffer bytes) {
-      stream.write(bytes);
-      return this;
+    public HashCode hashLong(long input) {
+        return hashBytes(ByteBuffer.allocate(8).order(ByteOrder.LITTLE_ENDIAN).putLong(input).array());
     }
 
     @Override
-    public HashCode hash() {
-      return hashBytes(stream.byteArray(), 0, stream.length());
-    }
-  }
-
-  // Just to access the byte[] without introducing an unnecessary copy
-  private static final class ExposedByteArrayOutputStream extends ByteArrayOutputStream {
-    ExposedByteArrayOutputStream(int expectedInputSize) {
-      super(expectedInputSize);
+    public HashCode hashUnencodedChars(CharSequence input) {
+        int len = input.length();
+        ByteBuffer buffer = ByteBuffer.allocate(len * 2).order(ByteOrder.LITTLE_ENDIAN);
+        for (int i = 0; i < len; i++) {
+            buffer.putChar(input.charAt(i));
+        }
+        return hashBytes(buffer.array());
     }
 
-    void write(ByteBuffer input) {
-      int remaining = input.remaining();
-      if (count + remaining > buf.length) {
-        buf = Arrays.copyOf(buf, count + remaining);
-      }
-      input.get(buf, count, remaining);
-      count += remaining;
+    @Override
+    public HashCode hashString(CharSequence input, Charset charset) {
+        return hashBytes(input.toString().getBytes(charset));
     }
 
-    byte[] byteArray() {
-      return buf;
+    @Override
+    public abstract HashCode hashBytes(byte[] input, int off, int len);
+
+    @Override
+    public HashCode hashBytes(ByteBuffer input) {
+        return newHasher(input.remaining()).putBytes(input).hash();
     }
 
-    int length() {
-      return count;
+    /**
+     * In-memory stream-based implementation of Hasher.
+     */
+    private final class BufferingHasher extends AbstractHasher {
+        /**
+         * The Stream.
+         */
+        final ExposedByteArrayOutputStream stream;
+
+        /**
+         * Instantiates a new Buffering hasher.
+         *
+         * @param expectedInputSize the expected input size
+         */
+        BufferingHasher(int expectedInputSize) {
+            this.stream = new ExposedByteArrayOutputStream(expectedInputSize);
+        }
+
+        @Override
+        public Hasher putByte(byte b) {
+            stream.write(b);
+            return this;
+        }
+
+        @Override
+        public Hasher putBytes(byte[] bytes, int off, int len) {
+            stream.write(bytes, off, len);
+            return this;
+        }
+
+        @Override
+        public Hasher putBytes(ByteBuffer bytes) {
+            stream.write(bytes);
+            return this;
+        }
+
+        @Override
+        public HashCode hash() {
+            return hashBytes(stream.byteArray(), 0, stream.length());
+        }
     }
-  }
+
+    // Just to access the byte[] without introducing an unnecessary copy
+    private static final class ExposedByteArrayOutputStream extends ByteArrayOutputStream {
+        /**
+         * Instantiates a new Exposed byte array output stream.
+         *
+         * @param expectedInputSize the expected input size
+         */
+        ExposedByteArrayOutputStream(int expectedInputSize) {
+            super(expectedInputSize);
+        }
+
+        /**
+         * Write.
+         *
+         * @param input the input
+         */
+        void write(ByteBuffer input) {
+            int remaining = input.remaining();
+            if (count + remaining > buf.length) {
+                buf = Arrays.copyOf(buf, count + remaining);
+            }
+            input.get(buf, count, remaining);
+            count += remaining;
+        }
+
+        /**
+         * Byte array byte [ ].
+         *
+         * @return the byte [ ]
+         */
+        byte[] byteArray() {
+            return buf;
+        }
+
+        /**
+         * Length int.
+         *
+         * @return the int
+         */
+        int length() {
+            return count;
+        }
+    }
 }

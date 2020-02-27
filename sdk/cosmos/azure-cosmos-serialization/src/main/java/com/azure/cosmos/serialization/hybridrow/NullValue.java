@@ -11,8 +11,7 @@ package com.azure.cosmos.serialization.hybridrow;
  */
 public final class NullValue {
     /**
-     * The default null literal.
-     * This is the same value as default({@link NullValue}).
+     * The default null literal. This is the same value as default({@link NullValue}).
      */
     public static final NullValue DEFAULT = new NullValue();
 
@@ -20,6 +19,7 @@ public final class NullValue {
      * Returns true if this is the same value as {@code other}.
      *
      * @param other The value to compare against.
+     *
      * @return True if the two values are the same.
      */
     public boolean equals(NullValue other) {

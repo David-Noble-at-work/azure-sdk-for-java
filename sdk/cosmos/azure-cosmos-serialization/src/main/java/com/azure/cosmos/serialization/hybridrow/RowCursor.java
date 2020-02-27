@@ -16,6 +16,9 @@ import com.azure.cosmos.serialization.hybridrow.layouts.TypeArgumentList;
 
 import static com.azure.cosmos.base.Strings.lenientFormat;
 
+/**
+ * The type Row cursor.
+ */
 public final class RowCursor implements Cloneable {
 
     private LayoutType cellType;
@@ -37,6 +40,9 @@ public final class RowCursor implements Cloneable {
     private UtfAnyString writePath;
     private StringToken writePathToken;
 
+    /**
+     * Instantiates a new Row cursor.
+     */
     RowCursor() {
     }
 
@@ -118,6 +124,13 @@ public final class RowCursor implements Cloneable {
         return this;
     }
 
+    /**
+     * Create row cursor.
+     *
+     * @param row the row
+     *
+     * @return the row cursor
+     */
     public static RowCursor create(RowBuffer row) {
 
         final SchemaId schemaId = row.readSchemaId(1);
@@ -133,6 +146,13 @@ public final class RowCursor implements Cloneable {
             .valueOffset(offset);
     }
 
+    /**
+     * Create for append row cursor.
+     *
+     * @param row the row
+     *
+     * @return the row cursor
+     */
     public static RowCursor createForAppend(RowBuffer row) {
 
         final SchemaId schemaId = row.readSchemaId(1);
@@ -267,6 +287,13 @@ public final class RowCursor implements Cloneable {
         return this.layout;
     }
 
+    /**
+     * Layout row cursor.
+     *
+     * @param value the value
+     *
+     * @return the row cursor
+     */
     public RowCursor layout(Layout value) {
         this.layout = value;
         return this;
@@ -281,6 +308,13 @@ public final class RowCursor implements Cloneable {
         return this.metaOffset;
     }
 
+    /**
+     * Meta offset row cursor.
+     *
+     * @param value the value
+     *
+     * @return the row cursor
+     */
     public RowCursor metaOffset(final int value) {
         this.metaOffset = value;
         return this;
@@ -295,6 +329,13 @@ public final class RowCursor implements Cloneable {
         return this.pathOffset;
     }
 
+    /**
+     * Path offset row cursor.
+     *
+     * @param value the value
+     *
+     * @return the row cursor
+     */
     public RowCursor pathOffset(final int value) {
         this.pathOffset = value;
         return this;
@@ -309,6 +350,13 @@ public final class RowCursor implements Cloneable {
         return this.pathToken;
     }
 
+    /**
+     * Path token row cursor.
+     *
+     * @param value the value
+     *
+     * @return the row cursor
+     */
     public RowCursor pathToken(int value) {
         this.pathToken = value;
         return this;
@@ -323,6 +371,13 @@ public final class RowCursor implements Cloneable {
         return this.scopeType;
     }
 
+    /**
+     * Scope type row cursor.
+     *
+     * @param scopeType the scope type
+     *
+     * @return the row cursor
+     */
     public RowCursor scopeType(LayoutTypeScope scopeType) {
         this.scopeType = scopeType;
         return this;
@@ -337,6 +392,13 @@ public final class RowCursor implements Cloneable {
         return this.scopeTypeArgs;
     }
 
+    /**
+     * Scope type args row cursor.
+     *
+     * @param scopeTypeArgs the scope type args
+     *
+     * @return the row cursor
+     */
     public RowCursor scopeTypeArgs(TypeArgumentList scopeTypeArgs) {
         this.scopeTypeArgs = scopeTypeArgs;
         return this;
@@ -345,12 +407,19 @@ public final class RowCursor implements Cloneable {
     /**
      * The 0-based offset from the beginning of the row where the first sparse field within the scope begins.
      *
-     * @return 0-based offset from the beginning of the row where the first sparse field within the scope begins.
+     * @return 0 -based offset from the beginning of the row where the first sparse field within the scope begins.
      */
     public int start() {
         return this.start;
     }
 
+    /**
+     * Start row cursor.
+     *
+     * @param start the start
+     *
+     * @return the row cursor
+     */
     public RowCursor start(int start) {
         this.start = start;
         return this;
@@ -397,6 +466,13 @@ public final class RowCursor implements Cloneable {
         return this.valueOffset;
     }
 
+    /**
+     * Value offset row cursor.
+     *
+     * @param valueOffset the value offset
+     *
+     * @return the row cursor
+     */
     public RowCursor valueOffset(int valueOffset) {
         this.valueOffset = valueOffset;
         return this;
@@ -411,6 +487,11 @@ public final class RowCursor implements Cloneable {
         return this.writePath;
     }
 
+    /**
+     * Write path.
+     *
+     * @param writePath the write path
+     */
     public void writePath(UtfAnyString writePath) {
         this.writePath = writePath;
     }
@@ -424,6 +505,11 @@ public final class RowCursor implements Cloneable {
         return this.writePathToken;
     }
 
+    /**
+     * Write path token.
+     *
+     * @param writePathToken the write path token
+     */
     public void writePathToken(StringToken writePathToken) {
         this.writePathToken = writePathToken;
     }

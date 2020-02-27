@@ -3,14 +3,14 @@
 
 package com.azure.cosmos.serialization.hybridrow.layouts;
 
-import com.azure.cosmos.serialization.hybridrow.SchemaId;
 import com.azure.cosmos.core.Json;
+import com.azure.cosmos.serialization.hybridrow.SchemaId;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.databind.ser.std.StdSerializer;
+import org.jetbrains.annotations.NotNull;
 
-import org.jetbrains.annotations.NotNull;;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collections;
@@ -20,9 +20,15 @@ import java.util.stream.StreamSupport;
 
 import static com.azure.cosmos.base.Preconditions.checkNotNull;
 
+/**
+ * The type Type argument list.
+ */
 @JsonSerialize(using = TypeArgumentList.JsonSerializer.class)
 public final class TypeArgumentList {
 
+    /**
+     * The constant EMPTY.
+     */
     public static final TypeArgumentList EMPTY = new TypeArgumentList();
 
     private final TypeArgument[] args;
@@ -65,6 +71,13 @@ public final class TypeArgumentList {
         return this.args.length;
     }
 
+    /**
+     * Equals boolean.
+     *
+     * @param other the other
+     *
+     * @return the boolean
+     */
     public boolean equals(TypeArgumentList other) {
         if (null == other) {
             return false;
@@ -105,6 +118,11 @@ public final class TypeArgumentList {
         return hash;
     }
 
+    /**
+     * List list.
+     *
+     * @return the list
+     */
     public List<TypeArgument> list() {
         return Collections.unmodifiableList(Arrays.asList(this.args));
     }
@@ -136,6 +154,9 @@ public final class TypeArgumentList {
         return Json.toString(this);
     }
 
+    /**
+     * The type Json serializer.
+     */
     static final class JsonSerializer extends StdSerializer<TypeArgumentList> {
 
         private static final long serialVersionUID = 3342591303413986726L;

@@ -57,6 +57,9 @@ public abstract class PropertyType {
     @JsonProperty(required = true)
     private TypeKind type;
 
+    /**
+     * Instantiates a new Property type.
+     */
     protected PropertyType() {
         this.nullable(true);
     }
@@ -64,7 +67,7 @@ public abstract class PropertyType {
     /**
      * API-specific type annotations for this {@linkplain Property property}.
      *
-     * @return API-specific type annotations for this {@linkplain Property property}.
+     * @return API -specific type annotations for this {@linkplain Property property}.
      */
     public final String apiType() {
         return this.apiType;
@@ -74,6 +77,7 @@ public abstract class PropertyType {
      * Sets API-specific type annotations for this {@linkplain Property property}.
      *
      * @param value API-specific type annotations for this {@linkplain Property property}.
+     *
      * @return a reference to this {@linkplain Property property}.
      */
     public final PropertyType apiType(String value) {
@@ -96,6 +100,7 @@ public abstract class PropertyType {
      * Sets a flag indicating whether the {@linkplain Property property} can be {@code null}.
      *
      * @param value {@code true} indicates that this {@linkplain Property property} can be {@code null}.
+     *
      * @return a reference to this {@linkplain Property property}.
      */
     public final PropertyType nullable(boolean value) {
@@ -116,6 +121,7 @@ public abstract class PropertyType {
      * Sets the logical type of this {@linkplain Property property}.
      *
      * @param value the logical type of this {@linkplain Property property}.
+     *
      * @return a reference to this {@linkplain Property property}.
      */
     public final PropertyType type(TypeKind value) {

@@ -3,26 +3,33 @@
 
 package com.azure.cosmos.serialization.hybridrow.layouts;
 
+import com.azure.cosmos.core.Out;
 import com.azure.cosmos.serialization.hybridrow.Result;
 import com.azure.cosmos.serialization.hybridrow.RowBuffer;
 import com.azure.cosmos.serialization.hybridrow.RowCursor;
-import com.azure.cosmos.core.Out;
-
-import org.jetbrains.annotations.NotNull;;
+import org.jetbrains.annotations.NotNull;
 
 import static com.azure.cosmos.base.Preconditions.checkArgument;
 import static com.azure.cosmos.base.Preconditions.checkNotNull;
 
+/**
+ * Describes the layout of a UInt32 field.
+ */
 public final class LayoutUInt32 extends LayoutTypePrimitive<Long> {
 
+    /**
+     * Initializes a new UInt32 layout.
+     */
     public LayoutUInt32() {
         super(LayoutCode.UINT_32, Integer.BYTES);
     }
 
+    @Override
     public boolean isFixed() {
         return true;
     }
 
+    @Override
     @NotNull
     public String name() {
         return "uint32";
@@ -66,8 +73,11 @@ public final class LayoutUInt32 extends LayoutTypePrimitive<Long> {
 
     @Override
     @NotNull
-    public Result writeFixed(@NotNull RowBuffer buffer, @NotNull RowCursor scope, @NotNull LayoutColumn column,
-                             @NotNull Long value) {
+    public Result writeFixed(
+        @NotNull RowBuffer buffer,
+        @NotNull RowCursor scope,
+        @NotNull LayoutColumn column,
+        @NotNull Long value) {
 
         checkArgument(scope.scopeType() instanceof LayoutUDT);
 

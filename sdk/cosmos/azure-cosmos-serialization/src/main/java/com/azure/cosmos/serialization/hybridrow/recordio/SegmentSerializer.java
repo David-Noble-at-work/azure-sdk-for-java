@@ -14,23 +14,42 @@ import com.azure.cosmos.serialization.hybridrow.io.Segment;
 import com.azure.cosmos.serialization.hybridrow.layouts.LayoutResolver;
 import com.azure.cosmos.serialization.hybridrow.layouts.TypeArgument;
 import io.netty.buffer.ByteBuf;
-
-import org.jetbrains.annotations.NotNull;;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import static com.azure.cosmos.base.Preconditions.checkState;
 
+/**
+ * The type Segment serializer.
+ */
 public final class SegmentSerializer {
 
     private static final UtfAnyString COMMENT = new UtfAnyString("comment");
     private static final UtfAnyString LENGTH = new UtfAnyString("length");
     private static final UtfAnyString SDL = new UtfAnyString("sdl");
 
+    /**
+     * Read result.
+     *
+     * @param buffer the buffer
+     * @param resolver the resolver
+     * @param segment the segment
+     *
+     * @return the result
+     */
     public static Result read(ByteBuf buffer, LayoutResolver resolver, Out<Segment> segment) {
         RowReader reader = new RowReader(new RowBuffer(buffer, HybridRowVersion.V1, resolver));
         return SegmentSerializer.read(reader, segment);
     }
 
+    /**
+     * Read result.
+     *
+     * @param reader the reader
+     * @param segment the segment
+     *
+     * @return the result
+     */
     public static Result read(RowReader reader, Out<Segment> segment) {
 
         segment.set(new Segment(null, null));
@@ -96,6 +115,15 @@ public final class SegmentSerializer {
         return Result.SUCCESS;
     }
 
+    /**
+     * Write result.
+     *
+     * @param writer the writer
+     * @param segment the segment
+     * @param typeArgument the type argument
+     *
+     * @return the result
+     */
     public static Result write(
         @NotNull final RowWriter writer,
         @NotNull final Segment segment,

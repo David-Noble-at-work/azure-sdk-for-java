@@ -23,6 +23,11 @@ public class SchemaOptions {
         return this.disableSystemPrefix;
     }
 
+    /**
+     * Disable system prefix.
+     *
+     * @param value the value
+     */
     public final void disableSystemPrefix(boolean value) {
         this.disableSystemPrefix = value;
     }
@@ -30,12 +35,11 @@ public class SchemaOptions {
     /**
      * {@code true} if structural schema validation is enabled.
      * <p>
-     * When structural schema validation is enabled then attempting to store an unschematized
-     * path in the row, or a value whose type does not conform to the type constraints defined for that
-     * path within the schema will lead to a schema validation error. When structural schema validation is
-     * NOT enabled, then storing an unschematized path or non-confirming value will lead to a sparse
-     * column override of the path.  The value will be stored (and any existing value at that path will be
-     * overwritten).  No error will be given.
+     * When structural schema validation is enabled then attempting to store an unschematized path in the row, or a
+     * value whose type does not conform to the type constraints defined for that path within the schema will lead to a
+     * schema validation error. When structural schema validation is NOT enabled, then storing an unschematized path or
+     * non-confirming value will lead to a sparse column override of the path.  The value will be stored (and any
+     * existing value at that path will be overwritten).  No error will be given.
      *
      * @return {@code true} if structural schema validation is enabled.
      */
@@ -43,6 +47,11 @@ public class SchemaOptions {
         return this.disallowUnschematized;
     }
 
+    /**
+     * Disallow unschematized.
+     *
+     * @param value the value
+     */
     public final void disallowUnschematized(boolean value) {
         this.disallowUnschematized = value;
     }
@@ -60,6 +69,11 @@ public class SchemaOptions {
         return this.enablePropertyLevelTimestamp;
     }
 
+    /**
+     * Enable property level timestamp.
+     *
+     * @param value the value
+     */
     public final void enablePropertyLevelTimestamp(boolean value) {
         this.enablePropertyLevelTimestamp = value;
     }

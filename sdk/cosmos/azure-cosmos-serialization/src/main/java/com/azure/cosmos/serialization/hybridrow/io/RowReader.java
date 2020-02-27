@@ -3,6 +3,9 @@
 
 package com.azure.cosmos.serialization.hybridrow.io;
 
+import com.azure.cosmos.core.Json;
+import com.azure.cosmos.core.Out;
+import com.azure.cosmos.core.Utf8String;
 import com.azure.cosmos.serialization.hybridrow.Float128;
 import com.azure.cosmos.serialization.hybridrow.NullValue;
 import com.azure.cosmos.serialization.hybridrow.Result;
@@ -10,9 +13,6 @@ import com.azure.cosmos.serialization.hybridrow.RowBuffer;
 import com.azure.cosmos.serialization.hybridrow.RowCursor;
 import com.azure.cosmos.serialization.hybridrow.RowCursors;
 import com.azure.cosmos.serialization.hybridrow.UnixDateTime;
-import com.azure.cosmos.core.Json;
-import com.azure.cosmos.core.Out;
-import com.azure.cosmos.core.Utf8String;
 import com.azure.cosmos.serialization.hybridrow.layouts.LayoutBinary;
 import com.azure.cosmos.serialization.hybridrow.layouts.LayoutBoolean;
 import com.azure.cosmos.serialization.hybridrow.layouts.LayoutColumn;
@@ -47,9 +47,9 @@ import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.databind.ser.std.StdSerializer;
 import io.netty.buffer.ByteBuf;
-
-import org.jetbrains.annotations.NotNull;;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
@@ -135,37 +135,13 @@ public final class RowReader {
         this.columnIndex = -1;
     }
 
+    /**
+     * Is done boolean.
+     *
+     * @return the boolean
+     */
     public boolean isDone() {
         return this.state == States.DONE;
-    }
-
-    /**
-     * Read the current field as a fixed length {@code MongoDbObjectId} value.
-     *
-     * @param value On success, receives the value, undefined otherwise.
-     *
-     * @return {@link Result#SUCCESS} if the read is successful, an error {@link Result} otherwise.
-     */
-    public Result ReadMongoDbObjectId(Out<?/* MongoDbObjectID */> value) {
-        // TODO: DANOBLE: Resurrect this method
-        //        switch (this.state) {
-        //
-        //            case Schematized:
-        //                return this.readPrimitiveValue(value);
-        //
-        //            case Sparse:
-        //                if (!(this.cursor.cellType() instanceof LayoutMongoDbObjectId)) {
-        //                    value.set(null);
-        //                    return Result.TYPE_MISMATCH;
-        //                }
-        //                value.set(this.row.readSparseMongoDbObjectId(this.cursor));
-        //                return Result.SUCCESS;
-        //
-        //            default:
-        //                value.set(null);
-        //                return Result.FAILURE;
-        //        }
-        throw new UnsupportedOperationException();
     }
 
     /**
@@ -201,9 +177,9 @@ public final class RowReader {
      * <p>
      * When enumerating a non-indexed scope, this value is always zero.
      *
-     * @return zero-based index of the field relative to the scope, if positioned on a field; otherwise undefined.
+     * @return zero -based index of the field relative to the scope, if positioned on a field; otherwise undefined.
      *
-     * @see #path()
+     * @see #path() #path()
      */
     public int index() {
         return this.state == States.SPARSE ? this.cursor.index() : 0;
@@ -225,7 +201,7 @@ public final class RowReader {
      *
      * @return path of the field relative to the scope, if positioned on a field; otherwise undefined.
      *
-     * @see #index
+     * @see #index #index
      */
     @NotNull
     public Utf8String path() {
@@ -964,6 +940,11 @@ public final class RowReader {
         }
     }
 
+    /**
+     * Save checkpoint checkpoint.
+     *
+     * @return the checkpoint
+     */
     public Checkpoint saveCheckpoint() {
         return new Checkpoint(this.state, this.columnIndex, this.cursor);
     }
@@ -1177,6 +1158,9 @@ public final class RowReader {
          */
         DONE;
 
+        /**
+         * The constant BYTES.
+         */
         public static final int BYTES = Byte.BYTES;
         private final String friendlyName;
 
@@ -1184,10 +1168,22 @@ public final class RowReader {
             this.friendlyName = this.name().toLowerCase();
         }
 
+        /**
+         * Friendly name string.
+         *
+         * @return the string
+         */
         public String friendlyName() {
             return this.friendlyName;
         }
 
+        /**
+         * From states.
+         *
+         * @param value the value
+         *
+         * @return the states
+         */
         public static States from(byte value) {
             return values()[value];
         }
@@ -1202,6 +1198,11 @@ public final class RowReader {
             return this.friendlyName;
         }
 
+        /**
+         * Value byte.
+         *
+         * @return the byte
+         */
         public byte value() {
             return (byte) this.ordinal();
         }
@@ -1236,44 +1237,93 @@ public final class RowReader {
         private RowCursor cursor;
         private States state;
 
+        /**
+         * Instantiates a new Checkpoint.
+         *
+         * @param state the state
+         * @param columnIndex the column index
+         * @param cursor the cursor
+         */
         public Checkpoint(States state, int columnIndex, RowCursor cursor) {
             this.state(state);
             this.columnIndex(columnIndex);
             this.cursor(cursor);
         }
 
+        /**
+         * Column index int.
+         *
+         * @return the int
+         */
         public int columnIndex() {
             return this.columnIndex;
         }
 
+        /**
+         * Column index checkpoint.
+         *
+         * @param columnIndex the column index
+         *
+         * @return the checkpoint
+         */
         public Checkpoint columnIndex(int columnIndex) {
             this.columnIndex = columnIndex;
             return this;
         }
 
+        /**
+         * Cursor row cursor.
+         *
+         * @return the row cursor
+         */
         public RowCursor cursor() {
             return this.cursor;
         }
 
+        /**
+         * Cursor checkpoint.
+         *
+         * @param cursor the cursor
+         *
+         * @return the checkpoint
+         */
         public Checkpoint cursor(RowCursor cursor) {
             this.cursor = cursor;
             return this;
         }
 
+        /**
+         * State states.
+         *
+         * @return the states
+         */
         public States state() {
             return this.state;
         }
 
+        /**
+         * State checkpoint.
+         *
+         * @param state the state
+         *
+         * @return the checkpoint
+         */
         public Checkpoint state(States state) {
             this.state = state;
             return this;
         }
     }
 
+    /**
+     * The type Json serializer.
+     */
     static final class JsonSerializer extends StdSerializer<RowReader> {
 
         private static final long serialVersionUID = -6213091433480194231L;
 
+        /**
+         * Instantiates a new Json serializer.
+         */
         JsonSerializer() {
             super(RowReader.class);
         }

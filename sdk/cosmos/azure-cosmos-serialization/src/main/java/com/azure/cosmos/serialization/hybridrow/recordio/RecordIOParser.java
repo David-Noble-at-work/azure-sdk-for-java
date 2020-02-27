@@ -16,13 +16,16 @@ import it.unimi.dsi.fastutil.bytes.Byte2ObjectMap;
 import it.unimi.dsi.fastutil.bytes.Byte2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
-
-import org.jetbrains.annotations.NotNull;;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+
 import java.util.zip.CRC32;
 
 import static com.azure.cosmos.base.Preconditions.checkNotNull;
 
+/**
+ * The type Record io parser.
+ */
 public final class RecordIOParser {
 
     private Record record;
@@ -35,9 +38,8 @@ public final class RecordIOParser {
      * @param buffer The buffer to consume
      * @param type Indicates the type of Hybrid Row produced in {@code record}
      * @param record If non-empty, then the body of the next record in the sequence
-     * @param need The smallest number of bytes needed to advanced the parser state further
-     * <p>
-     * It is recommended that this method not be called again until at least this number of bytes are available.
+     * @param need The smallest number of bytes needed to advanced the parser state further <p> It is recommended that
+     * this method not be called again until at least this number of bytes are available.
      *
      * @return {@link Result#SUCCESS} if no error has occurred;, otherwise the {@link Result} of the last error
      * encountered during parsing.
@@ -265,6 +267,9 @@ public final class RecordIOParser {
          */
         RECORD(2);
 
+        /**
+         * The constant BYTES.
+         */
         public static final int BYTES = Integer.BYTES;
 
         private static Int2ObjectMap<ProductionType> mappings;
@@ -275,10 +280,22 @@ public final class RecordIOParser {
             mappings().put(value, this);
         }
 
+        /**
+         * Value int.
+         *
+         * @return the int
+         */
         public int value() {
             return this.value;
         }
 
+        /**
+         * From production type.
+         *
+         * @param value the value
+         *
+         * @return the production type
+         */
         public static ProductionType from(int value) {
             return mappings().get(value);
         }
@@ -300,14 +317,38 @@ public final class RecordIOParser {
      * Note: numerical ordering of these states matters.
      */
     private enum State {
+        /**
+         * The Start.
+         */
         START((byte) 0, "Start: no buffers have yet been provided to the parser"),
+        /**
+         * The Error.
+         */
         ERROR((byte) 1, "Unrecoverable parse error encountered"),
+        /**
+         * The Need segment length.
+         */
         NEED_SEGMENT_LENGTH((byte) 2, "Parsing segment header length"),
+        /**
+         * The Need segment.
+         */
         NEED_SEGMENT((byte) 3, "Parsing segment header"),
+        /**
+         * The Need header.
+         */
         NEED_HEADER((byte) 4, "Parsing HybridRow header"),
+        /**
+         * The Need record.
+         */
         NEED_RECORD((byte) 5, "Parsing record header"),
+        /**
+         * The Need row.
+         */
         NEED_ROW((byte) 6, "Parsing row body");
 
+        /**
+         * The constant BYTES.
+         */
         public static final int BYTES = Byte.SIZE;
 
         private static Byte2ObjectMap<State> mappings;
@@ -320,14 +361,31 @@ public final class RecordIOParser {
             mappings().put(value, this);
         }
 
+        /**
+         * Description string.
+         *
+         * @return the string
+         */
         public String description() {
             return this.description;
         }
 
+        /**
+         * Value byte.
+         *
+         * @return the byte
+         */
         public byte value() {
             return this.value;
         }
 
+        /**
+         * From state.
+         *
+         * @param value the value
+         *
+         * @return the state
+         */
         public static State from(byte value) {
             return mappings().get(value);
         }

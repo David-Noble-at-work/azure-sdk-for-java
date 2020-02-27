@@ -91,7 +91,9 @@ final class Platform {
         return string == null || string.isEmpty();
     }
 
-    /** Calls {@link System#nanoTime()}. */
+    /**
+     * Calls {@link System#nanoTime()}.
+     */
     @SuppressWarnings("GoodTime") // reading system time without TimeSource
     static long systemNanoTime() {
         return System.nanoTime();

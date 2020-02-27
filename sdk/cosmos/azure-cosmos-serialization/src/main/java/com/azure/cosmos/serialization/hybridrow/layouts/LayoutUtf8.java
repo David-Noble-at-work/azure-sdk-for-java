@@ -3,28 +3,35 @@
 
 package com.azure.cosmos.serialization.hybridrow.layouts;
 
+import com.azure.cosmos.core.Out;
+import com.azure.cosmos.core.Utf8String;
 import com.azure.cosmos.serialization.hybridrow.Result;
 import com.azure.cosmos.serialization.hybridrow.RowBuffer;
 import com.azure.cosmos.serialization.hybridrow.RowCursor;
-import com.azure.cosmos.core.Out;
-import com.azure.cosmos.core.Utf8String;
-
-import org.jetbrains.annotations.NotNull;;
+import org.jetbrains.annotations.NotNull;
 
 import static com.azure.cosmos.base.Preconditions.checkArgument;
 import static com.azure.cosmos.base.Preconditions.checkNotNull;
 
+/**
+ * The type Layout utf 8.
+ */
 public final class LayoutUtf8 extends LayoutTypePrimitive<String>
     implements LayoutUtf8Readable, LayoutUtf8Writable {
 
+    /**
+     * Instantiates a new Layout utf 8.
+     */
     public LayoutUtf8() {
         super(LayoutCode.UTF_8, 0);
     }
 
+    @Override
     public boolean isFixed() {
         return false;
     }
 
+    @Override
     @NotNull
     public String name() {
         return "utf8";

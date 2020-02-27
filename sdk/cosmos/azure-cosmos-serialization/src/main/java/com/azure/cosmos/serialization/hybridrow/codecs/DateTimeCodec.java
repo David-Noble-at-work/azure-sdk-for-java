@@ -5,8 +5,8 @@ package com.azure.cosmos.serialization.hybridrow.codecs;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
+import org.jetbrains.annotations.NotNull;
 
-import org.jetbrains.annotations.NotNull;;
 import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
@@ -43,6 +43,9 @@ import static com.azure.cosmos.base.Preconditions.checkNotNull;
  */
 public final class DateTimeCodec {
 
+    /**
+     * The constant BYTES.
+     */
     public static final int BYTES = Long.BYTES;
 
     private static final long FLAGS_MASK = 0xC000000000000000L;
@@ -70,7 +73,9 @@ public final class DateTimeCodec {
      * Decode an {@link OffsetDateTime} serialized like a {@code System.DateTime} by {@code MemoryMarshal.Write}.
      *
      * @param bytes an array containing the serialized value to be decoded.
+     *
      * @return a new {@link OffsetDateTime}.((byte[])((UnpooledHeapByteBuf)in).array)[0]
+     *
      * @see <a href="https://referencesource.microsoft.com/mscorlib/a.html#df6b1eba7461813b">struct DateTime source</a>
      */
     public static OffsetDateTime decode(@NotNull final byte[] bytes) {
@@ -82,7 +87,9 @@ public final class DateTimeCodec {
      * Decode an {@link OffsetDateTime} serialized like a {@code System.DateTime} by {@code MemoryMarshal.Write}.
      *
      * @param in a {@link ByteBuf} containing the serialized value to be decoded.
+     *
      * @return a new {@link OffsetDateTime}.
+     *
      * @see <a href="https://referencesource.microsoft.com/mscorlib/a.html#df6b1eba7461813b">struct DateTime source</a>
      */
     public static OffsetDateTime decode(@NotNull final ByteBuf in) {
@@ -115,7 +122,9 @@ public final class DateTimeCodec {
      * Encode an {@link OffsetDateTime} like a {@code System.DateTime} serialized by {@code MemoryMarshal.Write}.
      *
      * @param dateTime an {@link OffsetDateTime} to be encoded.
+     *
      * @return a new byte array containing the encoded {@code offsetDateTime}.
+     *
      * @see <a href="https://referencesource.microsoft.com/mscorlib/a.html#df6b1eba7461813b">struct DateTime source</a>
      */
     public static byte[] encode(@NotNull final OffsetDateTime dateTime) {
@@ -130,6 +139,7 @@ public final class DateTimeCodec {
      *
      * @param dateTime an {@link OffsetDateTime} to be encoded.
      * @param out an output {@link ByteBuf}.
+     *
      * @see <a href="https://referencesource.microsoft.com/mscorlib/a.html#df6b1eba7461813b">struct DateTime source</a>
      */
     public static void encode(@NotNull final OffsetDateTime dateTime, @NotNull final ByteBuf out) {

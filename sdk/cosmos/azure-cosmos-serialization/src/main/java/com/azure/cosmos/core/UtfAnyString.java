@@ -17,27 +17,39 @@ import static com.azure.cosmos.core.Utf8String.transcodeUtf16;
  */
 public final class UtfAnyString implements CharSequence, Comparable<UtfAnyString> {
 
+    /**
+     * The constant EMPTY.
+     */
     public static final UtfAnyString EMPTY = new UtfAnyString("");
+    /**
+     * The constant NULL.
+     */
     public static final UtfAnyString NULL = new UtfAnyString();
 
     private static final int NULL_HASHCODE = reduceHashCode(5_381, 5_381);
 
     private final CharSequence buffer;
 
+    /**
+     * Instantiates a new {@link UtfAnyString} from a {@link String string} value.
+     *
+     * @param value the value.
+     */
     public UtfAnyString(final String value) {
         this.buffer = value;
     }
 
+    /**
+     * Instantiates a new {@link UtfAnyString} from a {@link Utf8String UTF-8 string} value.
+     *
+     * @param value the value.
+     */
     public UtfAnyString(final Utf8String value) {
         this.buffer = value;
     }
 
     private UtfAnyString() {
         this.buffer = null;
-    }
-
-    private UtfAnyString(final CharSequence sequence) {
-        this.buffer = sequence;
     }
 
     /**
@@ -99,11 +111,19 @@ public final class UtfAnyString implements CharSequence, Comparable<UtfAnyString
         return this.buffer.charAt(index);
     }
 
-    public int compareTo(@NotNull final String other) {
+    /**
+     * Compares this {@link UtfAnyString} to a {@link String} value.
+     *
+     * @param value the {@link String} value.
+     *
+     * @return a negative integer, zero, or a positive integer as this {@link UtfAnyString} is less than, equal to, or
+     * greater than {@code value}.
+     */
+    public int compareTo(@NotNull final String value) {
 
-        checkNotNull(other, "expected non-null other");
+        checkNotNull(value, "expected non-null value");
 
-        if (other == this.buffer) {
+        if (value == this.buffer) {
             return 0;
         }
 
@@ -112,15 +132,23 @@ public final class UtfAnyString implements CharSequence, Comparable<UtfAnyString
         }
 
         return this.buffer instanceof String
-            ? ((String) this.buffer).compareTo(other)
-            : ((Utf8String) this.buffer).compareTo(other);
+            ? ((String) this.buffer).compareTo(value)
+            : ((Utf8String) this.buffer).compareTo(value);
     }
 
-    public int compareTo(@NotNull final Utf8String other) {
+    /**
+     * Compares this {@link UtfAnyString} to a {@link Utf8String} value.
+     *
+     * @param value the {@link Utf8String} value.
+     *
+     * @return a negative integer, zero, or a positive integer as this {@link UtfAnyString} is less than, equal to, or
+     * greater than {@code value}.
+     */
+    public int compareTo(@NotNull final Utf8String value) {
 
-        checkNotNull(other, "expected non-null other");
+        checkNotNull(value, "expected non-null value");
 
-        if (other == this.buffer) {
+        if (value == this.buffer) {
             return 0;
         }
 
@@ -129,10 +157,18 @@ public final class UtfAnyString implements CharSequence, Comparable<UtfAnyString
         }
 
         return this.buffer instanceof String
-            ? -other.compareTo((String) this.buffer)
-            : ((Utf8String) this.buffer).compareTo(other);
+            ? -value.compareTo((String) this.buffer)
+            : ((Utf8String) this.buffer).compareTo(value);
     }
 
+    /**
+     * Compares this {@link UtfAnyString} to another {@link UtfAnyString} instance.
+     *
+     * @param other the {@link String} value.
+     *
+     * @return a negative integer, zero, or a positive integer as this {@link UtfAnyString} is less than, equal to, or
+     * greater than the {@code other} one.
+     */
     @Override
     public int compareTo(@NotNull final UtfAnyString other) {
 
@@ -159,6 +195,13 @@ public final class UtfAnyString implements CharSequence, Comparable<UtfAnyString
         return ((Utf8String) this.buffer).compareTo((Utf8String) other.buffer);
     }
 
+    /**
+     * Returns the empty {@link UtfAnyString}.
+     *
+     * The value returned is a singleton. There is one and only one empty {@link UtfAnyString}.
+     *
+     * @return the empty {@link UtfAnyString}.
+     */
     public static UtfAnyString empty() {
         return EMPTY;
     }
@@ -185,28 +228,49 @@ public final class UtfAnyString implements CharSequence, Comparable<UtfAnyString
         return false;
     }
 
-    public boolean equals(final String other) {
+    /**
+     * Indicates whether the value of some {@link String} is equal to the value of this {@link UtfAnyString}.
+     *
+     * @param value the {@link String} to compare for equality.
+     *
+     * @return {@code true} if the value of this {@link UtfAnyString} equals {@code value}.
+     */
+    public boolean equals(final String value) {
 
         if (null == this.buffer) {
-            return null == other;
+            return null == value;
         }
 
         if (this.buffer instanceof String) {
-            return other.contentEquals(this.buffer);  // skips the type check that String.equals performs
+            return value.contentEquals(this.buffer);  // skips the type check that String.equals performs
         }
 
-        return ((Utf8String) this.buffer).equals(other);
+        return ((Utf8String) this.buffer).equals(value);
     }
 
-    public boolean equals(final Utf8String other) {
+    /**
+     * Indicates whether the value of some {@link Utf8String} is equal to the value of this {@link UtfAnyString}.
+     *
+     * @param value the {@link Utf8String} to compare for equality.
+     *
+     * @return {@code true} if the value of this {@link UtfAnyString} equals {@code value}.
+     */
+    public boolean equals(final Utf8String value) {
 
-        if (null == other) {
+        if (null == value) {
             return null == this.buffer;
         }
 
-        return other.equals(this.buffer);
+        return value.equals(this.buffer);
     }
 
+    /**
+     * Indicates whether some other {@link UtfAnyString} is equal to this one.
+     *
+     * @param other the other.
+     *
+     * @return {@code true} if this {@link UtfAnyString} equals {@code other}.
+     */
     public boolean equals(final UtfAnyString other) {
 
         if (null == other) {
@@ -294,6 +358,11 @@ public final class UtfAnyString implements CharSequence, Comparable<UtfAnyString
         return String.valueOf(this.buffer);
     }
 
+    /**
+     * To utf 16 string.
+     *
+     * @return the string
+     */
     public String toUtf16() {
         if (null == this.buffer) {
             return null;
@@ -301,6 +370,11 @@ public final class UtfAnyString implements CharSequence, Comparable<UtfAnyString
         return this.buffer instanceof String ? (String) this.buffer : this.buffer.toString();
     }
 
+    /**
+     * To utf 8 utf 8 string.
+     *
+     * @return the utf 8 string
+     */
     public Utf8String toUtf8() {
         if (null == this.buffer) {
             return null;

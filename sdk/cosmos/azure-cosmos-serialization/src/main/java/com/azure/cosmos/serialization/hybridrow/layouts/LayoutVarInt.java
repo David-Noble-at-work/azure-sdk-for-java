@@ -3,29 +3,37 @@
 
 package com.azure.cosmos.serialization.hybridrow.layouts;
 
+import com.azure.cosmos.core.Out;
 import com.azure.cosmos.serialization.hybridrow.Result;
 import com.azure.cosmos.serialization.hybridrow.RowBuffer;
 import com.azure.cosmos.serialization.hybridrow.RowCursor;
-import com.azure.cosmos.core.Out;
-
-import org.jetbrains.annotations.NotNull;;
+import org.jetbrains.annotations.NotNull;
 
 import static com.azure.cosmos.base.Preconditions.checkArgument;
 
+/**
+ * The type Layout var int.
+ */
 public final class LayoutVarInt extends LayoutTypePrimitive<Long> {
 
+    /**
+     * Instantiates a new Layout var int.
+     */
     public LayoutVarInt() {
         super(LayoutCode.VAR_INT, 0);
     }
 
+    @Override
     public boolean isFixed() {
         return false;
     }
 
+    @Override
     public boolean isVarint() {
         return true;
     }
 
+    @Override
     @NotNull
     public String name() {
         return "varint";

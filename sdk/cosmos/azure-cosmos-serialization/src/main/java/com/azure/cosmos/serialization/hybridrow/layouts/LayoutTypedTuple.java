@@ -3,18 +3,25 @@
 
 package com.azure.cosmos.serialization.hybridrow.layouts;
 
+import com.azure.cosmos.core.Out;
 import com.azure.cosmos.serialization.hybridrow.Result;
 import com.azure.cosmos.serialization.hybridrow.RowBuffer;
 import com.azure.cosmos.serialization.hybridrow.RowCursor;
-import com.azure.cosmos.core.Out;
-
-import org.jetbrains.annotations.NotNull;;
+import org.jetbrains.annotations.NotNull;
 
 import static com.azure.cosmos.base.Preconditions.checkArgument;
 import static com.azure.cosmos.base.Preconditions.checkNotNull;
 
+/**
+ * Describes the layout of a TypedTuple field.
+ */
 public final class LayoutTypedTuple extends LayoutIndexedScope {
 
+    /**
+     * Initializes a new TypeTuple layout.
+     *
+     * @param immutable {@code true} if the TypedTuple field is immutable and {@code false}, if it is not.
+     */
     public LayoutTypedTuple(boolean immutable) {
         super(
             immutable ? LayoutCode.IMMUTABLE_TYPED_TUPLE_SCOPE : LayoutCode.TYPED_TUPLE_SCOPE, immutable,

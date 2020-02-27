@@ -40,8 +40,6 @@ import static com.azure.cosmos.base.Preconditions.checkNotNull;
 import static com.azure.cosmos.base.Strings.lenientFormat;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
-;
-
 /**
  * The {@link Utf8String} class represents UTF-8 encoded character strings.
  *
@@ -285,7 +283,7 @@ public final class Utf8String implements ByteBufHolder, CharSequence, Comparable
      * A value of {@code null} is returned, if this {@link Utf8String} is {@code null}.
      *
      * @return reference to the read-only {@link ByteBuf} holding the content of this {@link Utf8String}, or
-     * {@code null} if this {@link Utf8String} is null.
+     * {@code null} if this {@link Utf8String} is {@code null}.
      */
     @Nullable
     public ByteBuf content() {
@@ -575,7 +573,6 @@ public final class Utf8String implements ByteBufHolder, CharSequence, Comparable
      * Whether the exception is thrown on sequences containing 4-byte UTF-8 encodings depends on the values of
      * {@code start} and {@code end}. To avoid this exception at the cost of data conversion and memory allocation,
      * convert this {@link Utf8String} to a {@link String} and call {@link String#subSequence}.
-     *
      * @throws IndexOutOfBoundsException if {@code start} or {@code end} are negative, {@code end} is greater than
      * {@link #length()}, {@code start} is greater than {@code end}, or {@link #isNull()} is {@code true}.
      */
@@ -639,6 +636,13 @@ public final class Utf8String implements ByteBufHolder, CharSequence, Comparable
         return Json.toString(this.toUtf16());
     }
 
+    /**
+     * Returns the {@link String} value of this {@link Utf8String}, or {@code null} if the value of this {@link
+     * Utf8String} is {@code null}.
+     *
+     * @return the {@link String} value of this {@link Utf8String}, or {@code null} if the value of this {@link
+     * Utf8String} is {@code null}.
+     */
     @Nullable
     public String toUtf16() {
         return this.utf16String.get();

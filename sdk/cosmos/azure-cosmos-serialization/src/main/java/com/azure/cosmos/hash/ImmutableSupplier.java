@@ -18,8 +18,10 @@ import com.google.common.base.Supplier;
 import com.google.errorprone.annotations.Immutable;
 
 /**
- * Explicitly named subinterface of {@link Supplier} that can be marked {@literal @}{@link
- * Immutable}.
+ * Explicitly named subinterface of {@link Supplier} that can be marked {@literal @}{@link Immutable}*.
+ *
+ * @param <T> the type parameter
  */
 @Immutable
-interface ImmutableSupplier<T> extends Supplier<T> {}
+interface ImmutableSupplier<T> extends Supplier<T> {
+}

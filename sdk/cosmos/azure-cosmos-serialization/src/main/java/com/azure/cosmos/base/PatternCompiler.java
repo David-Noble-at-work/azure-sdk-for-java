@@ -14,14 +14,13 @@
 package com.azure.cosmos.base;
 
 /**
- * Pluggable interface for compiling a regex pattern. By default this package uses the {@code
- * java.util.regex} library, but an alternate implementation can be supplied using the {@link
- * java.util.ServiceLoader} mechanism.
+ * Pluggable interface for compiling a regex pattern. By default this package uses the {@code java.util.regex} library,
+ * but an alternate implementation can be supplied using the {@link java.util.ServiceLoader} mechanism.
  */
 interface PatternCompiler {
     /**
-     * Returns {@code true} if the regex implementation behaves like Perl -- notably, by supporting
-     * possessive quantifiers but also being susceptible to catastrophic backtracking.
+     * Returns {@code true} if the regex implementation behaves like Perl -- notably, by supporting possessive
+     * quantifiers but also being susceptible to catastrophic backtracking.
      */
     boolean isPcreLike();
 

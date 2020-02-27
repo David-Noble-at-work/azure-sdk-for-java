@@ -3,25 +3,32 @@
 
 package com.azure.cosmos.serialization.hybridrow.layouts;
 
+import com.azure.cosmos.core.Out;
 import com.azure.cosmos.serialization.hybridrow.Result;
 import com.azure.cosmos.serialization.hybridrow.RowBuffer;
 import com.azure.cosmos.serialization.hybridrow.RowCursor;
-import com.azure.cosmos.core.Out;
-
-import org.jetbrains.annotations.NotNull;;
+import org.jetbrains.annotations.NotNull;
 
 import static com.azure.cosmos.base.Preconditions.checkArgument;
 
+/**
+ * Describes the layout of an Int8 field
+ */
 public final class LayoutInt8 extends LayoutTypePrimitive<Byte> {
 
+    /**
+     * Initializes a new Int8 layout.
+     */
     public LayoutInt8() {
         super(LayoutCode.INT_8, Byte.BYTES);
     }
 
+    @Override
     public boolean isFixed() {
         return true;
     }
 
+    @Override
     @NotNull
     public String name() {
         return "int8";

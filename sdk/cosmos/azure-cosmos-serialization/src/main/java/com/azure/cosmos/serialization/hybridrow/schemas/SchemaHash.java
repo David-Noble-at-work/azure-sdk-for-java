@@ -5,7 +5,7 @@ package com.azure.cosmos.serialization.hybridrow.schemas;
 
 import com.azure.cosmos.serialization.hybridrow.HashCode128;
 import com.azure.cosmos.serialization.hybridrow.SchemaId;
-import com.azure.cosmos.serialization.hybridrow.internal.Murmur3Hash;
+import com.azure.cosmos.serialization.hybridrow.implementation.Murmur3Hash;
 
 import java.util.Optional;
 import java.util.stream.Stream;
@@ -13,6 +13,9 @@ import java.util.stream.Stream;
 import static com.azure.cosmos.base.Preconditions.checkState;
 import static com.azure.cosmos.base.Strings.lenientFormat;
 
+/**
+ * The type Schema hash.
+ */
 public final class SchemaHash {
 
     /**

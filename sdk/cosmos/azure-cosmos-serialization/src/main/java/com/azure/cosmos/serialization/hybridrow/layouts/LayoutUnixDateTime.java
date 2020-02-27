@@ -3,26 +3,33 @@
 
 package com.azure.cosmos.serialization.hybridrow.layouts;
 
+import com.azure.cosmos.core.Out;
 import com.azure.cosmos.serialization.hybridrow.Result;
 import com.azure.cosmos.serialization.hybridrow.RowBuffer;
 import com.azure.cosmos.serialization.hybridrow.RowCursor;
 import com.azure.cosmos.serialization.hybridrow.UnixDateTime;
-import com.azure.cosmos.core.Out;
-
-import org.jetbrains.annotations.NotNull;;
+import org.jetbrains.annotations.NotNull;
 
 import static com.azure.cosmos.base.Preconditions.checkArgument;
 
+/**
+ * The type Layout unix date time.
+ */
 public final class LayoutUnixDateTime extends LayoutTypePrimitive<UnixDateTime> {
 
+    /**
+     * Instantiates a new Layout unix date time.
+     */
     public LayoutUnixDateTime() {
         super(LayoutCode.UNIX_DATE_TIME, UnixDateTime.BYTES);
     }
 
+    @Override
     public boolean isFixed() {
         return true;
     }
 
+    @Override
     @NotNull
     public String name() {
         return "unixdatetime";

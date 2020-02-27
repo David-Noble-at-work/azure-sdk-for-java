@@ -30,6 +30,7 @@ public class ArrayPropertyType extends ScopePropertyType {
      * Set the type of the elements of the array
      *
      * @param value type of the elements of the array or {@code null}, if the array is untyped.
+     *
      * @return a reference to this {@link ArrayPropertyType}.
      */
     public final ArrayPropertyType items(PropertyType value) {

@@ -3,14 +3,13 @@
 
 package com.azure.cosmos.serialization.hybridrow.layouts;
 
+import com.azure.cosmos.core.Json;
+import com.azure.cosmos.core.Out;
 import com.azure.cosmos.serialization.hybridrow.Result;
 import com.azure.cosmos.serialization.hybridrow.RowBuffer;
 import com.azure.cosmos.serialization.hybridrow.RowCursor;
-import com.azure.cosmos.core.Json;
-import com.azure.cosmos.core.Out;
 import com.fasterxml.jackson.annotation.JsonProperty;
-
-import org.jetbrains.annotations.NotNull;;
+import org.jetbrains.annotations.NotNull;
 
 import static com.azure.cosmos.base.Preconditions.checkArgument;
 import static com.azure.cosmos.base.Preconditions.checkNotNull;
@@ -120,10 +119,24 @@ public abstract class LayoutType /*implements ILayoutType*/ {
         return !this.isFixed();
     }
 
+    /**
+     * Count type argument int.
+     *
+     * @param value the value
+     *
+     * @return the int
+     */
     public int countTypeArgument(@NotNull TypeArgumentList value) {
         return LayoutCode.BYTES;
     }
 
+    /**
+     * From layout code layout type.
+     *
+     * @param code the code
+     *
+     * @return the layout type
+     */
     @NotNull
     public static LayoutType fromLayoutCode(LayoutCode code) {
         LayoutType type = LayoutType.codeIndex[code.value()];
@@ -338,6 +351,15 @@ public abstract class LayoutType /*implements ILayoutType*/ {
         return Result.SUCCESS;
     }
 
+    /**
+     * Read type argument type argument.
+     *
+     * @param buffer the buffer
+     * @param offset the offset
+     * @param lengthInBytes the length in bytes
+     *
+     * @return the type argument
+     */
     @NotNull
     public static TypeArgument readTypeArgument(
         @NotNull final RowBuffer buffer, final int offset, @NotNull final Out<Integer> lengthInBytes) {
@@ -353,6 +375,15 @@ public abstract class LayoutType /*implements ILayoutType*/ {
         return new TypeArgument(type, typeArgs);
     }
 
+    /**
+     * Read type argument list type argument list.
+     *
+     * @param buffer the buffer
+     * @param offset the offset
+     * @param lengthInBytes the length in bytes
+     *
+     * @return the type argument list
+     */
     @NotNull
     public TypeArgumentList readTypeArgumentList(
         @NotNull final RowBuffer buffer, final int offset, @NotNull final Out<Integer> lengthInBytes) {
@@ -384,6 +415,11 @@ public abstract class LayoutType /*implements ILayoutType*/ {
         return Json.toString(this);
     }
 
+    /**
+     * Type arg type argument.
+     *
+     * @return the type argument
+     */
     public TypeArgument typeArg() {
         return this.typeArg;
     }
@@ -400,6 +436,15 @@ public abstract class LayoutType /*implements ILayoutType*/ {
         return (T) this;
     }
 
+    /**
+     * Write type argument int.
+     *
+     * @param buffer the buffer
+     * @param offset the offset
+     * @param value the value
+     *
+     * @return the int
+     */
     public int writeTypeArgument(@NotNull final RowBuffer buffer, int offset, @NotNull final TypeArgumentList value) {
         buffer.writeSparseTypeCode(offset, this.layoutCode());
         return LayoutCode.BYTES;

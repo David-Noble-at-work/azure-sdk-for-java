@@ -3,27 +3,35 @@
 
 package com.azure.cosmos.serialization.hybridrow.layouts;
 
+import com.azure.cosmos.core.Out;
 import com.azure.cosmos.serialization.hybridrow.Result;
 import com.azure.cosmos.serialization.hybridrow.RowBuffer;
 import com.azure.cosmos.serialization.hybridrow.RowCursor;
 import com.azure.cosmos.serialization.hybridrow.codecs.DecimalCodec;
-import com.azure.cosmos.core.Out;
+import org.jetbrains.annotations.NotNull;
 
-import org.jetbrains.annotations.NotNull;;
 import java.math.BigDecimal;
 
 import static com.azure.cosmos.base.Preconditions.checkArgument;
 
+/**
+ * The type Layout decimal.
+ */
 public final class LayoutDecimal extends LayoutTypePrimitive<BigDecimal> {
 
+    /**
+     * Instantiates a new Layout decimal.
+     */
     public LayoutDecimal() {
         super(LayoutCode.DECIMAL, DecimalCodec.BYTES);
     }
 
+    @Override
     public boolean isFixed() {
         return true;
     }
 
+    @Override
     @NotNull
     public String name() {
         return "decimal";

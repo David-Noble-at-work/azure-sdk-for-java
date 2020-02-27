@@ -20,13 +20,13 @@ import com.google.common.hash.Funnels;
 import java.io.Serializable;
 
 /**
- * An object which can send data from an object of type {@code T} into a {@code PrimitiveSink}.
- * Implementations for common types can be found in {@link Funnels}.
+ * An object which can send data from an object of type {@code T} into a {@code PrimitiveSink}. Implementations for
+ * common types can be found in {@link Funnels}.
  *
  * <p>Note that serialization of {@linkplain BloomFilter bloom filters} requires the proper
- * serialization of funnels. When possible, it is recommended that funnels be implemented as a
- * single-element enum to maintain serialization guarantees. See Effective Java (2nd Edition), Item
- * 3: "Enforce the singleton property with a private constructor or an enum type". For example:
+ * serialization of funnels. When possible, it is recommended that funnels be implemented as a single-element enum to
+ * maintain serialization guarantees. See Effective Java (2nd Edition), Item 3: "Enforce the singleton property with a
+ * private constructor or an enum type". For example:
  *
  * <pre>{@code
  * public enum PersonFunnel implements Funnel<Person> {
@@ -37,18 +37,23 @@ import java.io.Serializable;
  *         .putInt(person.getAge());
  *   }
  * }
- * }</pre>
+ * }*</pre>
+ *
+ * @param <T> the type parameter
  *
  * @author Dimitris Andreou
  * @since 11.0
  */
 public interface Funnel<T> extends Serializable {
 
-  /**
-   * Sends a stream of data from the {@code from} object into the sink {@code into}. There is no
-   * requirement that this data be complete enough to fully reconstitute the object later.
-   *
-   * @since 12.0 (in Guava 11.0, {@code PrimitiveSink} was named {@code Sink})
-   */
-  void funnel(T from, PrimitiveSink into);
+    /**
+     * Sends a stream of data from the {@code from} object into the sink {@code into}. There is no requirement that this
+     * data be complete enough to fully reconstitute the object later.
+     *
+     * @param from the from
+     * @param into the into
+     *
+     * @since 12.0 (in Guava 11.0, {@code PrimitiveSink} was named {@code Sink})
+     */
+    void funnel(T from, PrimitiveSink into);
 }

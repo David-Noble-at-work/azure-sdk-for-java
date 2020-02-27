@@ -3,24 +3,41 @@
 
 package com.azure.cosmos.serialization.hybridrow.layouts;
 
+import com.azure.cosmos.core.Out;
 import com.azure.cosmos.serialization.hybridrow.Result;
 import com.azure.cosmos.serialization.hybridrow.RowBuffer;
 import com.azure.cosmos.serialization.hybridrow.RowCursor;
 import com.azure.cosmos.serialization.hybridrow.RowCursors;
 import com.azure.cosmos.serialization.hybridrow.RowOptions;
-import com.azure.cosmos.core.Out;
-
-import org.jetbrains.annotations.NotNull;;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import static com.azure.cosmos.base.Preconditions.checkNotNull;
 
+/**
+ * Describes the layout of a UniqueScope field.
+ */
 public abstract class LayoutUniqueScope extends LayoutIndexedScope implements ILayoutType {
 
+    /**
+     * Initializes a new UniqueScope layout.
+     *
+     * @param code the code
+     * @param immutable {@code true} if the UniqueScope field is immutable and {@code false}, if it is not.
+     * @param isSizedScope the is sized scope
+     * @param isTypedScope the is typed scope
+     */
     protected LayoutUniqueScope(LayoutCode code, boolean immutable, boolean isSizedScope, boolean isTypedScope) {
         super(code, immutable, isSizedScope, false, true, isTypedScope);
     }
 
+    /**
+     * Field type type argument.
+     *
+     * @param scope the scope
+     *
+     * @return the type argument
+     */
     @NotNull
     public abstract TypeArgument fieldType(@NotNull RowCursor scope);
 
@@ -93,11 +110,9 @@ public abstract class LayoutUniqueScope extends LayoutIndexedScope implements IL
      * @param destinationScope The parent unique indexed edit into which the field should be moved.
      * @param sourceEdit The field to be moved.
      *
-     * @return {@link Result#SUCCESS} if the field is moved; an error {@link Result} otherwise.
-     * <p>
-     * The source field MUST be a field whose type arguments match the element type of the destination unique index.
-     * <p>
-     * The source field is deleted whether the move succeeds or fails.
+     * @return {@link Result#SUCCESS} if the field is moved; an error {@link Result} otherwise. <p> The source field
+     * MUST be a field whose type arguments match the element type of the destination unique index. <p> The source field
+     * is deleted whether the move succeeds or fails.
      */
     @NotNull
     public final Result moveField(

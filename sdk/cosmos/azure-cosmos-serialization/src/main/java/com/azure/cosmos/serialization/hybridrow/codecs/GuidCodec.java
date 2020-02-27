@@ -5,8 +5,8 @@ package com.azure.cosmos.serialization.hybridrow.codecs;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
+import org.jetbrains.annotations.NotNull;
 
-import org.jetbrains.annotations.NotNull;;
 import java.util.UUID;
 
 import static com.azure.cosmos.base.Preconditions.checkArgument;
@@ -15,8 +15,8 @@ import static com.azure.cosmos.base.Preconditions.checkNotNull;
 /**
  * Provides static methods for encoding and decoding {@link UUID}s serialized as {@code System.Guid}s
  * <p>
- * {@link UUID}s are serialized like {@code System.Guid}s read and written by {@code MemoryMarshal.Read} and
- * {@code MemoryMarshal.Write}.
+ * {@link UUID}s are serialized like {@code System.Guid}s read and written by {@code MemoryMarshal.Read} and {@code
+ * MemoryMarshal.Write}.
  *
  * <table summary="Layout of field value">
  *     <tbody>
@@ -47,7 +47,13 @@ import static com.azure.cosmos.base.Preconditions.checkNotNull;
  */
 public final class GuidCodec {
 
+    /**
+     * The constant BYTES.
+     */
     public static final int BYTES = 2 * Long.BYTES;
+    /**
+     * The constant EMPTY.
+     */
     public static final UUID EMPTY = new UUID(0L, 0L);
 
     private GuidCodec() {
@@ -57,6 +63,7 @@ public final class GuidCodec {
      * Decode a {@link UUID} serialized like a {@code System.Guid} by {@code MemoryMarshal.Write}.
      *
      * @param bytes an array containing the serialized {@link UUID} to be decoded.
+     *
      * @return a new {@link UUID}.
      */
     public static UUID decode(@NotNull final byte[] bytes) {
@@ -68,6 +75,7 @@ public final class GuidCodec {
      * Decode a {@link UUID} serialized like a {@code System.Guid} by {@code MemoryMarshal.Write}.
      *
      * @param in a {@link ByteBuf} containing the serialized {@link UUID} to be decoded.
+     *
      * @return a new {@link UUID}.
      */
     public static UUID decode(@NotNull final ByteBuf in) {
@@ -88,6 +96,7 @@ public final class GuidCodec {
      * Encodes a {@link UUID} like a {@code System.Guid} serialized by {@code MemoryMarshal.Write}.
      *
      * @param uuid a {@link UUID} to be encoded.
+     *
      * @return a new byte array containing the encoded.
      */
     public static byte[] encode(final UUID uuid) {

@@ -19,8 +19,8 @@ import org.jetbrains.annotations.TestOnly;
 import java.util.BitSet;
 
 /**
- * An immutable version of CharMatcher for smallish sets of characters that uses a hash table with
- * linear probing to check for matches.
+ * An immutable version of CharMatcher for smallish sets of characters that uses a hash table with linear probing to
+ * check for matches.
  *
  * @author Christopher Swenson
  */
@@ -69,9 +69,9 @@ final class SmallCharMatcher extends NamedFastMatcher {
     // of dependencies.
 
     /**
-     * Returns an array size suitable for the backing array of a hash table that uses open addressing
-     * with linear probing in its implementation. The returned size is the smallest power of two that
-     * can hold setSize elements with the desired load factor.
+     * Returns an array size suitable for the backing array of a hash table that uses open addressing with linear
+     * probing in its implementation. The returned size is the smallest power of two that can hold setSize elements with
+     * the desired load factor.
      */
     @TestOnly
     static int chooseTableSize(int setSize) {

@@ -3,14 +3,14 @@
 
 package com.azure.cosmos.serialization.hybridrow.schemas;
 
+import com.azure.cosmos.core.Json;
 import com.azure.cosmos.serialization.hybridrow.SchemaId;
 import com.azure.cosmos.serialization.hybridrow.layouts.Layout;
 import com.azure.cosmos.serialization.hybridrow.layouts.LayoutCompiler;
-import com.azure.cosmos.core.Json;
 import com.fasterxml.jackson.annotation.JsonProperty;
-
-import org.jetbrains.annotations.NotNull;;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -80,7 +80,8 @@ public final class Schema {
      * Comments are for documentary purpose only and do not affect the schema at runtime.
      *
      * @param value a comment on this {@linkplain Schema schema} or {@code null} to remove the comment, if any, on this
-     *              {@linkplain Schema schema}.
+     * {@linkplain Schema schema}.
+     *
      * @return a reference to this {@linkplain Schema schema}.
      */
     public Schema comment(String value) {
@@ -92,6 +93,7 @@ public final class Schema {
      * Compiles this logical schema into a physical layout that can be used to read and write rows.
      *
      * @param namespace The namespace within which this schema is defined.
+     *
      * @return The layout for the schema.
      */
     public Layout compile(Namespace namespace) {
@@ -121,6 +123,7 @@ public final class Schema {
      * can only contain alpha-numeric characters and underscores.
      *
      * @param value a name for this {@linkplain Schema schema}.
+     *
      * @return a reference to this {@linkplain Schema schema}.
      */
     @NotNull
@@ -133,12 +136,19 @@ public final class Schema {
     /**
      * Schema-wide options.
      *
-     * @return schema-wide options.
+     * @return schema -wide options.
      */
     public SchemaOptions options() {
         return this.options;
     }
 
+    /**
+     * Options schema.
+     *
+     * @param value the value
+     *
+     * @return the schema
+     */
     public Schema options(SchemaOptions value) {
         this.options = value;
         return this;
@@ -148,6 +158,7 @@ public final class Schema {
      * Parse a JSON fragment and return a schema.
      *
      * @param value The JSON string value to parse
+     *
      * @return A logical schema, if the value parses.
      */
     public static Optional<Schema> parse(String value) {
@@ -167,6 +178,13 @@ public final class Schema {
         return this.partitionKeys;
     }
 
+    /**
+     * Partition keys schema.
+     *
+     * @param value the value
+     *
+     * @return the schema
+     */
     public Schema partitionKeys(@Nullable List<PartitionKey> value) {
         this.partitionKeys = value != null ? value : Collections.emptyList();
         return this;
@@ -184,6 +202,13 @@ public final class Schema {
         return this.primaryKeys;
     }
 
+    /**
+     * Primary sort keys schema.
+     *
+     * @param value the value
+     *
+     * @return the schema
+     */
     public Schema primarySortKeys(ArrayList<PrimarySortKey> value) {
         this.primaryKeys = value != null ? value : Collections.emptyList();
         return this;
@@ -201,6 +226,13 @@ public final class Schema {
         return this.properties;
     }
 
+    /**
+     * Properties schema.
+     *
+     * @param value the value
+     *
+     * @return the schema
+     */
     public Schema properties(List<Property> value) {
         this.properties = value != null ? value : Collections.emptyList();
         return this;
@@ -217,6 +249,13 @@ public final class Schema {
         return this.id;
     }
 
+    /**
+     * Schema id schema.
+     *
+     * @param value the value
+     *
+     * @return the schema
+     */
     public Schema schemaId(SchemaId value) {
         this.id = value;
         return this;
@@ -236,6 +275,13 @@ public final class Schema {
         return this.staticKeys;
     }
 
+    /**
+     * Static keys schema.
+     *
+     * @param value the value
+     *
+     * @return the schema
+     */
     public Schema staticKeys(List<StaticKey> value) {
         this.staticKeys = value != null ? value : Collections.emptyList();
         return this;
@@ -262,6 +308,13 @@ public final class Schema {
         return this.type;
     }
 
+    /**
+     * Type schema.
+     *
+     * @param value the value
+     *
+     * @return the schema
+     */
     public Schema type(TypeKind value) {
         this.type = value;
         return this;
@@ -276,6 +329,13 @@ public final class Schema {
         return this.version;
     }
 
+    /**
+     * Version schema.
+     *
+     * @param value the value
+     *
+     * @return the schema
+     */
     public Schema version(SchemaLanguageVersion value) {
         this.version = value;
         return this;

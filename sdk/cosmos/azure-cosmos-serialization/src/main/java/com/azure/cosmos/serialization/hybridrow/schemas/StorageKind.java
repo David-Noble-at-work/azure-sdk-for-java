@@ -48,6 +48,9 @@ public enum StorageKind {
      */
     VARIABLE(2, "variable");
 
+    /**
+     * The number of bytes in a {@link StorageKind} value.
+     */
     public static final int BYTES = Integer.BYTES;
 
     private static final Supplier<Int2ReferenceMap<StorageKind>> mappings = Suppliers.memoize(() -> {
@@ -65,10 +68,22 @@ public enum StorageKind {
         this.value = value;
     }
 
+    /**
+     * Friendly name string.
+     *
+     * @return the string
+     */
     public String friendlyName() {
         return this.friendlyName;
     }
 
+    /**
+     * From storage kind.
+     *
+     * @param value the value
+     *
+     * @return the storage kind
+     */
     public static StorageKind from(int value) {
         return mappings.get().get(value);
     }
@@ -78,6 +93,11 @@ public enum StorageKind {
         return this.friendlyName;
     }
 
+    /**
+     * Value int.
+     *
+     * @return the int
+     */
     public int value() {
         return this.value;
     }

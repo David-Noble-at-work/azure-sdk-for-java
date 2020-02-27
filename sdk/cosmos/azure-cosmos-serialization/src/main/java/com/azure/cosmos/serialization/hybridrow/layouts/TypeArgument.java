@@ -5,13 +5,18 @@ package com.azure.cosmos.serialization.hybridrow.layouts;
 
 import com.azure.cosmos.core.Json;
 import com.fasterxml.jackson.annotation.JsonProperty;
-
-import org.jetbrains.annotations.NotNull;;
+import org.jetbrains.annotations.NotNull;
 
 import static com.azure.cosmos.base.Preconditions.checkNotNull;
 
+/**
+ * The type Type argument.
+ */
 public final class TypeArgument {
 
+    /**
+     * The constant NONE.
+     */
     public static final TypeArgument NONE = new TypeArgument();
 
     private final LayoutType type;
@@ -56,6 +61,13 @@ public final class TypeArgument {
         return other.getClass() == TypeArgument.class && this.equals((TypeArgument) other);
     }
 
+    /**
+     * Equals boolean.
+     *
+     * @param other the other
+     *
+     * @return the boolean
+     */
     public boolean equals(TypeArgument other) {
         return this.type.equals(other.type) && this.typeArgs.equals(other.typeArgs);
     }

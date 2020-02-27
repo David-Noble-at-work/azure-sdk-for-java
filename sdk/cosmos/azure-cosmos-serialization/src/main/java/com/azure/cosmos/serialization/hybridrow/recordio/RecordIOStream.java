@@ -23,12 +23,15 @@ import java.util.function.Function;
 import static com.azure.cosmos.base.Preconditions.checkNotNull;
 import static com.azure.cosmos.base.Preconditions.checkState;
 
-;
-
+/**
+ * Provides static methods for HybridRow record-based IO.
+ */
 public final class RecordIOStream {
 
+    private RecordIOStream() {
+    }
+
     private static final int INITIAL_CAPACITY = 1024;
-    private static final CompletableFuture<Result> SUCCESS = CompletableFuture.completedFuture(Result.SUCCESS);
 
     /**
      * Reads an entire stream of records.
@@ -42,8 +45,8 @@ public final class RecordIOStream {
      * @return {@link Result#SUCCESS Success} if the {@code inputStream} is parsed without issue; an error {@link Result
      * result} otherwise.
      */
-    public static @NotNull
-    CompletableFuture<Result> readRecordIOAsync(
+    @NotNull
+    public static CompletableFuture<Result> readRecordIOAsync(
         @NotNull InputStream inputStream,
         @NotNull Function<ByteBuf, Result> visitRecord) {
         return readRecordIOAsync(inputStream, visitRecord, null, null);
@@ -66,25 +69,43 @@ public final class RecordIOStream {
      * @return {@link Result#SUCCESS Success} if the {@code inputStream} is parsed without issue; an error {@link Result
      * result} otherwise.
      */
-    public static @NotNull
-    CompletableFuture<Result> readRecordIOAsync(
+    @NotNull
+    public static CompletableFuture<Result> readRecordIOAsync(
         @NotNull final InputStream inputStream,
         @NotNull final Function<ByteBuf, Result> visitRecord,
         @Nullable final Function<ByteBuf, Result> visitSegment) {
-        return readRecordIOAsync(inputStream, visitRecord, visitSegment, null);
+        return readRecordIOAsync(inputStream, visitRecord, visitSegment, Unpooled.buffer(INITIAL_CAPACITY));
     }
 
-    public static @NotNull
-    CompletableFuture<Result> readRecordIOAsync(
+    /**
+     * Reads an entire stream of records.
+     *
+     * @param inputStream The stream from which to read records.
+     * @param visitRecord A function that is called once for each record.
+     * <p>
+     * The function receives a {@link ByteBuf} containing the record body's row buffer. If the function returns an error
+     * then the sequence is aborted.
+     * @param visitSegment An (optional) function that is called once for each segment header.
+     * <p>
+     * If the function is not provided then segment headers are parsed but skipped over. Otherwise--if the function is
+     * provided--it is passed a {@link ByteBuf} containing the segment header's row buffer. If the function returns an
+     * error value then the sequence is aborted.
+     * @param buffer the buffer.
+     *
+     * @return {@link Result#SUCCESS Success} if the {@code inputStream} is parsed without issue; an error {@link Result
+     * result} otherwise.
+     */
+    @NotNull
+    public static CompletableFuture<Result> readRecordIOAsync(
         @NotNull InputStream inputStream,
         @NotNull Function<ByteBuf, Result> visitRecord,
         @Nullable Function<ByteBuf, Result> visitSegment,
-        @Nullable ByteBuf buffer) {
+        @NotNull ByteBuf buffer) {
 
         checkNotNull(inputStream, "expected non-null inputStream");
         checkNotNull(visitRecord, "expected non-null visitRecord");
+        checkNotNull(buffer, "expected non-null buffer");
 
-        buffer = buffer != null ? buffer : Unpooled.buffer(INITIAL_CAPACITY);
         Out<Integer> need = new Out<Integer>().set(0);
         RecordIOParser parser = null;
 

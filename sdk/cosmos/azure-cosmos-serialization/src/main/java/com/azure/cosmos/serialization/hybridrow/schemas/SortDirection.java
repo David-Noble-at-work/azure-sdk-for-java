@@ -24,6 +24,9 @@ public enum SortDirection {
      */
     DESCENDING(1);
 
+    /**
+     * The constant BYTEST.
+     */
     public static final int BYTEST = Integer.BYTES;
 
     private static final Supplier<Int2ReferenceMap<SortDirection>> mappings = Suppliers.memoize(() -> {
@@ -39,10 +42,22 @@ public enum SortDirection {
         this.value = value;
     }
 
+    /**
+     * From sort direction.
+     *
+     * @param value the value
+     *
+     * @return the sort direction
+     */
     public static SortDirection from(int value) {
         return mappings.get().get(value);
     }
 
+    /**
+     * Value int.
+     *
+     * @return the int
+     */
     public int value() {
         return this.value;
     }

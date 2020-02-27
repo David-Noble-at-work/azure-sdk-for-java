@@ -3,19 +3,22 @@
 
 package com.azure.cosmos.serialization.hybridrow.schemas;
 
+import com.azure.cosmos.base.Preconditions;
 import com.azure.cosmos.core.Json;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.azure.cosmos.base.Preconditions;
+import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.jetbrains.annotations.NotNull;;
 import java.io.File;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+/**
+ * The type Namespace.
+ */
 public class Namespace {
 
     private static final Logger logger = LoggerFactory.getLogger(Json.class);
@@ -42,6 +45,7 @@ public class Namespace {
      * Sets the fully qualified name of the namespace.
      *
      * @param value fully qualified name of the {@linkplain Namespace namespace}.
+     *
      * @return a reference to this {@linkplain Namespace namespace}.
      */
     public final Namespace name(String value) {
@@ -53,6 +57,7 @@ public class Namespace {
      * Parse a JSON document and return a full namespace.
      *
      * @param file The JSON file to parse.
+     *
      * @return A namespace containing a set of logical schemas.
      */
     public static Optional<Namespace> parse(File file) {
@@ -65,6 +70,7 @@ public class Namespace {
      * Parse a JSON document and return a full namespace.
      *
      * @param stream The JSON input stream to parse.
+     *
      * @return A namespace containing a set of logical schemas.
      */
     public static Optional<Namespace> parse(InputStream stream) {
@@ -81,6 +87,7 @@ public class Namespace {
      * Parse a JSON document and return a full namespace.
      *
      * @param value The JSON text to parse.
+     *
      * @return A namespace containing a set of logical schemas.
      */
     public static Optional<Namespace> parse(String value) {
@@ -102,6 +109,13 @@ public class Namespace {
         return this.schemas;
     }
 
+    /**
+     * Schemas namespace.
+     *
+     * @param value the value
+     *
+     * @return the namespace
+     */
     public final Namespace schemas(ArrayList<Schema> value) {
         this.schemas = value != null ? value : new ArrayList<Schema>();
         return this;
@@ -121,7 +135,8 @@ public class Namespace {
      * Sets the version of the HybridRow Schema Definition Language used to encode this namespace.
      *
      * @param value {linkplain SchemaLanguageVersion version} of the HybridRow Schema Definition Language that will be
-     *              used to encode this {@linkplain Namespace namespace}.
+     * used to encode this {@linkplain Namespace namespace}.
+     *
      * @return a reference to this {@linkplain Namespace namespace}.
      */
     public final Namespace version(@NotNull SchemaLanguageVersion value) {

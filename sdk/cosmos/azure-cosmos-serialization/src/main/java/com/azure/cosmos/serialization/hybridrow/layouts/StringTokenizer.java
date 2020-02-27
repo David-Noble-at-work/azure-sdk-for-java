@@ -13,6 +13,9 @@ import java.util.Optional;
 import static com.azure.cosmos.base.Preconditions.checkArgument;
 import static com.azure.cosmos.base.Preconditions.checkState;
 
+/**
+ * The type String tokenizer.
+ */
 public final class StringTokenizer {
 
     private final HashMap<String, StringToken> stringTokens;
@@ -44,6 +47,7 @@ public final class StringTokenizer {
      * If the string already has a token, that token is returned instead.
      *
      * @param path The string to assign a new token.
+     *
      * @return The token assigned to the string.
      */
     public StringToken add(Utf8String path) {
@@ -65,6 +69,7 @@ public final class StringTokenizer {
      * Looks up a token's corresponding string.
      *
      * @param token The token to look up.
+     *
      * @return True if successful, false otherwise.
      */
     public Optional<Utf8String> tryFindString(long token) {
@@ -75,6 +80,7 @@ public final class StringTokenizer {
      * Looks up a string's corresponding token.
      *
      * @param path The string to look up.
+     *
      * @return {@code true} if successful, {@code false} otherwise.
      */
     public Optional<StringToken> tryFindToken(UtfAnyString path) {

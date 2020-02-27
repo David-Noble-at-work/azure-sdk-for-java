@@ -36,6 +36,7 @@ public class UdtPropertyType extends ScopePropertyType {
      * The UDT schema MUST be defined within the same {@link Namespace} as the schema that references it.
      *
      * @param value the name of the UDT schema defining the structure of a nested row.
+     *
      * @return a reference to this {@link UdtPropertyType}.
      */
     public final UdtPropertyType name(String value) {
@@ -66,6 +67,7 @@ public class UdtPropertyType extends ScopePropertyType {
      * specific version referenced MUST be provided.
      *
      * @param value the unique identifier of the UDT schema defining the structure of a nested row or {@code null}.
+     *
      * @return a reference to this {@link UdtPropertyType}.
      */
     public final UdtPropertyType schemaId(SchemaId value) {

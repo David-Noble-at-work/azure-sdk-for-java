@@ -5,14 +5,17 @@ package com.azure.cosmos.serialization.hybridrow.layouts;
 
 import com.azure.cosmos.serialization.hybridrow.SchemaId;
 import com.azure.cosmos.serialization.hybridrow.schemas.StorageKind;
+import org.jetbrains.annotations.NotNull;
 
-import org.jetbrains.annotations.NotNull;;
 import java.util.ArrayList;
 import java.util.Stack;
 
 import static com.azure.cosmos.base.Preconditions.checkArgument;
 import static com.azure.cosmos.base.Preconditions.checkNotNull;
 
+/**
+ * The type Layout builder.
+ */
 public final class LayoutBuilder {
 
     private final String name;
@@ -27,6 +30,12 @@ public final class LayoutBuilder {
     private ArrayList<LayoutColumn> varColumns;
     private int varCount;
 
+    /**
+     * Instantiates a new Layout builder.
+     *
+     * @param name the name
+     * @param schemaId the schema id
+     */
     // [ <present bits>
     //   <bool bits>
     //   <fixed_1> <fixed_2> ... <fixed_n>
@@ -39,11 +48,22 @@ public final class LayoutBuilder {
         this.reset();
     }
 
+    /**
+     * End object scope.
+     */
     public void endObjectScope() {
         checkArgument(this.scope.size() > 0);
         this.scope.pop();
     }
 
+    /**
+     * Add fixed column.
+     *
+     * @param path the path
+     * @param type the type
+     * @param nullable the nullable
+     * @param length the length
+     */
     public void addFixedColumn(@NotNull String path, @NotNull LayoutType type, boolean nullable, int length) {
 
         checkNotNull(path, "expected non-null path");
@@ -82,6 +102,12 @@ public final class LayoutBuilder {
         this.fixedColumns.add(column);
     }
 
+    /**
+     * Add object scope.
+     *
+     * @param path the path
+     * @param type the type
+     */
     public void addObjectScope(String path, LayoutType type) {
 
         LayoutColumn column = new LayoutColumn(path, type, TypeArgumentList.EMPTY, StorageKind.SPARSE, this.parent(),
@@ -92,6 +118,12 @@ public final class LayoutBuilder {
         this.scope.push(column);
     }
 
+    /**
+     * Add sparse column.
+     *
+     * @param path the path
+     * @param type the type
+     */
     public void addSparseColumn(@NotNull final String path, @NotNull final LayoutType type) {
 
         checkNotNull(path, "expected non-null path");
@@ -105,6 +137,13 @@ public final class LayoutBuilder {
         this.sparseColumns.add(column);
     }
 
+    /**
+     * Add typed scope.
+     *
+     * @param path the path
+     * @param type the type
+     * @param typeArgs the type args
+     */
     public void addTypedScope(
         @NotNull final String path, @NotNull final LayoutType type, @NotNull final TypeArgumentList typeArgs) {
 
@@ -116,6 +155,13 @@ public final class LayoutBuilder {
         this.sparseColumns.add(column);
     }
 
+    /**
+     * Add variable column.
+     *
+     * @param path the path
+     * @param type the type
+     * @param length the length
+     */
     public void addVariableColumn(String path, LayoutType type, int length) {
 
         checkNotNull(path, "expected non-null path");
@@ -131,6 +177,11 @@ public final class LayoutBuilder {
         this.varColumns.add(column);
     }
 
+    /**
+     * Build layout.
+     *
+     * @return the layout
+     */
     public Layout build() {
 
         // Compute offset deltas. Offset boolean values by the present byte count and fixed fields by the sum of the

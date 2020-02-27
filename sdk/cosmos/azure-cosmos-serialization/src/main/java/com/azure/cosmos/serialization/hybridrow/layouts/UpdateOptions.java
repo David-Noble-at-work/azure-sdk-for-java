@@ -15,14 +15,16 @@ import java.util.function.Supplier;
  */
 public enum UpdateOptions {
 
+    /**
+     * None update options.
+     */
     NONE(0),
 
     /**
      * Overwrite an existing value.
      * <p>
-     * An existing value is assumed to exist at the offset provided.  The existing value is
-     * replaced inline.  The remainder of the row is resized to accomodate either an increase or decrease
-     * in required space.
+     * An existing value is assumed to exist at the offset provided.  The existing value is replaced inline.  The
+     * remainder of the row is resized to accomodate either an increase or decrease in required space.
      */
     UPDATE(1),
 
@@ -44,11 +46,14 @@ public enum UpdateOptions {
     /**
      * Insert a new value moving existing values to the right.
      * <p>
-     * Within an array scope, inserts a new value immediately at the index moving all subsequent
-     * items to the right. In any other scope behaves the same as {@link #UPSERT}.
+     * Within an array scope, inserts a new value immediately at the index moving all subsequent items to the right. In
+     * any other scope behaves the same as {@link #UPSERT}.
      */
     INSERT_AT(4);
 
+    /**
+     * The constant BYTES.
+     */
     public static final int BYTES = Integer.BYTES;
 
     private static final Supplier<Int2ReferenceMap<UpdateOptions>> mappings = Suppliers.memoize(() -> {
@@ -64,10 +69,22 @@ public enum UpdateOptions {
         this.value = value;
     }
 
+    /**
+     * From update options.
+     *
+     * @param value the value
+     *
+     * @return the update options
+     */
     public static UpdateOptions from(int value) {
         return mappings.get().get(value);
     }
 
+    /**
+     * Value int.
+     *
+     * @return the int
+     */
     public int value() {
         return this.value;
     }

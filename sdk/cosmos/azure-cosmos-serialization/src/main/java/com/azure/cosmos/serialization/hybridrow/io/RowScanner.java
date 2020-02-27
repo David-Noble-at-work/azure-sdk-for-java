@@ -14,8 +14,8 @@ import com.azure.cosmos.serialization.hybridrow.layouts.LayoutType;
 import com.azure.cosmos.serialization.hybridrow.schemas.Namespace;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
+import org.jetbrains.annotations.NotNull;
 
-import org.jetbrains.annotations.NotNull;;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -34,6 +34,9 @@ import static com.azure.cosmos.base.Preconditions.checkState;
 import static com.azure.cosmos.base.Strings.lenientFormat;
 import static java.util.Objects.requireNonNull;
 
+/**
+ * The type Row scanner.
+ */
 public final class RowScanner implements AutoCloseable, Iterable<DataItem> {
 
     private final AtomicBoolean closed;
@@ -126,6 +129,15 @@ public final class RowScanner implements AutoCloseable, Iterable<DataItem> {
         return RowScanner.open(namespace, new File(requireNonNull(path, "expected non-null path")));
     }
 
+    /**
+     * Visit result.
+     *
+     * @param <TContext> the type parameter
+     * @param accept the accept
+     * @param context the context
+     *
+     * @return the result
+     */
     public <TContext> Result visit(BiFunction<DataItem, TContext, Result> accept, TContext context) {
 
         checkState(!this.closed.get(), "RowScanner is closed");
@@ -319,15 +331,35 @@ public final class RowScanner implements AutoCloseable, Iterable<DataItem> {
 
     private static class DataItemIterator implements Iterator<DataItem> {
 
+        /**
+         * The Nodes.
+         */
         final Deque<Utf8String> nodes;
+        /**
+         * The Readers.
+         */
         final Deque<RowReader> readers;
 
+        /**
+         * The Value.
+         */
         @SuppressWarnings("rawtypes")
         final Out value;
 
+        /**
+         * The Data item.
+         */
         DataItem dataItem;
+        /**
+         * The Reader.
+         */
         RowReader reader;
 
+        /**
+         * Instantiates a new Data item iterator.
+         *
+         * @param reader the reader
+         */
         DataItemIterator(RowReader reader) {
             this.readers = new ArrayDeque<>();
             this.nodes = new ArrayDeque<>();
@@ -560,20 +592,41 @@ public final class RowScanner implements AutoCloseable, Iterable<DataItem> {
         private final TContext context;
         private final Deque<Utf8String> nodes;
 
+        /**
+         * Instantiates a new Data item visitor.
+         *
+         * @param accept the accept
+         * @param context the context
+         */
         DataItemVisitor(BiFunction<DataItem, TContext, Result> accept, TContext context) {
             this.accept = accept;
             this.context = context;
             this.nodes = new ArrayDeque<>();
         }
 
+        /**
+         * Accept bi function.
+         *
+         * @return the bi function
+         */
         BiFunction<DataItem, TContext, Result> accept() {
             return this.accept;
         }
 
+        /**
+         * Context t context.
+         *
+         * @return the t context
+         */
         TContext context() {
             return this.context;
         }
 
+        /**
+         * Nodes deque.
+         *
+         * @return the deque
+         */
         Deque<Utf8String> nodes() {
             return this.nodes;
         }

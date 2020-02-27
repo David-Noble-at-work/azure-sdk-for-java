@@ -56,6 +56,16 @@ public final class HybridRowHeader {
         return this.version;
     }
 
+    /**
+     * Extracts a {@link HybridRowHeader HybridRow header} from a {@link ByteBuf}.
+     * <p>
+     * The decode operation starts at the current reader index and increases the reader index by the length of the
+     * {@link HybridRowHeader HybridRow header}.
+     *
+     * @param buffer the {@link ByteBuf} to decode.
+     *
+     * @return a new {@link HybridRowHeader} instance.
+     */
     @NotNull
     public static HybridRowHeader decode(@NotNull final ByteBuf buffer) {
 

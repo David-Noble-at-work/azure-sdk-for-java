@@ -30,6 +30,13 @@ public class PrimitivePropertyType extends PropertyType {
         return this.length;
     }
 
+    /**
+     * Length primitive property type.
+     *
+     * @param value the value
+     *
+     * @return the primitive property type
+     */
     public final PrimitivePropertyType length(int value) {
         this.length = value;
         return this;
@@ -44,6 +51,13 @@ public class PrimitivePropertyType extends PropertyType {
         return this.storage;
     }
 
+    /**
+     * Storage primitive property type.
+     *
+     * @param value the value
+     *
+     * @return the primitive property type
+     */
     public final PrimitivePropertyType storage(StorageKind value) {
         this.storage = value;
         return this;

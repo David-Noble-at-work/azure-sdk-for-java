@@ -3,16 +3,20 @@
 
 package com.azure.cosmos.serialization.hybridrow.layouts;
 
+import com.azure.cosmos.core.Out;
 import com.azure.cosmos.serialization.hybridrow.Result;
 import com.azure.cosmos.serialization.hybridrow.RowBuffer;
 import com.azure.cosmos.serialization.hybridrow.RowCursor;
-import com.azure.cosmos.core.Out;
-
-import org.jetbrains.annotations.NotNull;;
+import org.jetbrains.annotations.NotNull;
 
 import static com.azure.cosmos.base.Preconditions.checkArgument;
 import static com.azure.cosmos.base.Preconditions.checkNotNull;
 
+/**
+ * The type Layout type primitive.
+ *
+ * @param <T> the type parameter
+ */
 public abstract class LayoutTypePrimitive<T> extends LayoutType implements ILayoutType {
     /**
      * Initializes a new instance of the {@link LayoutTypePrimitive} class.
@@ -40,6 +44,15 @@ public abstract class LayoutTypePrimitive<T> extends LayoutType implements ILayo
     // * Convert LayoutType<T> to a non-generic type (LayoutType, not LayoutType<T>)
     // * Ensure that all primitive types inherit from this type
 
+    /**
+     * Delete fixed result.
+     *
+     * @param buffer the buffer
+     * @param scope the scope
+     * @param column the column
+     *
+     * @return the result
+     */
     @NotNull
     public final Result deleteFixed(
         @NotNull final RowBuffer buffer, @NotNull final RowCursor scope, @NotNull final LayoutColumn column) {
@@ -125,6 +138,15 @@ public abstract class LayoutTypePrimitive<T> extends LayoutType implements ILayo
         return Result.SUCCESS;
     }
 
+    /**
+     * Has value result.
+     *
+     * @param buffer the buffer
+     * @param scope the scope
+     * @param column the column
+     *
+     * @return the result
+     */
     @NotNull
     public final Result hasValue(
         @NotNull final RowBuffer buffer, @NotNull final RowCursor scope, @NotNull final LayoutColumn column) {
@@ -139,6 +161,16 @@ public abstract class LayoutTypePrimitive<T> extends LayoutType implements ILayo
         return Result.SUCCESS;
     }
 
+    /**
+     * Read fixed result.
+     *
+     * @param buffer the buffer
+     * @param scope the scope
+     * @param column the column
+     * @param value the value
+     *
+     * @return the result
+     */
     @NotNull
     public abstract Result readFixed(
         @NotNull RowBuffer buffer,
@@ -146,12 +178,31 @@ public abstract class LayoutTypePrimitive<T> extends LayoutType implements ILayo
         @NotNull LayoutColumn column,
         @NotNull Out<T> value);
 
+    /**
+     * Read sparse result.
+     *
+     * @param buffer the buffer
+     * @param edit the edit
+     * @param value the value
+     *
+     * @return the result
+     */
     @NotNull
     public abstract Result readSparse(
         @NotNull RowBuffer buffer,
         @NotNull RowCursor edit,
         @NotNull Out<T> value);
 
+    /**
+     * Read variable result.
+     *
+     * @param buffer the buffer
+     * @param scope the scope
+     * @param column the column
+     * @param value the value
+     *
+     * @return the result
+     */
     @NotNull
     public Result readVariable(
         @NotNull final RowBuffer buffer,
@@ -168,6 +219,16 @@ public abstract class LayoutTypePrimitive<T> extends LayoutType implements ILayo
         return Result.FAILURE;
     }
 
+    /**
+     * Write fixed result.
+     *
+     * @param buffer the buffer
+     * @param scope the scope
+     * @param column the column
+     * @param value the value
+     *
+     * @return the result
+     */
     @NotNull
     public abstract Result writeFixed(
         @NotNull RowBuffer buffer,
@@ -175,12 +236,31 @@ public abstract class LayoutTypePrimitive<T> extends LayoutType implements ILayo
         @NotNull LayoutColumn column,
         @NotNull T value);
 
+    /**
+     * Write sparse result.
+     *
+     * @param buffer the buffer
+     * @param edit the edit
+     * @param value the value
+     *
+     * @return the result
+     */
     @NotNull
     public abstract Result writeSparse(
         @NotNull RowBuffer buffer,
         @NotNull RowCursor edit,
         @NotNull T value);
 
+    /**
+     * Write sparse result.
+     *
+     * @param buffer the buffer
+     * @param edit the edit
+     * @param value the value
+     * @param options the options
+     *
+     * @return the result
+     */
     @NotNull
     public abstract Result writeSparse(
         @NotNull RowBuffer buffer,
@@ -188,6 +268,16 @@ public abstract class LayoutTypePrimitive<T> extends LayoutType implements ILayo
         @NotNull T value,
         @NotNull UpdateOptions options);
 
+    /**
+     * Write variable result.
+     *
+     * @param buffer the buffer
+     * @param scope the scope
+     * @param column the column
+     * @param value the value
+     *
+     * @return the result
+     */
     @NotNull
     public Result writeVariable(
         @NotNull RowBuffer buffer,

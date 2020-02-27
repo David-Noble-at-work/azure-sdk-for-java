@@ -10,12 +10,30 @@ import it.unimi.dsi.fastutil.ints.Int2ReferenceOpenHashMap;
 import java.util.Arrays;
 import java.util.function.Supplier;
 
+/**
+ * The enum Result.
+ */
 public enum Result {
 
+    /**
+     * Success result.
+     */
     SUCCESS(0),
+    /**
+     * Failure result.
+     */
     FAILURE(1),
+    /**
+     * Not found result.
+     */
     NOT_FOUND(2),
+    /**
+     * Exists result.
+     */
     EXISTS(3),
+    /**
+     * Too big result.
+     */
     TOO_BIG(4),
 
     /**
@@ -48,6 +66,9 @@ public enum Result {
      */
     CANCELED(10);
 
+    /**
+     * The constant BYTES.
+     */
     public static final int BYTES = Integer.BYTES;
 
     private static final Supplier<Int2ReferenceMap<Result>> mappings = Suppliers.memoize(() -> {
@@ -63,10 +84,22 @@ public enum Result {
         this.value = value;
     }
 
+    /**
+     * From result.
+     *
+     * @param value the value
+     *
+     * @return the result
+     */
     public static Result from(int value) {
         return mappings.get().get(value);
     }
 
+    /**
+     * Value int.
+     *
+     * @return the int
+     */
     public int value() {
         return this.value;
     }

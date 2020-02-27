@@ -1,18 +1,17 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-package com.azure.cosmos.serialization.hybridrow.internal;
+package com.azure.cosmos.serialization.hybridrow.implementation;
 
-import com.azure.cosmos.core.Utf8String;
-import com.azure.cosmos.serialization.hybridrow.HashCode128;
 import com.azure.cosmos.base.Utf8;
+import com.azure.cosmos.core.Utf8String;
 import com.azure.cosmos.hash.HashCode;
 import com.azure.cosmos.hash.HashFunction;
 import com.azure.cosmos.hash.Hashing;
+import com.azure.cosmos.serialization.hybridrow.HashCode128;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufAllocator;
 import io.netty.buffer.Unpooled;
-
 import org.jetbrains.annotations.NotNull;
 
 import static com.azure.cosmos.base.Preconditions.checkNotNull;

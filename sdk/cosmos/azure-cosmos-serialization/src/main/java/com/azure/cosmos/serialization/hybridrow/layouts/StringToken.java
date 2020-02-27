@@ -6,19 +6,30 @@ package com.azure.cosmos.serialization.hybridrow.layouts;
 import com.azure.cosmos.core.Utf8String;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
-
-import org.jetbrains.annotations.NotNull;;
+import org.jetbrains.annotations.NotNull;
 
 import static com.azure.cosmos.base.Preconditions.checkNotNull;
 
+/**
+ * The type String token.
+ */
 public final class StringToken implements Cloneable {
 
+    /**
+     * The constant NONE.
+     */
     public static final StringToken NONE = new StringToken();
 
     private final long id;
     private final Utf8String path;
     private final ByteBuf varint;
 
+    /**
+     * Instantiates a new String token.
+     *
+     * @param id the id
+     * @param path the path
+     */
     public StringToken(long id, @NotNull Utf8String path) {
 
         checkNotNull(path);
@@ -37,18 +48,38 @@ public final class StringToken implements Cloneable {
         this.varint = Unpooled.wrappedBuffer(new byte[1]).asReadOnly();
     }
 
+    /**
+     * Is null boolean.
+     *
+     * @return the boolean
+     */
     public boolean isNull() {
         return this.varint() == null;
     }
 
+    /**
+     * Id long.
+     *
+     * @return the long
+     */
     public long id() {
         return this.id;
     }
 
+    /**
+     * Path utf 8 string.
+     *
+     * @return the utf 8 string
+     */
     public Utf8String path() {
         return this.path;
     }
 
+    /**
+     * Varint byte buf.
+     *
+     * @return the byte buf
+     */
     public ByteBuf varint() {
         return this.varint;
     }

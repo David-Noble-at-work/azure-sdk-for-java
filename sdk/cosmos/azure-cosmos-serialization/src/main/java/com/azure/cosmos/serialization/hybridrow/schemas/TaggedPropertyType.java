@@ -14,7 +14,13 @@ import java.util.List;
  */
 public class TaggedPropertyType extends ScopePropertyType {
 
+    /**
+     * The constant MAX_TAGGED_ARGUMENTS.
+     */
     public static final int MAX_TAGGED_ARGUMENTS = 2;
+    /**
+     * The constant MIN_TAGGED_ARGUMENTS.
+     */
     public static final int MIN_TAGGED_ARGUMENTS = 1;
 
     private List<PropertyType> items;
@@ -35,6 +41,13 @@ public class TaggedPropertyType extends ScopePropertyType {
         return this.items;
     }
 
+    /**
+     * Items tagged property type.
+     *
+     * @param value the value
+     *
+     * @return the tagged property type
+     */
     public final TaggedPropertyType items(List<PropertyType> value) {
         this.items = value != null ? value : new ArrayList<>();
         return this;

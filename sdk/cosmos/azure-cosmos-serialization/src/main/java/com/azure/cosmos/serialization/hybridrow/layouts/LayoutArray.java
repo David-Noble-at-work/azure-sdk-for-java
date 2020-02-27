@@ -7,11 +7,18 @@ import com.azure.cosmos.core.Out;
 import com.azure.cosmos.serialization.hybridrow.Result;
 import com.azure.cosmos.serialization.hybridrow.RowBuffer;
 import com.azure.cosmos.serialization.hybridrow.RowCursor;
+import org.jetbrains.annotations.NotNull;
 
-import org.jetbrains.annotations.NotNull;;
-
+/**
+ * Describes the layout of an Array field.
+ */
 public final class LayoutArray extends LayoutIndexedScope {
 
+    /**
+     * Instantiates a new Layout array.
+     *
+     * @param immutable {@code true} if the Array field is immutable and {@code false}, if it is not.
+     */
     public LayoutArray(final boolean immutable) {
         super(immutable
             ? LayoutCode.IMMUTABLE_ARRAY_SCOPE

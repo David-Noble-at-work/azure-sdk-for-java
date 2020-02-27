@@ -3,17 +3,19 @@
 
 package com.azure.cosmos.serialization.hybridrow.layouts;
 
+import com.azure.cosmos.core.Out;
 import com.azure.cosmos.serialization.hybridrow.Result;
 import com.azure.cosmos.serialization.hybridrow.RowBuffer;
 import com.azure.cosmos.serialization.hybridrow.RowCursor;
 import com.azure.cosmos.serialization.hybridrow.RowCursors;
-import com.azure.cosmos.core.Out;
-
-import org.jetbrains.annotations.NotNull;;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import static com.azure.cosmos.base.Preconditions.checkNotNull;
 
+/**
+ * Describes the layout of a TypeScope field.
+ */
 public abstract class LayoutTypeScope extends LayoutType {
 
     private final boolean isFixedArity;
@@ -22,6 +24,17 @@ public abstract class LayoutTypeScope extends LayoutType {
     private final boolean isTypedScope;
     private final boolean isUniqueScope;
 
+    /**
+     * Instantiates a new Layout type scope.
+     *
+     * @param code the code
+     * @param immutable {@code true} if the TypeScope field is immutable and {@code false}, if it is not.
+     * @param isSizedScope the is sized scope
+     * @param isIndexedScope the is indexed scope
+     * @param isFixedArity the is fixed arity
+     * @param isUniqueScope the is unique scope
+     * @param isTypedScope the is typed scope
+     */
     protected LayoutTypeScope(
         @NotNull final LayoutCode code,
         final boolean immutable,
@@ -94,6 +107,14 @@ public abstract class LayoutTypeScope extends LayoutType {
         return this.isUniqueScope;
     }
 
+    /**
+     * Delete scope result.
+     *
+     * @param buffer the buffer
+     * @param edit the edit
+     *
+     * @return the result
+     */
     @NotNull
     public final Result deleteScope(@NotNull final RowBuffer buffer, @NotNull final RowCursor edit) {
 
@@ -123,6 +144,15 @@ public abstract class LayoutTypeScope extends LayoutType {
         return false;
     }
 
+    /**
+     * Read scope result.
+     *
+     * @param buffer the buffer
+     * @param edit the edit
+     * @param value the value
+     *
+     * @return the result
+     */
     @NotNull
     public final Result readScope(
         @NotNull final RowBuffer buffer, @NotNull final RowCursor edit, @NotNull final Out<RowCursor> value) {
@@ -143,6 +173,12 @@ public abstract class LayoutTypeScope extends LayoutType {
         return Result.SUCCESS;
     }
 
+    /**
+     * Read sparse path.
+     *
+     * @param buffer the buffer
+     * @param edit the edit
+     */
     public void readSparsePath(@NotNull final RowBuffer buffer, @NotNull final RowCursor edit) {
         Out<Integer> pathLengthInBytes = new Out<>();
         Out<Integer> pathOffset = new Out<>();
@@ -151,16 +187,42 @@ public abstract class LayoutTypeScope extends LayoutType {
         edit.valueOffset(edit.valueOffset() + pathLengthInBytes.get());
     }
 
+    /**
+     * Sets implicit type code.
+     *
+     * @param edit the edit
+     */
     public void setImplicitTypeCode(@NotNull final RowCursor edit) {
         throw new UnsupportedOperationException();
     }
 
+    /**
+     * Write scope result.
+     *
+     * @param buffer the buffer
+     * @param scope the scope
+     * @param typeArgs the type args
+     * @param value the value
+     *
+     * @return the result
+     */
     @NotNull
     public abstract Result writeScope(
         @NotNull RowBuffer buffer,
         @NotNull RowCursor scope,
         @NotNull TypeArgumentList typeArgs, @NotNull Out<RowCursor> value);
 
+    /**
+     * Write scope result.
+     *
+     * @param buffer the buffer
+     * @param scope the scope
+     * @param typeArgs the type args
+     * @param options the options
+     * @param value the value
+     *
+     * @return the result
+     */
     @NotNull
     public abstract Result writeScope(
         @NotNull RowBuffer buffer,
@@ -168,6 +230,18 @@ public abstract class LayoutTypeScope extends LayoutType {
         @NotNull TypeArgumentList typeArgs,
         @NotNull UpdateOptions options, @NotNull Out<RowCursor> value);
 
+    /**
+     * Write scope result.
+     *
+     * @param <TContext> the type parameter
+     * @param buffer the buffer
+     * @param scope the scope
+     * @param typeArgs the type args
+     * @param context the context
+     * @param func the func
+     *
+     * @return the result
+     */
     @NotNull
     public <TContext> Result writeScope(
         @NotNull RowBuffer buffer,
@@ -177,6 +251,19 @@ public abstract class LayoutTypeScope extends LayoutType {
         return this.writeScope(buffer, scope, typeArgs, context, func, UpdateOptions.UPSERT);
     }
 
+    /**
+     * Write scope result.
+     *
+     * @param <TContext> the type parameter
+     * @param buffer the buffer
+     * @param scope the scope
+     * @param typeArgs the type args
+     * @param context the context
+     * @param func the func
+     * @param options the options
+     *
+     * @return the result
+     */
     @NotNull
     public <TContext> Result writeScope(
         @NotNull final RowBuffer buffer,

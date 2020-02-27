@@ -4,8 +4,7 @@
 package com.azure.cosmos.serialization.hybridrow.schemas;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-
-import org.jetbrains.annotations.NotNull;;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * Describes a single property definition.
@@ -38,7 +37,8 @@ public class Property {
      * Comments are for documentary purpose only and do not affect the property at runtime.
      *
      * @param value a comment on this {@linkplain Property property} or {@code null} to remove the comment, if any, on
-     *              this {@linkplain Property property}.
+     * this {@linkplain Property property}.
+     *
      * @return a reference to this {@linkplain Property property}.
      */
     public final Property comment(String value) {
@@ -69,6 +69,7 @@ public class Property {
      * See the logical path specification for full details on both relative and absolute paths.
      *
      * @param value the logical path of this {@linkplain Property property}.
+     *
      * @return a reference to this {@linkplain Property property}.
      */
     public final Property path(@NotNull String value) {
@@ -95,6 +96,7 @@ public class Property {
      * types may define one or more columns depending on their structure.
      *
      * @param value the type of this {@linkplain Property property}.
+     *
      * @return a reference to this {@linkplain Property property}.
      */
     public final Property type(PropertyType value) {

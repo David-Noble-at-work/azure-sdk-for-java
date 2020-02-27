@@ -3,6 +3,9 @@
 
 package com.azure.cosmos.serialization.hybridrow.layouts;
 
+/**
+ * The type Layout code traits.
+ */
 public final class LayoutCodeTraits {
     /**
      * {@code true} if the specified layout code indicates that an element type always requires a type code.
@@ -10,6 +13,7 @@ public final class LayoutCodeTraits {
      * When this method returns {@code true} it indicates that the element value is in the type code.
      *
      * @param code The element type code.
+     *
      * @return {@code true} if the specified layout code indicates that an element type always requires a type code.
      */
     public static boolean alwaysRequiresTypeCode(LayoutCode code) {
@@ -23,6 +27,7 @@ public final class LayoutCodeTraits {
      * actual value based code into the canonicalized type code for schema comparisons.
      *
      * @param code the code to canonicalize.
+     *
      * @return a canonicalized version of the specified layout code.
      */
     public static LayoutCode canonicalize(LayoutCode code) {
@@ -33,6 +38,7 @@ public final class LayoutCodeTraits {
      * Returns the same scope code without the immutable bit set.
      *
      * @param code The scope type code.
+     *
      * @return the same scope code without the immutable bit set.
      */
     public static LayoutCode clearImmutableBit(LayoutCode code) {

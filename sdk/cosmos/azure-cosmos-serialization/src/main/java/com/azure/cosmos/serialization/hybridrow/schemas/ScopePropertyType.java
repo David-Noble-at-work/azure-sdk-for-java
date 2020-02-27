@@ -3,6 +3,9 @@
 
 package com.azure.cosmos.serialization.hybridrow.schemas;
 
+/**
+ * The type Scope property type.
+ */
 public abstract class ScopePropertyType extends PropertyType {
 
     private boolean immutable;
@@ -18,6 +21,11 @@ public abstract class ScopePropertyType extends PropertyType {
         return this.immutable;
     }
 
+    /**
+     * Immutable.
+     *
+     * @param value the value
+     */
     public final void immutable(boolean value) {
         this.immutable = value;
     }

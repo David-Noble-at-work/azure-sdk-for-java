@@ -3,14 +3,14 @@
 
 package com.azure.cosmos.serialization.hybridrow.io;
 
+import com.azure.cosmos.base.Suppliers;
 import com.azure.cosmos.core.Json;
 import com.azure.cosmos.core.Utf8String;
 import com.azure.cosmos.serialization.hybridrow.layouts.LayoutCode;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.azure.cosmos.base.Suppliers;
 import com.google.common.collect.ImmutableList;
+import org.jetbrains.annotations.NotNull;
 
-import org.jetbrains.annotations.NotNull;;
 import java.util.Collection;
 import java.util.List;
 import java.util.function.Supplier;
@@ -31,6 +31,14 @@ public class DataItem {
     @JsonProperty
     private final Object value;
 
+    /**
+     * Instantiates a new Data item.
+     *
+     * @param nodes the nodes
+     * @param name the name
+     * @param type the type
+     * @param value the value
+     */
     @SuppressWarnings("UnstableApiUsage")
     DataItem(
         @NotNull final Collection<Utf8String> nodes,
@@ -78,14 +86,29 @@ public class DataItem {
         });
     }
 
+    /**
+     * Name string.
+     *
+     * @return the string
+     */
     public String name() {
         return this.name.get();
     }
 
+    /**
+     * Nodes list.
+     *
+     * @return the list
+     */
     public List<String> nodes() {
         return this.nodes;
     }
 
+    /**
+     * Path string.
+     *
+     * @return the string
+     */
     public String path() {
         return this.path.get();
     }
@@ -95,10 +118,20 @@ public class DataItem {
         return Json.toString(this);
     }
 
+    /**
+     * Type layout code.
+     *
+     * @return the layout code
+     */
     public LayoutCode type() {
         return this.type;
     }
 
+    /**
+     * Value object.
+     *
+     * @return the object
+     */
     public Object value() {
         return this.value;
     }

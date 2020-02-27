@@ -678,7 +678,6 @@ public final class Preconditions {
      * @return the non-null reference that was validated
      *
      * @throws NullPointerException if {@code reference} is null.
-     *
      * @see Verify#verifyNotNull Verify.verifyNotNull()
      */
     public static <T extends @NotNull Object> T checkNotNull(

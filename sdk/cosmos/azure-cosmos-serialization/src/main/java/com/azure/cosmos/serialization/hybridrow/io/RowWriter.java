@@ -38,9 +38,9 @@ import com.azure.cosmos.serialization.hybridrow.layouts.TypeArgumentList;
 import com.azure.cosmos.serialization.hybridrow.layouts.UpdateOptions;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
-
-import org.jetbrains.annotations.NotNull;;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 import java.util.List;
@@ -51,6 +51,9 @@ import java.util.function.Consumer;
 import static com.azure.cosmos.base.Preconditions.checkNotNull;
 import static com.azure.cosmos.base.Strings.lenientFormat;
 
+/**
+ * Writes data to a {@link RowBuffer}.
+ */
 public final class RowWriter {
 
     private final RowCursor cursor;
@@ -327,13 +330,15 @@ public final class RowWriter {
         );
     }
 
-    /** Write content to a specified area in the scope of a row writer.
+    /**
+     * Write content to a specified area in the scope of a row writer.
      * <p>
+     *
+     * @param <TContext> the type of {@code context}.
      * @param path a path string identifying the scope.
      * @param typeArg a type argument specifying the layout of the content.
      * @param context a context for writing content to the scope using {@code func} or {@code null}.
      * @param func a function that will be called to write content to the scope using {@code context} or {@code null}.
-     * @param <TContext> the type of {@code context}.
      *
      * @return the {@link Result} of the write to the specified scope.
      *
@@ -831,6 +836,8 @@ public final class RowWriter {
 
     /**
      * Functional interface for writing content to a {@link RowBuffer}.
+     *
+     * @param <TContext> the type parameter
      */
     @FunctionalInterface
     public interface Writer<TContext> {
@@ -839,8 +846,8 @@ public final class RowWriter {
          *
          * @param writer writes content.
          * @param context provides context for the write operation.
-         *
          * @param typeArgument specifies a type argument.
+         *
          * @return a result code
          */
         Result apply(RowWriter writer, TContext context, TypeArgument typeArgument);

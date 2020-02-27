@@ -11,12 +11,12 @@ import com.azure.cosmos.serialization.hybridrow.layouts.TypeArgument;
  */
 public interface RowSerializable {
     /**
-     * Writes the current instance into the row
+     * Writes the current instance into the row.
      *
-     * @param writer A writer for the current row scope
-     * @param typeArg The schematized layout type, if a schema is available
+     * @param writer A writer for the current row scope.
+     * @param typeArg The schematized layout type, if a schema is available.
      *
-     * @return Success if the write is successful, the error code otherwise
+     * @return {@link Result#SUCCESS} if the write is successful, an error {@link Result} otherwise.
      */
     Result write(RowWriter writer, TypeArgument typeArg);
 }

@@ -9,13 +9,16 @@ import com.azure.cosmos.serialization.hybridrow.Result;
 import com.azure.cosmos.serialization.hybridrow.UnixDateTime;
 import com.azure.cosmos.serialization.hybridrow.io.RowReader;
 import com.azure.cosmos.serialization.hybridrow.layouts.LayoutType;
-import org.jetbrains.annotations.NotNull;;
+import org.jetbrains.annotations.NotNull;
 
 import static com.azure.cosmos.base.Preconditions.checkArgument;
 import static com.azure.cosmos.base.Preconditions.checkNotNull;
 import static com.azure.cosmos.base.Preconditions.checkState;
 import static com.azure.cosmos.base.Strings.lenientFormat;
 
+/**
+ * The type Row reader json extensions.
+ */
 public final class RowReaderJsonExtensions {
     /**
      * Project a JSON document from a HybridRow {@link RowReader}.
@@ -461,6 +464,13 @@ public final class RowReaderJsonExtensions {
         private final String separator;
         private final RowReaderJsonSettings settings;
 
+        /**
+         * Instantiates a new Reader string context.
+         *
+         * @param builder the builder
+         * @param settings the settings
+         * @param indent the indent
+         */
         ReaderStringContext(
             @NotNull final StringBuilder builder,
             @NotNull final RowReaderJsonSettings settings,
@@ -477,26 +487,54 @@ public final class RowReaderJsonExtensions {
             this.builder = builder;
         }
 
+        /**
+         * Builder string builder.
+         *
+         * @return the string builder
+         */
         public StringBuilder builder() {
             return this.builder;
         }
 
+        /**
+         * Indent int.
+         *
+         * @return the int
+         */
         public int indent() {
             return this.indent;
         }
 
+        /**
+         * Newline string.
+         *
+         * @return the string
+         */
         public String newline() {
             return this.newline;
         }
 
+        /**
+         * Separator string.
+         *
+         * @return the string
+         */
         public String separator() {
             return this.separator;
         }
 
+        /**
+         * Sets .
+         *
+         * @return the
+         */
         public RowReaderJsonSettings settings() {
             return this.settings;
         }
 
+        /**
+         * Write indent.
+         */
         public void writeIndent() {
             String indentChars = this.settings().indentChars() != null ? this.settings().indentChars() : "";
             for (int i = 0; i < this.indent(); i++) {

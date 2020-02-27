@@ -3,31 +3,38 @@
 
 package com.azure.cosmos.serialization.hybridrow.layouts;
 
+import com.azure.cosmos.core.Out;
 import com.azure.cosmos.serialization.hybridrow.Result;
 import com.azure.cosmos.serialization.hybridrow.RowBuffer;
 import com.azure.cosmos.serialization.hybridrow.RowCursor;
-import com.azure.cosmos.core.Out;
 import io.netty.buffer.ByteBuf;
-
-import org.jetbrains.annotations.NotNull;;
+import org.jetbrains.annotations.NotNull;
 
 import static com.azure.cosmos.base.Preconditions.checkArgument;
 import static com.azure.cosmos.base.Preconditions.checkNotNull;
 
+/**
+ * The type Layout binary.
+ */
 public final class LayoutBinary extends LayoutTypePrimitive<ByteBuf> {
     // implements
     // LayoutListWritable<Byte>,
     // LayoutListReadable<Byte>,
     // ILayoutSequenceWritable<Byte> {
 
+    /**
+     * Instantiates a new Layout binary.
+     */
     public LayoutBinary() {
         super(LayoutCode.BINARY, 0);
     }
 
+    @Override
     public boolean isFixed() {
         return false;
     }
 
+    @Override
     @NotNull
     public String name() {
         return "binary";

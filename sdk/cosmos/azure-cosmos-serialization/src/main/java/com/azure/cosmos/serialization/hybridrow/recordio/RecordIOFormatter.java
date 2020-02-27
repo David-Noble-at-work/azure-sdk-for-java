@@ -13,17 +13,34 @@ import com.azure.cosmos.serialization.hybridrow.io.Segment;
 import com.azure.cosmos.serialization.hybridrow.layouts.Layout;
 import com.azure.cosmos.serialization.hybridrow.layouts.SystemSchema;
 import io.netty.buffer.ByteBuf;
+import org.jetbrains.annotations.NotNull;
 
-import org.jetbrains.annotations.NotNull;;
 import java.util.zip.CRC32;
 
 import static com.azure.cosmos.base.Preconditions.checkNotNull;
 
+/**
+ * Provides static methods for formatting a HybridRow record.
+ */
 public final class RecordIOFormatter {
 
+    /**
+     * The constant RECORD_LAYOUT.
+     */
     public static final Layout RECORD_LAYOUT = SystemSchema.layoutResolver().resolve(SystemSchema.RECORD_SCHEMA_ID);
+    /**
+     * The constant SEGMENT_LAYOUT.
+     */
     public static final Layout SEGMENT_LAYOUT = SystemSchema.layoutResolver().resolve(SystemSchema.SEGMENT_SCHEMA_ID);
 
+    /**
+     * Format record result.
+     *
+     * @param body the body
+     * @param rowBuffer the row buffer
+     *
+     * @return the result
+     */
     public static Result formatRecord(
         @NotNull final ByteBuf body,
         @NotNull final Out<RowBuffer> rowBuffer) {
@@ -50,6 +67,14 @@ public final class RecordIOFormatter {
             rowBuffer.setAndGet(new RowBuffer(initialCapacity)));
     }
 
+    /**
+     * Format segment result.
+     *
+     * @param segment the segment
+     * @param rowBuffer the row buffer
+     *
+     * @return the result
+     */
     public static Result formatSegment(@NotNull final Segment segment, @NotNull final Out<RowBuffer> rowBuffer) {
 
         checkNotNull(segment, "expected non-null segment");

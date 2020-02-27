@@ -31,6 +31,11 @@ public class TuplePropertyType extends ScopePropertyType {
         return this.items;
     }
 
+    /**
+     * Items.
+     *
+     * @param value the value
+     */
     public final void items(List<PropertyType> value) {
         this.items = value != null ? value : new ArrayList<PropertyType>();
     }

@@ -3,15 +3,20 @@
 
 package com.azure.cosmos.serialization.hybridrow.layouts;
 
+import com.azure.cosmos.core.Out;
 import com.azure.cosmos.serialization.hybridrow.Result;
 import com.azure.cosmos.serialization.hybridrow.RowBuffer;
 import com.azure.cosmos.serialization.hybridrow.RowCursor;
-import com.azure.cosmos.core.Out;
+import org.jetbrains.annotations.NotNull;
 
-import org.jetbrains.annotations.NotNull;;
-
+/**
+ * The type Layout end scope.
+ */
 public final class LayoutEndScope extends LayoutTypeScope {
 
+    /**
+     * Instantiates a new Layout end scope.
+     */
     public LayoutEndScope() {
         super(LayoutCode.END_SCOPE, false, false, false, false, false, false);
     }

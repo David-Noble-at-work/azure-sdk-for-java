@@ -3,19 +3,26 @@
 
 package com.azure.cosmos.serialization.hybridrow.layouts;
 
+import com.azure.cosmos.core.Out;
 import com.azure.cosmos.serialization.hybridrow.Result;
 import com.azure.cosmos.serialization.hybridrow.RowBuffer;
 import com.azure.cosmos.serialization.hybridrow.RowCursor;
-import com.azure.cosmos.core.Out;
-
-import org.jetbrains.annotations.NotNull;;
+import org.jetbrains.annotations.NotNull;
 
 import static com.azure.cosmos.base.Preconditions.checkArgument;
 import static com.azure.cosmos.base.Preconditions.checkNotNull;
 import static com.azure.cosmos.base.Preconditions.checkState;
 
+/**
+ * Describes the layout of a Nullable field
+ */
 public final class LayoutNullable extends LayoutIndexedScope {
 
+    /**
+     * Initializes a new Nullable field.
+     *
+     * @param immutable {@code true} if the Nullable field is immutable and {@code false}, if it is not.
+     */
     public LayoutNullable(boolean immutable) {
         super(
             immutable ? LayoutCode.IMMUTABLE_NULLABLE_SCOPE : LayoutCode.NULLABLE_SCOPE, immutable,
@@ -39,6 +46,14 @@ public final class LayoutNullable extends LayoutIndexedScope {
         return !LayoutCodeTraits.alwaysRequiresTypeCode(edit.scopeTypeArgs().get(0).type().layoutCode());
     }
 
+    /**
+     * Has value result.
+     *
+     * @param buffer the buffer
+     * @param scope the scope
+     *
+     * @return the result
+     */
     public static Result hasValue(@NotNull final RowBuffer buffer, @NotNull final RowCursor scope) {
         checkNotNull(buffer, "expected non-null buffer");
         checkNotNull(scope, "expected non-null scope");
@@ -72,6 +87,17 @@ public final class LayoutNullable extends LayoutIndexedScope {
         edit.cellTypeArgs(edit.scopeTypeArgs().get(0).typeArgs());
     }
 
+    /**
+     * Write scope result.
+     *
+     * @param buffer the buffer
+     * @param edit the edit
+     * @param typeArgs the type args
+     * @param hasValue the has value
+     * @param value the value
+     *
+     * @return the result
+     */
     @NotNull
     public Result writeScope(
         @NotNull final RowBuffer buffer,
@@ -82,6 +108,18 @@ public final class LayoutNullable extends LayoutIndexedScope {
         return this.writeScope(buffer, edit, typeArgs, hasValue, UpdateOptions.UPSERT, value);
     }
 
+    /**
+     * Write scope result.
+     *
+     * @param buffer the buffer
+     * @param edit the edit
+     * @param typeArgs the type args
+     * @param hasValue the has value
+     * @param options the options
+     * @param value the value
+     *
+     * @return the result
+     */
     @NotNull
     public Result writeScope(
         @NotNull final RowBuffer buffer,

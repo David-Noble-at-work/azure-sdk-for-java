@@ -3,25 +3,32 @@
 
 package com.azure.cosmos.serialization.hybridrow.layouts;
 
+import com.azure.cosmos.core.Out;
 import com.azure.cosmos.serialization.hybridrow.Result;
 import com.azure.cosmos.serialization.hybridrow.RowBuffer;
 import com.azure.cosmos.serialization.hybridrow.RowCursor;
-import com.azure.cosmos.core.Out;
-
-import org.jetbrains.annotations.NotNull;;
+import org.jetbrains.annotations.NotNull;
 
 import static com.azure.cosmos.base.Preconditions.checkArgument;
 
+/**
+ * Describes the layout of a Float64 field.
+ */
 public final class LayoutFloat64 extends LayoutTypePrimitive<Double> {
 
+    /**
+     * Initializes a new Float64 layout.
+     */
     public LayoutFloat64() {
         super(LayoutCode.FLOAT_64, Double.BYTES);
     }
 
+    @Override
     public boolean isFixed() {
         return true;
     }
 
+    @Override
     @NotNull
     public String name() {
         return "float64";
@@ -74,13 +81,13 @@ public final class LayoutFloat64 extends LayoutTypePrimitive<Double> {
         return Result.SUCCESS;
     }
 
-    //C# TO JAVA CONVERTER NOTE: Java does not support optional parameters. Overloaded method(s) are created above:
-    //ORIGINAL LINE: public override Result WriteSparse(ref RowBuffer b, ref RowCursor edit, double value,
-    // UpdateOptions options = UpdateOptions.Upsert)
     @Override
     @NotNull
-    public Result writeSparse(@NotNull RowBuffer buffer, @NotNull RowCursor edit, @NotNull Double value,
-                              @NotNull UpdateOptions options) {
+    public Result writeSparse(
+        @NotNull RowBuffer buffer,
+        @NotNull RowCursor edit,
+        @NotNull Double value,
+        @NotNull UpdateOptions options) {
 
         Result result = prepareSparseWrite(buffer, edit, this.typeArg(), options);
 

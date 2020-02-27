@@ -14,7 +14,6 @@
 
 package com.azure.cosmos.base;
 
-import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import org.jetbrains.annotations.Nullable;
 
 import static com.azure.cosmos.base.Strings.lenientFormat;
@@ -95,6 +94,7 @@ public final class Verify {
      * @param expression the expression
      *
      * @throws VerifyException if {@code expression} is {@code false}
+     *
      * @see Preconditions#checkState Preconditions#checkStatePreconditions.checkState()
      */
     public static void verify(boolean expression) {
@@ -115,7 +115,8 @@ public final class Verify {
      * @param errorMessageArgs the arguments to be substituted into the message template. Arguments are converted to
      * strings using {@link String#valueOf(Object)}.
      *
-     * @throws VerifyException if {@code expression} is {@code false}
+     * @throws VerifyException if {@code expression} is {@code false}.
+     *
      * @see Preconditions#checkState Preconditions#checkStatePreconditions.checkState()
      */
     public static void verify(
@@ -137,6 +138,8 @@ public final class Verify {
      * @param errorMessageTemplate the error message template
      * @param p1 the p 1
      *
+     * @throws VerifyException if {@code expression} is {@code false}.
+     *
      * @since 23.1 (varargs overload since 17.0)
      */
     public static void verify(boolean expression, @Nullable String errorMessageTemplate, char p1) {
@@ -154,6 +157,8 @@ public final class Verify {
      * @param expression the expression
      * @param errorMessageTemplate the error message template
      * @param p1 the p 1
+     *
+     * @throws VerifyException if {@code expression} is {@code false}.
      *
      * @since 23.1 (varargs overload since 17.0)
      */
@@ -173,6 +178,8 @@ public final class Verify {
      * @param errorMessageTemplate the error message template
      * @param p1 the p 1
      *
+     * @throws VerifyException if {@code expression} is {@code false}.
+     *
      * @since 23.1 (varargs overload since 17.0)
      */
     public static void verify(boolean expression, @Nullable String errorMessageTemplate, long p1) {
@@ -190,6 +197,8 @@ public final class Verify {
      * @param expression the expression
      * @param errorMessageTemplate the error message template
      * @param p1 the p 1
+     *
+     * @throws VerifyException if {@code expression} is {@code false}.
      *
      * @since 23.1 (varargs overload since 17.0)
      */
@@ -211,6 +220,8 @@ public final class Verify {
      * @param p1 the p 1
      * @param p2 the p 2
      *
+     * @throws VerifyException if {@code expression} is {@code false}.
+     *
      * @since 23.1 (varargs overload since 17.0)
      */
     public static void verify(
@@ -230,6 +241,8 @@ public final class Verify {
      * @param errorMessageTemplate the error message template
      * @param p1 the p 1
      * @param p2 the p 2
+     *
+     * @throws VerifyException if {@code expression} is {@code false}.
      *
      * @since 23.1 (varargs overload since 17.0)
      */
@@ -251,6 +264,8 @@ public final class Verify {
      * @param p1 the p 1
      * @param p2 the p 2
      *
+     * @throws VerifyException if {@code expression} is {@code false}.
+     *
      * @since 23.1 (varargs overload since 17.0)
      */
     public static void verify(
@@ -270,6 +285,8 @@ public final class Verify {
      * @param errorMessageTemplate the error message template
      * @param p1 the p 1
      * @param p2 the p 2
+     *
+     * @throws VerifyException if {@code expression} is {@code false}.
      *
      * @since 23.1 (varargs overload since 17.0)
      */
@@ -291,6 +308,8 @@ public final class Verify {
      * @param p1 the p 1
      * @param p2 the p 2
      *
+     * @throws VerifyException if {@code expression} is {@code false}.
+     *
      * @since 23.1 (varargs overload since 17.0)
      */
     public static void verify(
@@ -310,6 +329,8 @@ public final class Verify {
      * @param errorMessageTemplate the error message template
      * @param p1 the p 1
      * @param p2 the p 2
+     *
+     * @throws VerifyException if {@code expression} is {@code false}.
      *
      * @since 23.1 (varargs overload since 17.0)
      */
@@ -331,6 +352,8 @@ public final class Verify {
      * @param p1 the p 1
      * @param p2 the p 2
      *
+     * @throws VerifyException if {@code expression} is {@code false}.
+     *
      * @since 23.1 (varargs overload since 17.0)
      */
     public static void verify(
@@ -350,6 +373,8 @@ public final class Verify {
      * @param errorMessageTemplate the error message template
      * @param p1 the p 1
      * @param p2 the p 2
+     *
+     * @throws VerifyException if {@code expression} is {@code false}.
      *
      * @since 23.1 (varargs overload since 17.0)
      */
@@ -371,6 +396,8 @@ public final class Verify {
      * @param p1 the p 1
      * @param p2 the p 2
      *
+     * @throws VerifyException if {@code expression} is {@code false}.
+     *
      * @since 23.1 (varargs overload since 17.0)
      */
     public static void verify(
@@ -390,6 +417,8 @@ public final class Verify {
      * @param errorMessageTemplate the error message template
      * @param p1 the p 1
      * @param p2 the p 2
+     *
+     * @throws VerifyException if {@code expression} is {@code false}.
      *
      * @since 23.1 (varargs overload since 17.0)
      */
@@ -411,6 +440,8 @@ public final class Verify {
      * @param p1 the p 1
      * @param p2 the p 2
      *
+     * @throws VerifyException if {@code expression} is {@code false}.
+     *
      * @since 23.1 (varargs overload since 17.0)
      */
     public static void verify(
@@ -430,6 +461,8 @@ public final class Verify {
      * @param errorMessageTemplate the error message template
      * @param p1 the p 1
      * @param p2 the p 2
+     *
+     * @throws VerifyException if {@code expression} is {@code false}.
      *
      * @since 23.1 (varargs overload since 17.0)
      */
@@ -451,6 +484,8 @@ public final class Verify {
      * @param p1 the p 1
      * @param p2 the p 2
      *
+     * @throws VerifyException if {@code expression} is {@code false}.
+     *
      * @since 23.1 (varargs overload since 17.0)
      */
     public static void verify(
@@ -470,6 +505,8 @@ public final class Verify {
      * @param errorMessageTemplate the error message template
      * @param p1 the p 1
      * @param p2 the p 2
+     *
+     * @throws VerifyException if {@code expression} is {@code false}.
      *
      * @since 23.1 (varargs overload since 17.0)
      */
@@ -491,6 +528,8 @@ public final class Verify {
      * @param p1 the p 1
      * @param p2 the p 2
      *
+     * @throws VerifyException if {@code expression} is {@code false}.
+     *
      * @since 23.1 (varargs overload since 17.0)
      */
     public static void verify(
@@ -510,6 +549,8 @@ public final class Verify {
      * @param errorMessageTemplate the error message template
      * @param p1 the p 1
      * @param p2 the p 2
+     *
+     * @throws VerifyException if {@code expression} is {@code false}.
      *
      * @since 23.1 (varargs overload since 17.0)
      */
@@ -534,6 +575,8 @@ public final class Verify {
      * @param p1 the p 1
      * @param p2 the p 2
      * @param p3 the p 3
+     *
+     * @throws VerifyException if {@code expression} is {@code false}.
      *
      * @since 23.1 (varargs overload since 17.0)
      */
@@ -561,6 +604,8 @@ public final class Verify {
      * @param p3 the p 3
      * @param p4 the p 4
      *
+     * @throws VerifyException if {@code expression} is {@code false}.
+     *
      * @since 23.1 (varargs overload since 17.0)
      */
     public static void verify(
@@ -583,10 +628,10 @@ public final class Verify {
      *
      * @return {@code reference}, guaranteed to be non-null, for convenience
      *
-     * @throws VerifyException if {@code reference} is {@code null}
+     * @throws VerifyException if {@code reference} is {@code null}.
+     *
      * @see Preconditions#checkNotNull Preconditions#checkNotNullPreconditions.checkNotNull()
      */
-    @CanIgnoreReturnValue
     public static <T> T verifyNotNull(@Nullable T reference) {
         return verifyNotNull(reference, "expected a non-null reference");
     }
@@ -608,10 +653,10 @@ public final class Verify {
      *
      * @return {@code reference}, guaranteed to be non-null, for convenience
      *
-     * @throws VerifyException if {@code reference} is {@code null}
+     * @throws VerifyException if {@code reference} is {@code null}.
+     *
      * @see Preconditions#checkNotNull Preconditions#checkNotNullPreconditions.checkNotNull()
      */
-    @CanIgnoreReturnValue
     public static <T> T verifyNotNull(
         @Nullable T reference,
         @Nullable String errorMessageTemplate,

@@ -4,16 +4,24 @@
 package com.azure.cosmos.serialization.hybridrow.layouts;
 
 import com.azure.cosmos.serialization.hybridrow.SchemaId;
+import org.jetbrains.annotations.NotNull;
 
-import org.jetbrains.annotations.NotNull;;
 import java.util.function.Function;
 
 import static com.azure.cosmos.base.Preconditions.checkNotNull;
 
+/**
+ * The type Layout resolver simple.
+ */
 public final class LayoutResolverSimple extends LayoutResolver {
 
     private final Function<SchemaId, Layout> resolver;
 
+    /**
+     * Instantiates a new Layout resolver simple.
+     *
+     * @param resolver the resolver
+     */
     public LayoutResolverSimple(Function<SchemaId, Layout> resolver) {
         this.resolver = resolver;
     }

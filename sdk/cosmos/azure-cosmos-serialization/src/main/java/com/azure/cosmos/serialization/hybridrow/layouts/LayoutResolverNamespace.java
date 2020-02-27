@@ -6,9 +6,9 @@ package com.azure.cosmos.serialization.hybridrow.layouts;
 import com.azure.cosmos.serialization.hybridrow.SchemaId;
 import com.azure.cosmos.serialization.hybridrow.schemas.Namespace;
 import com.azure.cosmos.serialization.hybridrow.schemas.Schema;
-
-import org.jetbrains.annotations.NotNull;;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+
 import java.util.concurrent.ConcurrentHashMap;
 
 import static com.azure.cosmos.base.Preconditions.checkNotNull;
@@ -28,10 +28,21 @@ public final class LayoutResolverNamespace extends LayoutResolver {
     private final LayoutResolver parent;
     private final Namespace schemaNamespace;
 
+    /**
+     * Instantiates a new Layout resolver namespace.
+     *
+     * @param namespace the namespace
+     */
     public LayoutResolverNamespace(@NotNull final Namespace namespace) {
         this(namespace, null);
     }
 
+    /**
+     * Instantiates a new Layout resolver namespace.
+     *
+     * @param schemaNamespace the schema namespace
+     * @param parent the parent
+     */
     public LayoutResolverNamespace(@NotNull final Namespace schemaNamespace, @Nullable final LayoutResolver parent) {
         checkNotNull(schemaNamespace, "expected non-null schemaNamespace");
         this.schemaNamespace = schemaNamespace;
@@ -39,6 +50,11 @@ public final class LayoutResolverNamespace extends LayoutResolver {
         this.layoutCache = new ConcurrentHashMap<>();
     }
 
+    /**
+     * Namespace namespace.
+     *
+     * @return the namespace
+     */
     public Namespace namespace() {
         return this.schemaNamespace;
     }

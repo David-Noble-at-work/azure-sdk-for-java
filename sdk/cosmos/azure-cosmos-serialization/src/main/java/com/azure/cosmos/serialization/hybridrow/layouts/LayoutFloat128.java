@@ -3,26 +3,33 @@
 
 package com.azure.cosmos.serialization.hybridrow.layouts;
 
+import com.azure.cosmos.core.Out;
 import com.azure.cosmos.serialization.hybridrow.Float128;
 import com.azure.cosmos.serialization.hybridrow.Result;
 import com.azure.cosmos.serialization.hybridrow.RowBuffer;
 import com.azure.cosmos.serialization.hybridrow.RowCursor;
-import com.azure.cosmos.core.Out;
-
-import org.jetbrains.annotations.NotNull;;
+import org.jetbrains.annotations.NotNull;
 
 import static com.azure.cosmos.base.Preconditions.checkArgument;
 
+/**
+ * Describes the layout of a Float128 field.
+ */
 public final class LayoutFloat128 extends LayoutTypePrimitive<Float128> {
 
+    /**
+     * Initialize a new Float128 layout.
+     */
     public LayoutFloat128() {
         super(LayoutCode.FLOAT_128, Float128.BYTES);
     }
 
+    @Override
     public boolean isFixed() {
         return true;
     }
 
+    @Override
     @NotNull
     public String name() {
         return "float128";
@@ -30,8 +37,11 @@ public final class LayoutFloat128 extends LayoutTypePrimitive<Float128> {
 
     @Override
     @NotNull
-    public Result readFixed(@NotNull RowBuffer buffer, @NotNull RowCursor scope, @NotNull LayoutColumn column,
-                            @NotNull Out<Float128> value) {
+    public Result readFixed(
+        @NotNull RowBuffer buffer,
+        @NotNull RowCursor scope,
+        @NotNull LayoutColumn column,
+        @NotNull Out<Float128> value) {
 
         checkArgument(scope.scopeType() instanceof LayoutUDT);
 
@@ -61,8 +71,11 @@ public final class LayoutFloat128 extends LayoutTypePrimitive<Float128> {
 
     @Override
     @NotNull
-    public Result writeFixed(@NotNull RowBuffer buffer, @NotNull RowCursor scope, @NotNull LayoutColumn column,
-                             @NotNull Float128 value) {
+    public Result writeFixed(
+        @NotNull RowBuffer buffer,
+        @NotNull RowCursor scope,
+        @NotNull LayoutColumn column,
+        @NotNull Float128 value) {
 
         checkArgument(scope.scopeType() instanceof LayoutUDT);
 
@@ -77,8 +90,11 @@ public final class LayoutFloat128 extends LayoutTypePrimitive<Float128> {
 
     @Override
     @NotNull
-    public Result writeSparse(@NotNull RowBuffer buffer, @NotNull RowCursor edit, @NotNull Float128 value,
-                              @NotNull UpdateOptions options) {
+    public Result writeSparse(
+        @NotNull RowBuffer buffer,
+        @NotNull RowCursor edit,
+        @NotNull Float128 value,
+        @NotNull UpdateOptions options) {
 
         Result result = prepareSparseWrite(buffer, edit, this.typeArg(), options);
 

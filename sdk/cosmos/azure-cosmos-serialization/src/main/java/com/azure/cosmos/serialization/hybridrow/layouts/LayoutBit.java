@@ -5,6 +5,9 @@ package com.azure.cosmos.serialization.hybridrow.layouts;
 
 import static com.azure.cosmos.base.Preconditions.checkArgument;
 
+/**
+ * The type Layout bit.
+ */
 public final class LayoutBit {
     /**
      * The empty bit.
@@ -23,6 +26,11 @@ public final class LayoutBit {
         this.index = index;
     }
 
+    /**
+     * Is invalid boolean.
+     *
+     * @return the boolean
+     */
     public boolean isInvalid() {
         return this.index == INVALID.index;
     }
@@ -55,6 +63,13 @@ public final class LayoutBit {
         return other instanceof LayoutBit && this.equals((LayoutBit) other);
     }
 
+    /**
+     * Equals boolean.
+     *
+     * @param other the other
+     *
+     * @return the boolean
+     */
     public boolean equals(LayoutBit other) {
         return other != null && this.index() == other.index();
     }
@@ -67,18 +82,20 @@ public final class LayoutBit {
     /**
      * Zero-based offset into the layout bitmask.
      *
-     * @return zero-based offset into the layout bitmask.
+     * @return zero -based offset into the layout bitmask.
      */
     public int index() {
         return this.index;
     }
 
     /**
-     * Returns the zero-based byte offset from the beginning of the row or scope that contains the bit from the bitmask.
+     * Returns the zero-based byte offset from the beginning of the row or scope that contains the bit from the
+     * bitmask.
      * <p>
      * Also see {@link #bit()} to identify.
      *
      * @param offset The byte offset from the beginning of the row where the scope begins.
+     *
      * @return The byte offset containing this bit.
      */
     public int offset(int offset) {
@@ -112,6 +129,8 @@ public final class LayoutBit {
 
         /**
          * The number of bytes needed to hold all bits so far allocated.
+         *
+         * @return the int
          */
         final int numBytes() {
             return LayoutBit.divCeiling(this.next, Byte.SIZE);

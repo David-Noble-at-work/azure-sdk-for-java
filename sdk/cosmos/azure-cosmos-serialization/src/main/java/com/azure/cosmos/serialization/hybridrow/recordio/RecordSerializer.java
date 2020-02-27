@@ -9,15 +9,30 @@ import com.azure.cosmos.serialization.hybridrow.Result;
 import com.azure.cosmos.serialization.hybridrow.io.RowReader;
 import com.azure.cosmos.serialization.hybridrow.io.RowWriter;
 import com.azure.cosmos.serialization.hybridrow.layouts.TypeArgument;
-
-import org.jetbrains.annotations.NotNull;;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import static com.azure.cosmos.base.Preconditions.checkNotNull;
 import static com.azure.cosmos.base.Preconditions.checkState;
 
+/**
+ * Provides static read/write operations on a {@link RowReader}.
+ */
 public final class RecordSerializer {
 
+    private RecordSerializer() {
+    }
+
+    // TODO (DANOBLE) Consider moving the methods of this type to the RowReader class.
+
+    /**
+     * Reads a HybridRow record.
+     *
+     * @param reader the reader from which the record will be read.
+     * @param record the record, if the operation is successful.
+     *
+     * @return {@link Result#SUCCESS}, if the operation is successful; an error {@link Result} otherwise.
+     */
     @NotNull
     public static Result read(@NotNull final RowReader reader, @NotNull final Out<Record> record) {
 
@@ -75,10 +90,20 @@ public final class RecordSerializer {
         return Result.SUCCESS;
     }
 
+    /**
+     * Writes a HybridRow record.
+     *
+     * @param writer the writer to which the record will be written.
+     * @param record the record to be written.
+     * @param typeArgument a {@link Nullable nullable} {@link TypeArgument type argument}.
+     *
+     * @return {@link Result#SUCCESS}, if the operation is successful; an error {@link Result} otherwise.
+     */
     @NotNull
     public static Result write(
         @NotNull final RowWriter writer,
-        @NotNull final Record record, @Nullable final TypeArgument typeArgument) {
+        @NotNull final Record record,
+        @Nullable final TypeArgument typeArgument) {
 
         checkNotNull(writer, "expected non-null writer");
         checkNotNull(record, "expected non-null record");

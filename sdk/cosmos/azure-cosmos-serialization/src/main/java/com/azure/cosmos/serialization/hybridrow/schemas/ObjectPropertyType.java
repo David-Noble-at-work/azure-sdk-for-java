@@ -33,6 +33,13 @@ public class ObjectPropertyType extends ScopePropertyType {
         return this.properties;
     }
 
+    /**
+     * Properties object property type.
+     *
+     * @param value the value
+     *
+     * @return the object property type
+     */
     public final ObjectPropertyType properties(List<Property> value) {
         this.properties = value != null ? value : Collections.emptyList();
         return this;

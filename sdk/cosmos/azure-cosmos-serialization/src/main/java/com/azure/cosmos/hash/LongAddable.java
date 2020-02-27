@@ -20,9 +20,22 @@ package com.azure.cosmos.hash;
  * @author Louis Wasserman
  */
 interface LongAddable {
-  void increment();
+    /**
+     * Increment.
+     */
+    void increment();
 
-  void add(long x);
+    /**
+     * Add.
+     *
+     * @param x the x
+     */
+    void add(long x);
 
-  long sum();
+    /**
+     * Sum long.
+     *
+     * @return the long
+     */
+    long sum();
 }

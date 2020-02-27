@@ -30,7 +30,6 @@ import com.azure.cosmos.serialization.hybridrow.layouts.LayoutInt16;
 import com.azure.cosmos.serialization.hybridrow.layouts.LayoutInt32;
 import com.azure.cosmos.serialization.hybridrow.layouts.LayoutInt64;
 import com.azure.cosmos.serialization.hybridrow.layouts.LayoutInt8;
-import com.azure.cosmos.serialization.hybridrow.layouts.LayoutMongoDbObjectId;
 import com.azure.cosmos.serialization.hybridrow.layouts.LayoutNull;
 import com.azure.cosmos.serialization.hybridrow.layouts.LayoutNullable;
 import com.azure.cosmos.serialization.hybridrow.layouts.LayoutObject;
@@ -81,13 +80,7 @@ import java.util.function.Supplier;
 import static com.azure.cosmos.base.Preconditions.checkArgument;
 import static com.azure.cosmos.base.Preconditions.checkNotNull;
 import static com.azure.cosmos.base.Preconditions.checkState;
-import static com.azure.cosmos.base.Strings.lenientFormat;
-
-;
-
-// import com.azure.data.cosmos.serialization.hybridrow.RowBuffer.UniqueIndexItem;
-
-//import static com.azure.data.cosmos.serialization.hybridrow.layouts.LayoutTypes.MongoDbObjectId;
+import static com.azure.cosmos.base.Strings.lenientFormat;// import com.azure.data.cosmos.serialization.hybridrow.RowBuffer.UniqueIndexItem;
 
 /**
  * Manages a sequence of bytes representing a Hybrid Row.
@@ -267,8 +260,8 @@ public final class RowBuffer {
      * by the value of {@code isVarint}.
      *
      * @param offset index of the field in this {@link RowBuffer}
-     * @param isVarint {@code true}, if the field should be interpreted as a variable-length integer value;
-     * {@code false}, if the field should be interpreted as a variable-length sequence of bytes.
+     * @param isVarint {@code true}, if the field should be interpreted as a variable-length integer value; {@code
+     * false}, if the field should be interpreted as a variable-length sequence of bytes.
      */
     public void deleteVariable(final int offset, final boolean isVarint) {
 
@@ -292,25 +285,6 @@ public final class RowBuffer {
     public HybridRowHeader header() {
         return this.readHeader();
     }
-
-    // TODO: DANOBLE: ressurrect this method
-    //    public void WriteSparseMongoDbObjectId(@NotNull final RowCursor edit, MongoDbObjectId value,
-    //                                           UpdateOptions options) {
-    //        int numBytes = MongoDbObjectId.Size;
-    //        int metaBytes;
-    //        final Out<Integer> metaBytes = new Out<>();
-    //        int spaceNeeded;
-    //        final Out<Integer> spaceNeeded = new Out<>();
-    //        int shift;
-    //        final Out<Integer> shift = new Out<>();
-    //        this.ensureSparse(numBytes, edit, MongoDbObjectId, TypeArgumentList.EMPTY, options,
-    //            metaBytes, spaceNeeded, shift);
-    //        this.writeSparseMetadata(edit, MongoDbObjectId, TypeArgumentList.EMPTY, metaBytes);
-    //        this.WriteMongoDbObjectId(edit.valueOffset(), value.clone());
-    //        checkState(spaceNeeded == metaBytes + MongoDbObjectId.Size);
-    //        edit.endOffset(edit.metaOffset() + spaceNeeded.get());
-    //        this.buffer.writerIndex(this.length() + shift);
-    //    }
 
     /**
      * Decrement the unsigned 32-bit integer value at the given {@code offset} in this {@link RowBuffer}.
@@ -443,11 +417,6 @@ public final class RowBuffer {
         return item.value();
     }
 
-    // TODO: DANOBLE: resurrect this method
-    //    public MongoDbObjectId ReadMongoDbObjectId(int offset) {
-    //        return MemoryMarshal.<MongoDbObjectId>Read(this.buffer.Slice(offset));
-    //    }
-
     /**
      * Read the value of the {@code Decimal} field at the given {@code offset} within this {@link RowBuffer}.
      *
@@ -521,13 +490,6 @@ public final class RowBuffer {
         Item<Double> item = this.read(this.buffer::readDoubleLE, offset);
         return item.value();
     }
-
-    // TODO: DANOBLE: resurrect this method
-    //    public MongoDbObjectId ReadSparseMongoDbObjectId(Reference<RowCursor> edit) {
-    //        this.readSparsePrimitiveTypeCode(edit, MongoDbObjectId);
-    //        edit.endOffset = edit.valueOffset() + MongoDbObjectId.Size;
-    //        return this.ReadMongoDbObjectId(edit.valueOffset()).clone();
-    //    }
 
     /**
      * Reads in the contents of the current {@link RowBuffer} from an {@link InputStream}.
@@ -1176,14 +1138,9 @@ public final class RowBuffer {
      *
      * @param value A signed value.
      *
-     * @return An unsigned value encoding the same value but with the sign bit in the LSB.
-     * <p>
-     * s the signed bit of a two's complement value to the least significant bit (LSB) by:
-     * <ol>
-     * <li>If negative, take the two's complement.
-     * <li>Left shift the value by 1 bit.
-     * <li>If negative, set the LSB to 1.
-     * </ol>
+     * @return An unsigned value encoding the same value but with the sign bit in the LSB. <p> s the signed bit of a
+     * two's complement value to the least significant bit (LSB) by: <ol> <li>If negative, take the two's complement.
+     * <li>Left shift the value by 1 bit. <li>If negative, set the LSB to 1. </ol>
      */
     public static long rotateSignToLsb(long value) {
         boolean isNegative = value < 0;
@@ -1204,14 +1161,12 @@ public final class RowBuffer {
         return isNegative ? (~(unsignedValue >>> 1) + 1) | 0x8000000000000000L : unsignedValue >>> 1;
     }
 
-    // TODO: DANOBLE: Support MongoDbObjectId values
-    //    public void WriteMongoDbObjectId(int offset, MongoDbObjectId value) {
-    //        Reference<azure.data.cosmos.serialization.hybridrow.MongoDbObjectId> tempReference_value =
-    //            new Reference<azure.data.cosmos.serialization.hybridrow.MongoDbObjectId>(value);
-    //        MemoryMarshal.Write(this.buffer.Slice(offset), tempReference_value);
-    //        value = tempReference_value.get();
-    //    }
-
+    /**
+     * Sets bit.
+     *
+     * @param offset the offset
+     * @param bit the bit
+     */
     public void setBit(final int offset, @NotNull final LayoutBit bit) {
         checkNotNull(bit, "expected non-null bit");
         if (bit.isInvalid()) {
@@ -1224,16 +1179,11 @@ public final class RowBuffer {
     /**
      * Move a sparse iterator to the next field within the same sparse scope.
      *
-     * @param edit The iterator to advance.
-     * <p>
-     * {@code edit.Path} On success, the path of the field at the given offset, otherwise undefined.
-     * <p>
-     * {@code edit.MetaOffset} If found, the offset to the metadata of the field, otherwise a location to insert the
-     * field.
-     * <p>
-     * {@code edit.cellType} If found, the layout code of the matching field found, otherwise undefined.
-     * <p>
-     * {@code edit.ValueOffset} If found, the offset to the value of the field, otherwise undefined. .
+     * @param edit The iterator to advance. <p> {@code edit.Path} On success, the path of the field at the given offset,
+     * otherwise undefined. <p> {@code edit.MetaOffset} If found, the offset to the metadata of the field, otherwise a
+     * location to insert the field. <p> {@code edit.cellType} If found, the layout code of the matching field found,
+     * otherwise undefined. <p> {@code edit.ValueOffset} If found, the offset to the value of the field, otherwise
+     * undefined. .
      *
      * @return {@code true} if there is another field; {@code false} if there is not.
      */
@@ -1392,12 +1342,24 @@ public final class RowBuffer {
         throw new IllegalStateException(lenientFormat("not a scope type: %s", scopeType));
     }
 
+    /**
+     * To array byte [ ].
+     *
+     * @return the byte [ ]
+     */
     public byte[] toArray() {
         byte[] content = new byte[this.length()];
         this.buffer.getBytes(0, content);
         return content;
     }
 
+    /**
+     * Typed collection move field.
+     *
+     * @param dstEdit the dst edit
+     * @param srcEdit the src edit
+     * @param options the options
+     */
     public void typedCollectionMoveField(
         @NotNull final RowCursor dstEdit,
         @NotNull final RowCursor srcEdit,
@@ -1446,22 +1408,15 @@ public final class RowBuffer {
      *
      * @param scope The sparse scope to rebuild an index for.
      *
-     * @return Success if the index could be built, an error otherwise.
-     * <p>
-     * The {@code scope} MUST be a set or map scope.
-     * <p>
-     * The scope may have been built (e.g. via RowWriter) with relaxed uniqueness constraint checking. This operation
-     * rebuilds an index to support verification of uniqueness constraints during subsequent partial tes.  If the
-     * appropriate uniqueness constraints cannot be established (i.e. a duplicate exists), this ation fails.  Before
-     * continuing, the resulting scope should either:
-     * <ol>
-     * <li>Be repaired (e.g. by deleting duplicates) and the index rebuild operation should be run again.
-     * <li>Be deleted. The entire scope should be removed including its items.
-     * </ol>
-     * Failure to perform one of these actions will leave the row is potentially in a corrupted state where partial
-     * updates may subsequent fail.
-     * <p>
-     * The target {@code scope} may or may not have already been indexed. This operation is idempotent.
+     * @return Success if the index could be built, an error otherwise. <p> The {@code scope} MUST be a set or map
+     * scope. <p> The scope may have been built (e.g. via RowWriter) with relaxed uniqueness constraint checking. This
+     * operation rebuilds an index to support verification of uniqueness constraints during subsequent partial tes.  If
+     * the appropriate uniqueness constraints cannot be established (i.e. a duplicate exists), this ation fails.  Before
+     * continuing, the resulting scope should either: <ol> <li>Be repaired (e.g. by deleting duplicates) and the index
+     * rebuild operation should be run again. <li>Be deleted. The entire scope should be removed including its items.
+     * </ol> Failure to perform one of these actions will leave the row is potentially in a corrupted state where
+     * partial updates may subsequent fail. <p> The target {@code scope} may or may not have already been indexed. This
+     * operation is idempotent.
      */
     @NotNull
     public Result typedCollectionUniqueIndexRebuild(@NotNull final RowCursor scope) {
@@ -1535,6 +1490,12 @@ public final class RowBuffer {
         return Result.SUCCESS;
     }
 
+    /**
+     * Unset bit.
+     *
+     * @param offset the offset
+     * @param bit the bit
+     */
     public void unsetBit(final int offset, @NotNull final LayoutBit bit) {
         checkNotNull(bit, "expected non-null bit");
         checkArgument(!bit.isInvalid());
@@ -1542,6 +1503,13 @@ public final class RowBuffer {
         this.buffer.setByte(index, this.buffer.getByte(index) & (byte) ~(1 << bit.bit()));
     }
 
+    /**
+     * Write 7 bit encoded int int.
+     *
+     * @param value the value
+     *
+     * @return the int
+     */
     public int write7BitEncodedInt(final long value) {
         return this.write7BitEncodedUInt(RowBuffer.rotateSignToLsb(value));
     }
@@ -1570,14 +1538,33 @@ public final class RowBuffer {
         return i;
     }
 
+    /**
+     * Write date time.
+     *
+     * @param offset the offset
+     * @param value the value
+     */
     public void writeDateTime(int offset, OffsetDateTime value) {
         Item<OffsetDateTime> item = this.write(this::writeDateTime, offset, value);
     }
 
+    /**
+     * Write decimal.
+     *
+     * @param offset the offset
+     * @param value the value
+     */
     public void writeDecimal(int offset, BigDecimal value) {
         Item<BigDecimal> item = this.write(this::writeDecimal, offset, value);
     }
 
+    /**
+     * Write fixed binary.
+     *
+     * @param offset the offset
+     * @param value the value
+     * @param length the length
+     */
     public void writeFixedBinary(final int offset, @NotNull final ByteBuf value, final int length) {
 
         checkNotNull(value, "expected non-null value");
@@ -1593,6 +1580,14 @@ public final class RowBuffer {
         }, offset, value);
     }
 
+    /**
+     * Write fixed binary.
+     *
+     * @param offset the offset
+     * @param value the value
+     * @param index the index
+     * @param length the length
+     */
     public void writeFixedBinary(final int offset, @NotNull final ByteBuf value, final int index, final int length) {
         checkArgument(index >= 0, "expected index >= 0, not %s", index);
         value.markReaderIndex().readerIndex(index);
@@ -1600,6 +1595,14 @@ public final class RowBuffer {
         value.resetReaderIndex();
     }
 
+    /**
+     * Write fixed binary.
+     *
+     * @param offset the offset
+     * @param value the value
+     * @param index the index
+     * @param length the length
+     */
     public void writeFixedBinary(final int offset, @NotNull final byte[] value, final int index, final int length) {
 
         checkNotNull(value, "expected non-null value");
@@ -1616,51 +1619,121 @@ public final class RowBuffer {
         }, offset, value);
     }
 
+    /**
+     * Write fixed string.
+     *
+     * @param offset the offset
+     * @param value the value
+     */
     public void writeFixedString(final int offset, @NotNull final Utf8String value) {
         checkNotNull(value, "expected non-null value");
         checkArgument(!value.isNull(), "expected non-null value content");
         Item<Utf8String> item = this.write(this::writeFixedString, offset, value);
     }
 
+    /**
+     * Write float 128.
+     *
+     * @param offset the offset
+     * @param value the value
+     */
     public void writeFloat128(int offset, Float128 value) {
         this.buffer.writeLongLE(value.low());
         this.buffer.writeLongLE(value.high());
     }
 
+    /**
+     * Write float 32.
+     *
+     * @param offset the offset
+     * @param value the value
+     */
     public void writeFloat32(final int offset, final float value) {
         Item<Float> item = this.write(this.buffer::writeFloatLE, offset, value);
     }
 
+    /**
+     * Write float 64.
+     *
+     * @param offset the offset
+     * @param value the value
+     */
     public void writeFloat64(final int offset, final double value) {
         Item<Double> item = this.write(this.buffer::writeDoubleLE, offset, value);
     }
 
+    /**
+     * Write guid.
+     *
+     * @param offset the offset
+     * @param value the value
+     */
     public void writeGuid(final int offset, @NotNull final UUID value) {
         checkNotNull(value, "expected non-null value");
         Item<UUID> item = this.write(this::writeGuid, offset, value);
     }
 
+    /**
+     * Write header.
+     *
+     * @param value the value
+     */
     public void writeHeader(HybridRowHeader value) {
         this.buffer.writeByte(value.version().value());
         this.buffer.writeIntLE(value.schemaId().value());
     }
 
+    /**
+     * Write int 16.
+     *
+     * @param ignored the ignored
+     * @param value the value
+     */
     public void writeInt16(final int ignored, final short value) {
         this.buffer.writeShortLE(value);
     }
 
+    /**
+     * Write int 32.
+     *
+     * @param ignored the ignored
+     * @param value the value
+     */
     public void writeInt32(final int ignored, final int value) {
         this.buffer.writeIntLE(value);
     }
 
+    /**
+     * Write int 64.
+     *
+     * @param ignored the ignored
+     * @param value the value
+     */
     public void writeInt64(final int ignored, final long value) {
         this.buffer.writeLongLE(value);
     }
 
+    /**
+     * Write int 8.
+     *
+     * @param ignored the ignored
+     * @param value the value
+     */
     public void writeInt8(final int ignored, final byte value) {
         this.buffer.writeByte(value);
     }
 
+    /**
+     * Write nullable row cursor.
+     *
+     * @param edit the edit
+     * @param scope the scope
+     * @param typeArgs the type args
+     * @param options the options
+     * @param hasValue the has value
+     *
+     * @return the row cursor
+     */
     @NotNull
     public RowCursor writeNullable(
         @NotNull final RowCursor edit,
@@ -1711,11 +1784,26 @@ public final class RowBuffer {
         return newScope;
     }
 
+    /**
+     * Write schema id.
+     *
+     * @param offset the offset
+     * @param value the value
+     */
     public void writeSchemaId(final int offset, @NotNull final SchemaId value) {
         checkNotNull(value, "expected non-null value");
         this.writeInt32(offset, value.value());
     }
 
+    /**
+     * Write sparse array row cursor.
+     *
+     * @param edit the edit
+     * @param scope the scope
+     * @param options the options
+     *
+     * @return the row cursor
+     */
     @NotNull
     public RowCursor writeSparseArray(
         @NotNull final RowCursor edit, @NotNull final LayoutTypeScope scope, @NotNull final UpdateOptions options) {
@@ -1749,6 +1837,13 @@ public final class RowBuffer {
             .layout(edit.layout());
     }
 
+    /**
+     * Write sparse binary.
+     *
+     * @param edit the edit
+     * @param value the value
+     * @param options the options
+     */
     public void writeSparseBinary(
         @NotNull final RowCursor edit, @NotNull final ByteBuf value, @NotNull final UpdateOptions options) {
 
@@ -1775,6 +1870,13 @@ public final class RowBuffer {
         edit.endOffset(edit.metaOffset() + spaceNeeded.get());
     }
 
+    /**
+     * Write sparse boolean.
+     *
+     * @param edit the edit
+     * @param value the value
+     * @param options the options
+     */
     public void writeSparseBoolean(
         @NotNull final RowCursor edit, final boolean value, @NotNull final UpdateOptions options) {
 
@@ -1800,6 +1902,13 @@ public final class RowBuffer {
         edit.endOffset(edit.metaOffset() + spaceNeeded.get());
     }
 
+    /**
+     * Write sparse date time.
+     *
+     * @param edit the edit
+     * @param value the value
+     * @param options the options
+     */
     public void writeSparseDateTime(
         @NotNull final RowCursor edit, @NotNull final OffsetDateTime value, @NotNull final UpdateOptions options) {
 
@@ -1826,6 +1935,13 @@ public final class RowBuffer {
         edit.endOffset(edit.metaOffset() + spaceNeeded.get());
     }
 
+    /**
+     * Write sparse decimal.
+     *
+     * @param edit the edit
+     * @param value the value
+     * @param options the options
+     */
     public void writeSparseDecimal(
         @NotNull final RowCursor edit, @NotNull final BigDecimal value, @NotNull final UpdateOptions options) {
 
@@ -1852,6 +1968,13 @@ public final class RowBuffer {
         edit.endOffset(edit.metaOffset() + spaceNeeded.get());
     }
 
+    /**
+     * Write sparse float 128.
+     *
+     * @param edit the edit
+     * @param value the value
+     * @param options the options
+     */
     public void writeSparseFloat128(
         @NotNull final RowCursor edit, @NotNull final Float128 value, @NotNull final UpdateOptions options) {
 
@@ -1878,6 +2001,13 @@ public final class RowBuffer {
         edit.endOffset(edit.metaOffset() + spaceNeeded.get());
     }
 
+    /**
+     * Write sparse float 32.
+     *
+     * @param edit the edit
+     * @param value the value
+     * @param options the options
+     */
     public void writeSparseFloat32(@NotNull RowCursor edit, float value, @NotNull UpdateOptions options) {
 
         checkNotNull(edit, "expected non-null edit");
@@ -1902,6 +2032,13 @@ public final class RowBuffer {
         edit.endOffset(edit.metaOffset() + spaceNeeded.get());
     }
 
+    /**
+     * Write sparse float 64.
+     *
+     * @param edit the edit
+     * @param value the value
+     * @param options the options
+     */
     public void writeSparseFloat64(@NotNull final RowCursor edit, double value, @NotNull final UpdateOptions options) {
 
         checkNotNull(edit, "expected non-null edit");
@@ -1926,6 +2063,13 @@ public final class RowBuffer {
         edit.endOffset(edit.metaOffset() + spaceNeeded.get());
     }
 
+    /**
+     * Write sparse guid.
+     *
+     * @param edit the edit
+     * @param value the value
+     * @param options the options
+     */
     public void writeSparseGuid(
         @NotNull final RowCursor edit, @NotNull final UUID value, @NotNull final UpdateOptions options) {
 
@@ -1952,6 +2096,13 @@ public final class RowBuffer {
         edit.endOffset(edit.metaOffset() + spaceNeeded.get());
     }
 
+    /**
+     * Write sparse int 16.
+     *
+     * @param edit the edit
+     * @param value the value
+     * @param options the options
+     */
     public void writeSparseInt16(@NotNull final RowCursor edit, short value, @NotNull final UpdateOptions options) {
 
         checkNotNull(edit, "expected non-null edit");
@@ -1976,6 +2127,13 @@ public final class RowBuffer {
         edit.endOffset(edit.metaOffset() + spaceNeeded.get());
     }
 
+    /**
+     * Write sparse int 32.
+     *
+     * @param edit the edit
+     * @param value the value
+     * @param options the options
+     */
     public void writeSparseInt32(@NotNull final RowCursor edit, int value, @NotNull final UpdateOptions options) {
 
         checkNotNull(edit, "expected non-null edit");
@@ -2000,6 +2158,13 @@ public final class RowBuffer {
         edit.endOffset(edit.metaOffset() + spaceNeeded.get());
     }
 
+    /**
+     * Write sparse int 64.
+     *
+     * @param edit the edit
+     * @param value the value
+     * @param options the options
+     */
     public void writeSparseInt64(@NotNull final RowCursor edit, long value, UpdateOptions options) {
 
         checkNotNull(edit, "expected non-null edit");
@@ -2024,6 +2189,13 @@ public final class RowBuffer {
         edit.endOffset(edit.metaOffset() + spaceNeeded.get());
     }
 
+    /**
+     * Write sparse int 8.
+     *
+     * @param edit the edit
+     * @param value the value
+     * @param options the options
+     */
     public void writeSparseInt8(@NotNull final RowCursor edit, byte value, UpdateOptions options) {
 
         checkNotNull(edit, "expected non-null edit");
@@ -2049,6 +2221,13 @@ public final class RowBuffer {
         edit.endOffset(edit.metaOffset() + spaceNeeded.get());
     }
 
+    /**
+     * Write sparse null.
+     *
+     * @param edit the edit
+     * @param value the value
+     * @param options the options
+     */
     public void writeSparseNull(
         @NotNull final RowCursor edit, @NotNull final NullValue value, @NotNull final UpdateOptions options) {
 
@@ -2074,6 +2253,15 @@ public final class RowBuffer {
         edit.endOffset(edit.metaOffset() + spaceNeeded.get());
     }
 
+    /**
+     * Write sparse object row cursor.
+     *
+     * @param edit the edit
+     * @param scope the scope
+     * @param options the options
+     *
+     * @return the row cursor
+     */
     public RowCursor writeSparseObject(
         @NotNull final RowCursor edit,
         @NotNull final LayoutTypeScope scope,
@@ -2108,6 +2296,13 @@ public final class RowBuffer {
             .layout(edit.layout());
     }
 
+    /**
+     * Write sparse string.
+     *
+     * @param edit the edit
+     * @param value the value
+     * @param options the options
+     */
     public void writeSparseString(
         @NotNull final RowCursor edit, @NotNull final Utf8String value, @NotNull final UpdateOptions options) {
 
@@ -2131,6 +2326,16 @@ public final class RowBuffer {
         edit.endOffset(edit.metaOffset() + spaceNeeded.get());
     }
 
+    /**
+     * Write sparse tuple row cursor.
+     *
+     * @param edit the edit
+     * @param scope the scope
+     * @param typeArgs the type args
+     * @param options the options
+     *
+     * @return the row cursor
+     */
     @NotNull
     public RowCursor writeSparseTuple(
         @NotNull final RowCursor edit,
@@ -2171,10 +2376,26 @@ public final class RowBuffer {
             .count(typeArgs.count());
     }
 
+    /**
+     * Write sparse type code.
+     *
+     * @param offset the offset
+     * @param code the code
+     */
     public void writeSparseTypeCode(int offset, LayoutCode code) {
         this.writeUInt8(offset, code.value());
     }
 
+    /**
+     * Write sparse udt row cursor.
+     *
+     * @param edit the edit
+     * @param scope the scope
+     * @param udt the udt
+     * @param options the options
+     *
+     * @return the row cursor
+     */
     @NotNull
     public RowCursor writeSparseUDT(
         @NotNull final RowCursor edit,
@@ -2212,6 +2433,13 @@ public final class RowBuffer {
             .layout(udt);
     }
 
+    /**
+     * Write sparse u int 16.
+     *
+     * @param edit the edit
+     * @param value the value
+     * @param options the options
+     */
     public void writeSparseUInt16(
         @NotNull final RowCursor edit, final short value, @NotNull final UpdateOptions options) {
 
@@ -2238,6 +2466,13 @@ public final class RowBuffer {
         edit.endOffset(edit.metaOffset() + spaceNeeded.get());
     }
 
+    /**
+     * Write sparse u int 32.
+     *
+     * @param edit the edit
+     * @param value the value
+     * @param options the options
+     */
     public void writeSparseUInt32(
         @NotNull final RowCursor edit, final int value, @NotNull final UpdateOptions options) {
 
@@ -2264,6 +2499,13 @@ public final class RowBuffer {
         edit.endOffset(edit.metaOffset() + spaceNeeded.get());
     }
 
+    /**
+     * Write sparse u int 64.
+     *
+     * @param edit the edit
+     * @param value the value
+     * @param options the options
+     */
     public void writeSparseUInt64(@NotNull final RowCursor edit, long value, @NotNull UpdateOptions options) {
 
         checkNotNull(edit, "expected non-null edit");
@@ -2289,6 +2531,13 @@ public final class RowBuffer {
         edit.endOffset(edit.metaOffset() + spaceNeeded.get());
     }
 
+    /**
+     * Write sparse u int 8.
+     *
+     * @param edit the edit
+     * @param value the value
+     * @param options the options
+     */
     public void writeSparseUInt8(
         @NotNull final RowCursor edit, final byte value, @NotNull final UpdateOptions options) {
 
@@ -2314,6 +2563,13 @@ public final class RowBuffer {
         edit.endOffset(edit.metaOffset() + spaceNeeded.get());
     }
 
+    /**
+     * Write sparse unix date time.
+     *
+     * @param edit the edit
+     * @param value the value
+     * @param options the options
+     */
     public void writeSparseUnixDateTime(
         @NotNull final RowCursor edit, @NotNull final UnixDateTime value, @NotNull final UpdateOptions options) {
 
@@ -2340,6 +2596,13 @@ public final class RowBuffer {
         edit.endOffset(edit.metaOffset() + spaceNeeded.get());
     }
 
+    /**
+     * Write sparse var int.
+     *
+     * @param edit the edit
+     * @param value the value
+     * @param options the options
+     */
     public void writeSparseVarInt(@NotNull final RowCursor edit, final long value,
                                   @NotNull final UpdateOptions options) {
 
@@ -2365,6 +2628,13 @@ public final class RowBuffer {
         edit.endOffset(edit.metaOffset() + spaceNeeded.get());
     }
 
+    /**
+     * Write sparse var u int.
+     *
+     * @param edit the edit
+     * @param value the value
+     * @param options the options
+     */
     public void writeSparseVarUInt(
         @NotNull final RowCursor edit, final long value, @NotNull final UpdateOptions options) {
 
@@ -2400,6 +2670,16 @@ public final class RowBuffer {
         this.buffer.getBytes(0, stream, this.length());
     }
 
+    /**
+     * Write typed array row cursor.
+     *
+     * @param edit the edit
+     * @param scope the scope
+     * @param typeArgs the type args
+     * @param options the options
+     *
+     * @return the row cursor
+     */
     @NotNull
     public RowCursor writeTypedArray(
         @NotNull final RowCursor edit,
@@ -2432,6 +2712,16 @@ public final class RowBuffer {
             .layout(edit.layout());
     }
 
+    /**
+     * Write typed map row cursor.
+     *
+     * @param edit the edit
+     * @param scope the scope
+     * @param typeArgs the type args
+     * @param options the options
+     *
+     * @return the row cursor
+     */
     @NotNull
     public RowCursor writeTypedMap(
         @NotNull final RowCursor edit,
@@ -2465,6 +2755,16 @@ public final class RowBuffer {
             .layout(edit.layout());
     }
 
+    /**
+     * Write typed set row cursor.
+     *
+     * @param edit the edit
+     * @param scope the scope
+     * @param typeArgs the type args
+     * @param options the options
+     *
+     * @return the row cursor
+     */
     @NotNull
     public RowCursor writeTypedSet(
         @NotNull final RowCursor edit,
@@ -2498,6 +2798,16 @@ public final class RowBuffer {
             .layout(edit.layout());
     }
 
+    /**
+     * Write typed tuple row cursor.
+     *
+     * @param edit the edit
+     * @param scope the scope
+     * @param typeArgs the type args
+     * @param options the options
+     *
+     * @return the row cursor
+     */
     public RowCursor writeTypedTuple(
         @NotNull final RowCursor edit,
         @NotNull final LayoutTypeScope scope,
@@ -2534,26 +2844,64 @@ public final class RowBuffer {
         return newScope;
     }
 
+    /**
+     * Write u int 16.
+     *
+     * @param offset the offset
+     * @param value the value
+     */
     public void writeUInt16(final int offset, final short value) {
         final Item<Short> item = this.write(this::writeUInt16, offset, value);
     }
 
+    /**
+     * Write u int 32.
+     *
+     * @param offset the offset
+     * @param value the value
+     */
     public void writeUInt32(final int offset, final int value) {
         final Item<Integer> item = this.write(this::writeUInt32, offset, value);
     }
 
+    /**
+     * Write u int 64.
+     *
+     * @param offset the offset
+     * @param value the value
+     */
     public void writeUInt64(final int offset, final long value) {
         final Item<Long> item = this.write(this::writeUInt64, offset, value);
     }
 
+    /**
+     * Write u int 8.
+     *
+     * @param offset the offset
+     * @param value the value
+     */
     public void writeUInt8(int offset, byte value) {
         final Item<Byte> item = this.write(this::writeUInt8, offset, value);
     }
 
+    /**
+     * Write unix date time.
+     *
+     * @param offset the offset
+     * @param value the value
+     */
     public void writeUnixDateTime(int offset, UnixDateTime value) {
         final Item<Long> item = this.write(this::writeUInt64, offset, value.milliseconds());
     }
 
+    /**
+     * Write variable binary.
+     *
+     * @param offset the offset
+     * @param value the value
+     * @param exists the exists
+     * @param shift the shift
+     */
     public void writeVariableBinary(
         final int offset, @NotNull final ByteBuf value, final boolean exists, @NotNull final Out<Integer> shift) {
 
@@ -2572,6 +2920,15 @@ public final class RowBuffer {
         checkState(this.length() == priorLength + shift.get());
     }
 
+    /**
+     * Write variable int int.
+     *
+     * @param offset the offset
+     * @param value the value
+     * @param exists the exists
+     *
+     * @return the int
+     */
     public int writeVariableInt(int offset, long value, boolean exists) {
 
         final int length = RowBuffer.count7BitEncodedInt(value);
@@ -2590,6 +2947,15 @@ public final class RowBuffer {
         return shift.get();
     }
 
+    /**
+     * Write variable string int.
+     *
+     * @param offset the offset
+     * @param value the value
+     * @param exists the exists
+     *
+     * @return the int
+     */
     public int writeVariableString(
         final int offset, @NotNull final Utf8String value, final boolean exists) {
 
@@ -2612,12 +2978,29 @@ public final class RowBuffer {
         return shift.get();
     }
 
+    /**
+     * Write variable u int int.
+     *
+     * @param offset the offset
+     * @param value the value
+     *
+     * @return the int
+     */
     public int writeVariableUInt(final int offset, final long value) {
         checkArgument(offset >= 0, "expected non-negative offset, not %s", offset);
         Item<Long> item = this.write(this::write7BitEncodedUInt, offset, value);
         return item.length();
     }
 
+    /**
+     * Write variable u int int.
+     *
+     * @param offset the offset
+     * @param value the value
+     * @param exists the exists
+     *
+     * @return the int
+     */
     public int writeVariableUInt(final int offset, final long value, final boolean exists) {
 
         checkArgument(offset >= 0, "expected non-negative offset, not %s", offset);
@@ -2811,10 +3194,6 @@ public final class RowBuffer {
         }
         if (code instanceof LayoutGuid) {
             return LayoutTypes.GUID.size();
-        }
-        if (code instanceof LayoutMongoDbObjectId) {
-            // return MongoDbObjectId.size();
-            throw new UnsupportedOperationException();
         }
         if (code instanceof LayoutUtf8 || code instanceof LayoutBinary || code instanceof LayoutVarInt
             || code instanceof LayoutVarUInt) {
@@ -3409,10 +3788,6 @@ public final class RowBuffer {
             case GUID:
                 return metaBytes + LayoutTypes.GUID.size();
 
-            case MONGODB_OBJECT_ID:
-                // return metaBytes + MongoDbObjectId.size();
-                throw new UnsupportedOperationException();
-
             case UTF_8:
             case BINARY: {
                 final Item<Long> item = this.read(this::read7BitEncodedUInt, metaOffset + metaBytes);
@@ -3584,13 +3959,6 @@ public final class RowBuffer {
             return LayoutTypes.GUID.size();
         }
 
-        if (code == LayoutTypes.MONGODB_OBJECT_ID) {
-            // TODO: DANOBLE: Add support for LayoutTypes.MONGODB_OBJECT_ID
-            // this.writeMongoDbObjectId(offset, null);
-            // return MongoDbObjectId.Size;
-            throw new UnsupportedOperationException();
-        }
-
         if (code == LayoutTypes.UTF_8 || code == LayoutTypes.BINARY || code == LayoutTypes.VAR_INT
             || code == LayoutTypes.VAR_UINT) {
             // Variable length types preceded by their varuint size take 1 byte for a size of 0
@@ -3755,11 +4123,20 @@ public final class RowBuffer {
 
         /**
          * The layout code of the value.
+         *
+         * @return the layout code
          */
         public LayoutCode code() {
             return this.code;
         }
 
+        /**
+         * Code unique index item.
+         *
+         * @param code the code
+         *
+         * @return the unique index item
+         */
         public UniqueIndexItem code(LayoutCode code) {
             this.code = code;
             return this;
@@ -3767,11 +4144,20 @@ public final class RowBuffer {
 
         /**
          * If existing, the offset to the metadata of the existing field, otherwise the location to insert a new field.
+         *
+         * @return the int
          */
         public int metaOffset() {
             return this.metaOffset;
         }
 
+        /**
+         * Meta offset unique index item.
+         *
+         * @param metaOffset the meta offset
+         *
+         * @return the unique index item
+         */
         public UniqueIndexItem metaOffset(int metaOffset) {
             this.metaOffset = metaOffset;
             return this;
@@ -3779,11 +4165,20 @@ public final class RowBuffer {
 
         /**
          * Size of the target element.
+         *
+         * @return the int
          */
         public int size() {
             return this.size;
         }
 
+        /**
+         * Size unique index item.
+         *
+         * @param size the size
+         *
+         * @return the unique index item
+         */
         public UniqueIndexItem size(int size) {
             this.size = size;
             return this;
@@ -3791,11 +4186,20 @@ public final class RowBuffer {
 
         /**
          * If existing, the offset to the value of the existing field, otherwise undefined.
+         *
+         * @return the int
          */
         public int valueOffset() {
             return this.valueOffset;
         }
 
+        /**
+         * Value offset unique index item.
+         *
+         * @param valueOffset the value offset
+         *
+         * @return the unique index item
+         */
         public UniqueIndexItem valueOffset(int valueOffset) {
             this.valueOffset = valueOffset;
             return this;
@@ -3814,18 +4218,43 @@ public final class RowBuffer {
             this.length = length;
         }
 
+        /**
+         * Length int.
+         *
+         * @return the int
+         */
         public int length() {
             return this.length;
         }
 
+        /**
+         * Of item.
+         *
+         * @param <T> the type parameter
+         * @param value the value
+         * @param offset the offset
+         * @param length the length
+         *
+         * @return the item
+         */
         public static <T> Item<T> of(T value, int offset, int length) {
             return new Item<>(value, offset, length);
         }
 
+        /**
+         * Offset int.
+         *
+         * @return the int
+         */
         public int offset() {
             return this.offset;
         }
 
+        /**
+         * Value t.
+         *
+         * @return the t
+         */
         public T value() {
             return this.value;
         }

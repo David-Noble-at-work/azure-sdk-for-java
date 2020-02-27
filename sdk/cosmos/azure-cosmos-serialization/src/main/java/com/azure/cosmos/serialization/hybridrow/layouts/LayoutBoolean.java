@@ -3,18 +3,25 @@
 
 package com.azure.cosmos.serialization.hybridrow.layouts;
 
+import com.azure.cosmos.core.Out;
 import com.azure.cosmos.serialization.hybridrow.Result;
 import com.azure.cosmos.serialization.hybridrow.RowBuffer;
 import com.azure.cosmos.serialization.hybridrow.RowCursor;
-import com.azure.cosmos.core.Out;
-
-import org.jetbrains.annotations.NotNull;;
+import org.jetbrains.annotations.NotNull;
 
 import static com.azure.cosmos.base.Preconditions.checkArgument;
 import static com.azure.cosmos.base.Preconditions.checkNotNull;
 
+/**
+ * The type Layout boolean.
+ */
 public final class LayoutBoolean extends LayoutTypePrimitive<Boolean> implements ILayoutType {
 
+    /**
+     * Instantiates a new Layout boolean.
+     *
+     * @param value the value
+     */
     public LayoutBoolean(boolean value) {
         super(value ? LayoutCode.BOOLEAN : LayoutCode.BOOLEAN_FALSE, 0);
     }

@@ -15,7 +15,7 @@ import com.fasterxml.jackson.databind.ser.std.StdSerializer;
 import it.unimi.dsi.fastutil.HashCommon;
 import it.unimi.dsi.fastutil.ints.Int2ReferenceMap;
 import it.unimi.dsi.fastutil.ints.Int2ReferenceOpenHashMap;
-import org.jetbrains.annotations.NotNull;;
+import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
 
@@ -30,8 +30,17 @@ import static it.unimi.dsi.fastutil.HashCommon.mix;
 @JsonSerialize(using = SchemaId.JsonSerializer.class)
 public final class SchemaId implements Comparable<SchemaId> {
 
+    /**
+     * The constant BYTES.
+     */
     public static final int BYTES = Integer.BYTES;
+    /**
+     * The constant INVALID.
+     */
     public static final SchemaId INVALID;
+    /**
+     * The constant NONE.
+     */
     public static final SchemaId NONE;
 
     private static final Int2ReferenceMap<SchemaId> cache;
@@ -75,6 +84,7 @@ public final class SchemaId implements Comparable<SchemaId> {
      * {@code true} if this is the same {@link SchemaId} as {@code other}.
      *
      * @param other The value to compare against.
+     *
      * @return {@code true} if the two values are the same.
      */
     public boolean equals(SchemaId other) {
@@ -88,6 +98,7 @@ public final class SchemaId implements Comparable<SchemaId> {
      * Returns a {@link SchemaId} with the given underlying integer value.
      *
      * @param value an integer.
+     *
      * @return a {@link SchemaId} with the given underlying integer {@code value}.
      */
     public static SchemaId from(int value) {
@@ -126,6 +137,9 @@ public final class SchemaId implements Comparable<SchemaId> {
         return this.value;
     }
 
+    /**
+     * The type Json deserializer.
+     */
     static final class JsonDeserializer extends StdDeserializer<SchemaId> {
 
         private static final long serialVersionUID = 265448445923892367L;
@@ -148,6 +162,9 @@ public final class SchemaId implements Comparable<SchemaId> {
         }
     }
 
+    /**
+     * The type Json serializer.
+     */
     static final class JsonSerializer extends StdSerializer<SchemaId> {
 
         private static final long serialVersionUID = 6998423491450285472L;

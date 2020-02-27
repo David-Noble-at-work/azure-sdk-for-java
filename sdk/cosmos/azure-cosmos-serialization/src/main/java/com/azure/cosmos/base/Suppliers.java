@@ -118,7 +118,7 @@ public final class Suppliers {
     /**
      * Returns a supplier that always supplies {@code instance}.
      *
-     * @param <T>  the type parameter
+     * @param <T> the type parameter
      * @param instance the instance
      *
      * @return the supplier

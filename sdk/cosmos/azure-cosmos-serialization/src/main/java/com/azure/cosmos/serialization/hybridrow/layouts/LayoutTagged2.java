@@ -3,19 +3,26 @@
 
 package com.azure.cosmos.serialization.hybridrow.layouts;
 
+import com.azure.cosmos.core.Out;
 import com.azure.cosmos.serialization.hybridrow.Result;
 import com.azure.cosmos.serialization.hybridrow.RowBuffer;
 import com.azure.cosmos.serialization.hybridrow.RowCursor;
-import com.azure.cosmos.core.Out;
-
-import org.jetbrains.annotations.NotNull;;
+import org.jetbrains.annotations.NotNull;
 
 import static com.azure.cosmos.base.Preconditions.checkArgument;
 import static com.azure.cosmos.base.Preconditions.checkNotNull;
 import static com.azure.cosmos.base.Preconditions.checkState;
 
+/**
+ * Describes the layout of a Tagged2 field.
+ */
 public final class LayoutTagged2 extends LayoutIndexedScope {
 
+    /**
+     * Initializes a new Tagged2 layout.
+     *
+     * @param immutable {@code true} if the Tagged field is immutable and {@code false}, if it is not.
+     */
     public LayoutTagged2(boolean immutable) {
         super(
             immutable ? LayoutCode.IMMUTABLE_TAGGED2_SCOPE : LayoutCode.TAGGED2_SCOPE, immutable,

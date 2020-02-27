@@ -3,15 +3,15 @@
 
 package com.azure.cosmos.serialization.hybridrow.layouts;
 
-import com.azure.cosmos.serialization.hybridrow.SchemaId;
 import com.azure.cosmos.core.Utf8String;
 import com.azure.cosmos.core.UtfAnyString;
+import com.azure.cosmos.serialization.hybridrow.SchemaId;
 import com.azure.cosmos.serialization.hybridrow.schemas.Namespace;
 import com.azure.cosmos.serialization.hybridrow.schemas.Schema;
 import com.azure.cosmos.serialization.hybridrow.schemas.StorageKind;
 import com.google.common.collect.ImmutableList;
+import org.jetbrains.annotations.NotNull;
 
-import org.jetbrains.annotations.NotNull;;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -23,9 +23,9 @@ import static com.azure.cosmos.base.Preconditions.checkNotNull;
 /**
  * A Layout describes the structure of a Hybrid Row.
  * <p>
- * A layout indicates the number, order, and type of all schematized columns to be stored within a hybrid row. The
- * order and type of columns defines the physical ordering of bytes used to encode the row and impacts the cost of
- * updating the row.
+ * A layout indicates the number, order, and type of all schematized columns to be stored within a hybrid row. The order
+ * and type of columns defines the physical ordering of bytes used to encode the row and impacts the cost of updating
+ * the row.
  * <p>
  * A layout is created by compiling a {@link Schema} through {@link Schema#compile(Namespace)} or by constructor through
  * a {@link LayoutBuilder}.
@@ -34,6 +34,9 @@ import static com.azure.cosmos.base.Preconditions.checkNotNull;
  */
 public final class Layout {
 
+    /**
+     * The constant EMPTY.
+     */
     public static final Layout EMPTY = SystemSchema.layoutResolver().resolve(SystemSchema.EMPTY_SCHEMA_ID);
 
     private final String name;
@@ -47,6 +50,15 @@ public final class Layout {
     private final StringTokenizer tokenizer;
     private final ImmutableList<LayoutColumn> topColumns;
 
+    /**
+     * Instantiates a new Layout.
+     *
+     * @param name the name
+     * @param schemaId the schema id
+     * @param numBitmaskBytes the num bitmask bytes
+     * @param minRequiredSize the min required size
+     * @param columns the columns
+     */
     @SuppressWarnings("UnstableApiUsage")
     public Layout(
         @NotNull final String name,
@@ -158,8 +170,7 @@ public final class Layout {
     /**
      * The minimum required size of a row with this layout.
      * <p>
-     * This size excludes all sparse columns, and assumes all columns (including variable) are
-     * null.
+     * This size excludes all sparse columns, and assumes all columns (including variable) are null.
      *
      * @return the minimum required size of a row with this layout.
      */
@@ -215,6 +226,7 @@ public final class Layout {
      * Finds a column specification for a column with a matching path.
      *
      * @param path path of the column to find
+     *
      * @return {@link LayoutColumn}, if a column with the {@code path} is found, {@link Optional#empty()}
      */
     public Optional<LayoutColumn> tryFind(@NotNull UtfAnyString path) {
@@ -236,6 +248,7 @@ public final class Layout {
      * Finds a column specification for a column with a matching path.
      *
      * @param path The path of the column to find.
+     *
      * @return True if a column with the path is found, otherwise false.
      */
     public Optional<LayoutColumn> tryFind(@NotNull String path) {

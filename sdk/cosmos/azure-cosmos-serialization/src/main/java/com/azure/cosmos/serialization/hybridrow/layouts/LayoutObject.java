@@ -3,19 +3,26 @@
 
 package com.azure.cosmos.serialization.hybridrow.layouts;
 
+import com.azure.cosmos.core.Out;
 import com.azure.cosmos.serialization.hybridrow.Result;
 import com.azure.cosmos.serialization.hybridrow.RowBuffer;
 import com.azure.cosmos.serialization.hybridrow.RowCursor;
-import com.azure.cosmos.core.Out;
-
-import org.jetbrains.annotations.NotNull;;
+import org.jetbrains.annotations.NotNull;
 
 import static com.azure.cosmos.base.Preconditions.checkNotNull;
 
+/**
+ * Describes the layout of an Object field
+ */
 public final class LayoutObject extends LayoutPropertyScope {
 
     private final TypeArgument typeArg;
 
+    /**
+     * Initializes a new Object layout.
+     *
+     * @param immutable {@code true} if the Object field is immutable and {@code false}, if it is not.
+     */
     public LayoutObject(boolean immutable) {
         super(immutable ? LayoutCode.IMMUTABLE_OBJECT_SCOPE : LayoutCode.OBJECT_SCOPE, immutable);
         this.typeArg = new TypeArgument(this);

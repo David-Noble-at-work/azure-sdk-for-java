@@ -16,11 +16,50 @@ import java.util.List;
  */
 public interface LayoutListWritable<TElement> extends ILayoutType {
 
+    /**
+     * Write fixed list result.
+     *
+     * @param buffer the buffer
+     * @param scope the scope
+     * @param column the column
+     * @param value the value
+     *
+     * @return the result
+     */
     Result writeFixedList(RowBuffer buffer, RowCursor scope, LayoutColumn column, List<TElement> value);
 
+    /**
+     * Write sparse list result.
+     *
+     * @param buffer the buffer
+     * @param edit the edit
+     * @param value the value
+     *
+     * @return the result
+     */
     Result writeSparseList(RowBuffer buffer, RowCursor edit, TElement value);
 
+    /**
+     * Write sparse list result.
+     *
+     * @param buffer the buffer
+     * @param edit the edit
+     * @param value the value
+     * @param options the options
+     *
+     * @return the result
+     */
     Result writeSparseList(RowBuffer buffer, RowCursor edit, List<TElement> value, UpdateOptions options);
 
+    /**
+     * Write variable list result.
+     *
+     * @param buffer the buffer
+     * @param scope the scope
+     * @param column the column
+     * @param value the value
+     *
+     * @return the result
+     */
     Result writeVariableList(RowBuffer buffer, RowCursor scope, LayoutColumn column, List<TElement> value);
 }

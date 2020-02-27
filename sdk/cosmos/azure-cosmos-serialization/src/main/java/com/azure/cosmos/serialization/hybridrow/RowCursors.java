@@ -7,17 +7,28 @@ import com.azure.cosmos.core.UtfAnyString;
 import com.azure.cosmos.serialization.hybridrow.layouts.LayoutCode;
 import com.azure.cosmos.serialization.hybridrow.layouts.LayoutEndScope;
 import com.azure.cosmos.serialization.hybridrow.layouts.StringToken;
-
-import org.jetbrains.annotations.NotNull;;
+import org.jetbrains.annotations.NotNull;
 
 import static com.azure.cosmos.base.Preconditions.checkArgument;
 import static com.azure.cosmos.base.Preconditions.checkNotNull;
 
+/**
+ * The type Row cursors.
+ */
 public final class RowCursors {
 
     private RowCursors() {
     }
 
+    /**
+     * Find row cursor.
+     *
+     * @param edit the edit
+     * @param row the row
+     * @param path the path
+     *
+     * @return the row cursor
+     */
     public static RowCursor find(@NotNull RowCursor edit, @NotNull RowBuffer row, @NotNull UtfAnyString path) {
         checkArgument(!edit.scopeType().isIndexedScope());
 
@@ -36,6 +47,15 @@ public final class RowCursors {
         return edit;
     }
 
+    /**
+     * Find row cursor.
+     *
+     * @param edit the edit
+     * @param row the row
+     * @param pathToken the path token
+     *
+     * @return the row cursor
+     */
     public static RowCursor find(@NotNull RowCursor edit, @NotNull RowBuffer row, @NotNull StringToken pathToken) {
 
         checkNotNull(edit);
@@ -63,6 +83,7 @@ public final class RowCursors {
      * An equivalent scope that is read-only.
      *
      * @param source source scope.
+     *
      * @return an equivalent scope that is read-only.
      */
     public static RowCursor asReadOnly(RowCursor source) {
@@ -72,22 +93,40 @@ public final class RowCursors {
     /**
      * Makes a copy of the current cursor.
      * <p>
-     * The two cursors will have independent and unconnected lifetimes after cloning.  However, mutations to a
-     * {@link RowBuffer} can invalidate any active cursors over the same row.
+     * The two cursors will have independent and unconnected lifetimes after cloning.  However, mutations to a {@link
+     * RowBuffer} can invalidate any active cursors over the same row.
      *
      * @param source source cursor.
+     *
      * @return copy of the source cursor.
      */
     public static RowCursor copy(RowCursor source) {
         return source.clone();
     }
 
+    /**
+     * Move next boolean.
+     *
+     * @param edit the edit
+     * @param row the row
+     *
+     * @return the boolean
+     */
     public static boolean moveNext(RowCursor edit, RowBuffer row) {
         edit.writePath(null);
         edit.writePathToken(null);
         return row.sparseIteratorMoveNext(edit);
     }
 
+    /**
+     * Move next boolean.
+     *
+     * @param edit the edit
+     * @param row the row
+     * @param childScope the child scope
+     *
+     * @return the boolean
+     */
     public static boolean moveNext(@NotNull RowCursor edit, @NotNull RowBuffer row, @NotNull RowCursor childScope) {
         if (childScope.scopeType() != null) {
             RowCursors.skip(edit.clone(), row, childScope);
@@ -95,6 +134,15 @@ public final class RowCursors {
         return RowCursors.moveNext(edit.clone(), row);
     }
 
+    /**
+     * Move to boolean.
+     *
+     * @param edit the edit
+     * @param row the row
+     * @param index the index
+     *
+     * @return the boolean
+     */
     public static boolean moveTo(@NotNull final RowCursor edit, @NotNull final RowBuffer row, final int index) {
 
         checkNotNull(row);
@@ -113,6 +161,13 @@ public final class RowCursors {
         return true;
     }
 
+    /**
+     * Skip.
+     *
+     * @param edit the edit
+     * @param buffer the buffer
+     * @param childScope the child scope
+     */
     public static void skip(
         @NotNull final RowCursor edit, @NotNull final RowBuffer buffer, @NotNull final RowCursor childScope) {
 

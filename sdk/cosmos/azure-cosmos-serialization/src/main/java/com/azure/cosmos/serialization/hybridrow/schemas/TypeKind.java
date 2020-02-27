@@ -3,9 +3,9 @@
 
 package com.azure.cosmos.serialization.hybridrow.schemas;
 
+import com.azure.cosmos.base.Suppliers;
 import com.azure.cosmos.serialization.hybridrow.UnixDateTime;
 import com.fasterxml.jackson.annotation.JsonEnumDefaultValue;
-import com.azure.cosmos.base.Suppliers;
 import it.unimi.dsi.fastutil.ints.Int2ReferenceMap;
 import it.unimi.dsi.fastutil.ints.Int2ReferenceOpenHashMap;
 
@@ -189,6 +189,9 @@ public enum TypeKind {
      */
     ANY(30, "any");
 
+    /**
+     * The constant BYTES.
+     */
     public static final int BYTES = Integer.BYTES;
 
     private static Supplier<Int2ReferenceMap<TypeKind>> mappings = Suppliers.memoize(() -> {
@@ -210,12 +213,20 @@ public enum TypeKind {
      * Returns the friendly name of this enum constant.
      *
      * @return the friendly name of this enum constant.
-     * @see #toString()
+     *
+     * @see #toString() #toString()#toString()
      */
     public String friendlyName() {
         return this.friendlyName;
     }
 
+    /**
+     * From type kind.
+     *
+     * @param value the value
+     *
+     * @return the type kind
+     */
     public static TypeKind from(int value) {
         return mappings.get().get(value);
     }
@@ -231,6 +242,11 @@ public enum TypeKind {
         return this.friendlyName;
     }
 
+    /**
+     * Value int.
+     *
+     * @return the int
+     */
     public int value() {
         return this.value;
     }

@@ -450,13 +450,15 @@ public final class Predicates {
          * @return the predicate
          */
         @SuppressWarnings("unchecked")
-            // safe contravariant cast
+        // safe contravariant cast
         <T> Predicate<T> withNarrowedType() {
             return (Predicate<T>) this;
         }
     }
 
-    /** @see Predicates#and(Iterable) */
+    /**
+     * @see Predicates#and(Iterable)
+     */
     private static class AndPredicate<T> implements Predicate<T>, Serializable {
         private static final long serialVersionUID = 0;
         private final List<? extends Predicate<? super T>> components;
@@ -497,7 +499,9 @@ public final class Predicates {
         }
     }
 
-    /** @see Predicates#compose(Predicate, Function) */
+    /**
+     * @see Predicates#compose(Predicate, Function)
+     */
     private static class CompositionPredicate<A, B> implements Predicate<A>, Serializable {
         private static final long serialVersionUID = 0;
         /**
@@ -540,7 +544,9 @@ public final class Predicates {
         }
     }
 
-    /** @see Predicates#containsPattern(String) */
+    /**
+     * @see Predicates#containsPattern(String)
+     */
     private static class ContainsPatternFromStringPredicate extends ContainsPatternPredicate {
 
         private static final long serialVersionUID = 0;
@@ -560,7 +566,9 @@ public final class Predicates {
         }
     }
 
-    /** @see Predicates#contains(Pattern) */
+    /**
+     * @see Predicates#contains(Pattern)
+     */
     private static class ContainsPatternPredicate implements Predicate<CharSequence>,
         Serializable {
         private static final long serialVersionUID = 0;
@@ -615,7 +623,9 @@ public final class Predicates {
         }
     }
 
-    /** @see Predicates#in(Collection) */
+    /**
+     * @see Predicates#in(Collection)
+     */
     private static class InPredicate<T> implements Predicate<T>, Serializable {
         private static final long serialVersionUID = 0;
         private final Collection<?> target;
@@ -653,7 +663,9 @@ public final class Predicates {
         }
     }
 
-    /** @see Predicates#instanceOf(Class) */
+    /**
+     * @see Predicates#instanceOf(Class)
+     */
     private static class InstanceOfPredicate implements Predicate<Object>, Serializable {
         private static final long serialVersionUID = 0;
         private final Class<?> clazz;
@@ -687,7 +699,9 @@ public final class Predicates {
         }
     }
 
-    /** @see Predicates#equalTo(Object) */
+    /**
+     * @see Predicates#equalTo(Object)
+     */
     private static class IsEqualToPredicate<T> implements Predicate<T>, Serializable {
         private static final long serialVersionUID = 0;
         private final T target;
@@ -721,7 +735,9 @@ public final class Predicates {
         }
     }
 
-    /** @see Predicates#not(Predicate) */
+    /**
+     * @see Predicates#not(Predicate)
+     */
     private static class NotPredicate<T> implements Predicate<T>, Serializable {
         private static final long serialVersionUID = 0;
         /**
@@ -763,7 +779,9 @@ public final class Predicates {
         }
     }
 
-    /** @see Predicates#or(Iterable) */
+    /**
+     * @see Predicates#or(Iterable)
+     */
     private static class OrPredicate<T> implements Predicate<T>, Serializable {
         private static final long serialVersionUID = 0;
         private final List<? extends Predicate<? super T>> components;
@@ -804,7 +822,9 @@ public final class Predicates {
         }
     }
 
-    /** @see Predicates#subtypeOf(Class) */
+    /**
+     * @see Predicates#subtypeOf(Class)
+     */
     private static class SubtypeOfPredicate implements Predicate<Class<?>>, Serializable {
         private static final long serialVersionUID = 0;
         private final Class<?> clazz;

@@ -3,18 +3,25 @@
 
 package com.azure.cosmos.serialization.hybridrow.layouts;
 
+import com.azure.cosmos.core.Out;
 import com.azure.cosmos.serialization.hybridrow.Result;
 import com.azure.cosmos.serialization.hybridrow.RowBuffer;
 import com.azure.cosmos.serialization.hybridrow.RowCursor;
-import com.azure.cosmos.core.Out;
-
-import org.jetbrains.annotations.NotNull;;
+import org.jetbrains.annotations.NotNull;
 
 import static com.azure.cosmos.base.Preconditions.checkNotNull;
 import static com.azure.cosmos.base.Preconditions.checkState;
 
+/**
+ * Describes the layout of a TypeArray field.
+ */
 public final class LayoutTypedArray extends LayoutIndexedScope {
 
+    /**
+     * Initializes a new TypedArray layout.
+     *
+     * @param immutable {@code true} if the TypedArray field is immutable and {@code false}, if it is not.
+     */
     public LayoutTypedArray(boolean immutable) {
         super(
             immutable ? LayoutCode.IMMUTABLE_TYPED_ARRAY_SCOPE : LayoutCode.TYPED_ARRAY_SCOPE, immutable,

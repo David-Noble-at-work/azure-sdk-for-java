@@ -3,19 +3,36 @@
 
 package com.azure.cosmos.serialization.hybridrow.json;
 
+/**
+ * The type Row reader json settings.
+ */
 public final class RowReaderJsonSettings {
 
     private final String indentChars;
     private final char quoteChar;
 
+    /**
+     * Instantiates a new Row reader json settings.
+     *
+     * @param indentChars the indent chars
+     */
     public RowReaderJsonSettings(String indentChars) {
         this(indentChars, '"');
     }
 
+    /**
+     * Instantiates a new Row reader json settings.
+     */
     public RowReaderJsonSettings() {
         this("  ", '"');
     }
 
+    /**
+     * Instantiates a new Row reader json settings.
+     *
+     * @param indentChars the indent chars
+     * @param quoteChar the quote char
+     */
     public RowReaderJsonSettings(String indentChars, char quoteChar) {
         this.indentChars = indentChars;
         this.quoteChar = quoteChar;

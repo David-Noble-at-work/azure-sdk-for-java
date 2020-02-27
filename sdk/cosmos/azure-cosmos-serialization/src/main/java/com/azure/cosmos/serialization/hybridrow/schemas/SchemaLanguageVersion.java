@@ -14,6 +14,9 @@ public enum SchemaLanguageVersion {
      */
     V1((byte) 0, "v1");
 
+    /**
+     * The constant BYTES.
+     */
     public static final int BYTES = Byte.BYTES;
 
     private static HashMap<Byte, SchemaLanguageVersion> mappings;
@@ -30,12 +33,20 @@ public enum SchemaLanguageVersion {
      * Returns the friendly name of this enum constant.
      *
      * @return the friendly name of this enum constant.
-     * @see #toString()
+     *
+     * @see #toString() #toString()
      */
     public String friendlyName() {
         return this.friendlyName;
     }
 
+    /**
+     * From schema language version.
+     *
+     * @param value the value
+     *
+     * @return the schema language version
+     */
     public static SchemaLanguageVersion from(byte value) {
         return mappings().get(value);
     }
@@ -51,6 +62,11 @@ public enum SchemaLanguageVersion {
         return this.friendlyName;
     }
 
+    /**
+     * Value byte.
+     *
+     * @return the byte
+     */
     public byte value() {
         return this.value;
     }

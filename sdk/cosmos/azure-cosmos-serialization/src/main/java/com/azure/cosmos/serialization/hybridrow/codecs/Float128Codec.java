@@ -6,14 +6,19 @@ package com.azure.cosmos.serialization.hybridrow.codecs;
 import com.azure.cosmos.serialization.hybridrow.Float128;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
-
-import org.jetbrains.annotations.NotNull;;
+import org.jetbrains.annotations.NotNull;
 
 import static com.azure.cosmos.base.Preconditions.checkArgument;
 import static com.azure.cosmos.base.Preconditions.checkNotNull;
 
+/**
+ * The type Float 128 codec.
+ */
 public final class Float128Codec {
 
+    /**
+     * The constant BYTES.
+     */
     public static final int BYTES = 2 * Long.BYTES;
 
     private Float128Codec() {
@@ -23,6 +28,7 @@ public final class Float128Codec {
      * Decode a {@link Float128} from a sequence of two {@code long}s in little endian format.
      *
      * @param bytes an array containing the serialized {@link Float128} to be decoded.
+     *
      * @return a new {@link Float128}.
      */
     public static Float128 decode(@NotNull final byte[] bytes) {
@@ -34,6 +40,7 @@ public final class Float128Codec {
      * Decode a {@link Float128} from a sequence of two {@code long}s in little endian format.
      *
      * @param in a {@link ByteBuf} containing the serialized {@link Float128} to be decoded.
+     *
      * @return a new {@link Float128}.
      */
     public static Float128 decode(@NotNull final ByteBuf in) {
@@ -51,6 +58,7 @@ public final class Float128Codec {
      * Encodes a {@link Float128} as a sequence of two {@code long}s in little endian format.
      *
      * @param value a {@link Float128} to be encoded.
+     *
      * @return a new byte array containing the encoded.
      */
     public static byte[] encode(final Float128 value) {

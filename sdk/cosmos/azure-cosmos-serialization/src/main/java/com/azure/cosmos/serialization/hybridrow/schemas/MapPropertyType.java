@@ -25,6 +25,13 @@ public class MapPropertyType extends ScopePropertyType {
         return this.keys;
     }
 
+    /**
+     * Keys map property type.
+     *
+     * @param value the value
+     *
+     * @return the map property type
+     */
     public final MapPropertyType keys(PropertyType value) {
         this.keys = value;
         return this;
@@ -39,6 +46,13 @@ public class MapPropertyType extends ScopePropertyType {
         return this.values;
     }
 
+    /**
+     * Values map property type.
+     *
+     * @param value the value
+     *
+     * @return the map property type
+     */
     public final MapPropertyType values(PropertyType value) {
         this.values = value;
         return this;

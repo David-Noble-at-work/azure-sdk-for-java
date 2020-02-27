@@ -13,10 +13,22 @@ public class PartitionKey {
      */
     private String path;
 
+    /**
+     * Path string.
+     *
+     * @return the string
+     */
     public final String path() {
         return this.path;
     }
 
+    /**
+     * Path partition key.
+     *
+     * @param value the value
+     *
+     * @return the partition key
+     */
     public final PartitionKey path(String value) {
         this.path = value;
         return this;

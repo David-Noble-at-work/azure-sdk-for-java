@@ -21,12 +21,11 @@ import java.util.Optional;
 import static com.azure.cosmos.base.Preconditions.checkNotNull;
 
 /**
- * Helper functions that operate on any {@code Object}, and are not already provided in {@link
- * java.util.Objects}.
+ * Helper functions that operate on any {@code Object}, and are not already provided in {@link java.util.Objects}.
  *
  * <p>See the Guava User Guide on <a
- * href="https://github.com/google/guava/wiki/CommonObjectUtilitiesExplained">writing {@code Object}
- * methods with {@code MoreObjects}</a>.
+ * href="https://github.com/google/guava/wiki/CommonObjectUtilitiesExplained">writing {@code Object} methods with {@code
+ * MoreObjects}</a>.
  *
  * @author Laurence Gonsalves
  * @since 18.0 (since 2.0 as {@code Objects})
@@ -36,16 +35,16 @@ public final class MoreObjects {
     }
 
     /**
-     * Returns the first of two given parameters that is not {@code null}, if either is, or otherwise
-     * throws a {@link NullPointerException}.
+     * Returns the first of two given parameters that is not {@code null}, if either is, or otherwise throws a {@link
+     * NullPointerException}.
      *
      * <p>To find the first non-null element in an iterable, use {@code Iterables.find(iterable,
      * Predicates.notNull())}. For varargs, use {@code Iterables.find(Arrays.asList(a, b, c, ...),
      * Predicates.notNull())}, static importing as necessary.
      *
      * <p><b>Note:</b> if {@code first} is represented as an {@link Optional}, this can be
-     * accomplished with {@link java.util.Optional#orElse(Object) first.or(second)}. That approach also allows for
-     * lazy evaluation of the fallback instance, using {@link java.util.Optional#orElse(Object) first.orElse(supplier)}.
+     * accomplished with {@link java.util.Optional#orElse(Object) first.or(second)}. That approach also allows for lazy
+     * evaluation of the fallback instance, using {@link java.util.Optional#orElse(Object) first.orElse(supplier)}.
      *
      * <p><b>Java 9 users:</b> use {@code java.util.Objects.requireNonNullElse(first, second)}
      * instead.
@@ -57,7 +56,6 @@ public final class MoreObjects {
      * @return {@code first} if it is non-null; otherwise {@code second} if it is non-null.
      *
      * @throws NullPointerException if both {@code first} and {@code second} are null.
-     *
      * @since 18.0 (since 3.0 as {@code Objects.firstNonNull()}).
      */
     public static <T> T firstNonNull(@Nullable T first, @Nullable T second) {
@@ -117,9 +115,8 @@ public final class MoreObjects {
     }
 
     /**
-     * Creates an instance of {@link ToStringHelper} in the same manner as {@link
-     * #toStringHelper(Object)}, but using the simple name of {@code clazz} instead of using an
-     * instance's {@link Object#getClass()}.
+     * Creates an instance of {@link ToStringHelper} in the same manner as {@link #toStringHelper(Object)}, but using
+     * the simple name of {@code clazz} instead of using an instance's {@link Object#getClass()}.
      *
      * <p>Note that in GWT, class names are often obfuscated.
      *
@@ -134,9 +131,8 @@ public final class MoreObjects {
     }
 
     /**
-     * Creates an instance of {@link ToStringHelper} in the same manner as {@link
-     * #toStringHelper(Object)}, but using {@code className} instead of using an instance's {@link
-     * Object#getClass()}.
+     * Creates an instance of {@link ToStringHelper} in the same manner as {@link #toStringHelper(Object)}, but using
+     * {@code className} instead of using an instance's {@link Object#getClass()}.
      *
      * @param className the name of the instance type.
      *
@@ -160,15 +156,17 @@ public final class MoreObjects {
         private ValueHolder holderTail = holderHead;
         private boolean omitNullValues = false;
 
-        /** Use {@link MoreObjects#toStringHelper(Object)} to create an instance. */
+        /**
+         * Use {@link MoreObjects#toStringHelper(Object)} to create an instance.
+         */
         private ToStringHelper(String className) {
             this.className = checkNotNull(className);
         }
 
         /**
-         * Adds a name/value pair to the formatted output in {@code name=value} format. If {@code value}
-         * is {@code null}, the string {@code "null"} is used, unless {@link #omitNullValues()} is
-         * called, in which case this name/value pair will not be added.
+         * Adds a name/value pair to the formatted output in {@code name=value} format. If {@code value} is {@code
+         * null}, the string {@code "null"} is used, unless {@link #omitNullValues()} is called, in which case this
+         * name/value pair will not be added.
          *
          * @param name the name to add to the formatted output.
          * @param value the value to add to the format output.
@@ -266,7 +264,8 @@ public final class MoreObjects {
         /**
          * Adds an unnamed value to the formatted output.
          * <p>
-         * It is strongly encouraged to use {@link #add(String, Object)} instead and give {@code value} a readable name.
+         * It is strongly encouraged to use {@link #add(String, Object)} instead and give {@code value} a readable
+         * name.
          *
          * @param value the value to add to the format output.
          *
@@ -279,7 +278,8 @@ public final class MoreObjects {
         /**
          * Adds an unnamed value to the formatted output.
          * <p>
-         * It is strongly encouraged to use {@link #add(String, Object)} instead and give {@code value} a readable name.
+         * It is strongly encouraged to use {@link #add(String, Object)} instead and give {@code value} a readable
+         * name.
          *
          * @param value the value to add to the format output.
          *
@@ -294,7 +294,8 @@ public final class MoreObjects {
         /**
          * Adds an unnamed value to the formatted output.
          * <p>
-         * It is strongly encouraged to use {@link #add(String, Object)} instead and give {@code value} a readable name.
+         * It is strongly encouraged to use {@link #add(String, Object)} instead and give {@code value} a readable
+         * name.
          *
          * @param value the value to add to the format output.
          *
@@ -309,7 +310,8 @@ public final class MoreObjects {
         /**
          * Adds an unnamed value to the formatted output.
          * <p>
-         * It is strongly encouraged to use {@link #add(String, Object)} instead and give {@code value} a readable name.
+         * It is strongly encouraged to use {@link #add(String, Object)} instead and give {@code value} a readable
+         * name.
          *
          * @param value the value to add to the format output.
          *
@@ -324,7 +326,8 @@ public final class MoreObjects {
         /**
          * Adds an unnamed value to the formatted output.
          * <p>
-         * It is strongly encouraged to use {@link #add(String, Object)} instead and give {@code value} a readable name.
+         * It is strongly encouraged to use {@link #add(String, Object)} instead and give {@code value} a readable
+         * name.
          *
          * @param value the value to add to the format output.
          *
@@ -339,7 +342,8 @@ public final class MoreObjects {
         /**
          * Adds an unnamed value to the formatted output.
          * <p>
-         * It is strongly encouraged to use {@link #add(String, Object)} instead and give {@code value} a readable name.
+         * It is strongly encouraged to use {@link #add(String, Object)} instead and give {@code value} a readable
+         * name.
          *
          * @param value the value to add to the format output.
          *
@@ -354,7 +358,8 @@ public final class MoreObjects {
         /**
          * Adds an unnamed value to the formatted output.
          * <p>
-         * It is strongly encouraged to use {@link #add(String, Object)} instead and give {@code value} a readable name.
+         * It is strongly encouraged to use {@link #add(String, Object)} instead and give {@code value} a readable
+         * name.
          *
          * @param value the value to add to the format output.
          *
@@ -386,9 +391,9 @@ public final class MoreObjects {
          * Returns a string in the format specified by {@link MoreObjects#toStringHelper(Object)}.
          *
          * <p>After calling this method, you can keep adding more properties to later call toString()
-         * again and get a more complete representation of the same object; but properties cannot be
-         * removed, so this only allows limited reuse of the helper instance. The helper allows
-         * duplication of properties (multiple name/value pairs with the same name can be added).
+         * again and get a more complete representation of the same object; but properties cannot be removed, so this
+         * only allows limited reuse of the helper instance. The helper allows duplication of properties (multiple
+         * name/value pairs with the same name can be added).
          */
         @Override
         public String toString() {

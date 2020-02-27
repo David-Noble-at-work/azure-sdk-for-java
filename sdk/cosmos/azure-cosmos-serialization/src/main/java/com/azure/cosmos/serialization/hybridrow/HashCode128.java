@@ -5,8 +5,7 @@ package com.azure.cosmos.serialization.hybridrow;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
-
-import org.jetbrains.annotations.NotNull;;
+import org.jetbrains.annotations.NotNull;
 
 import static com.azure.cosmos.base.Preconditions.checkArgument;
 import static com.azure.cosmos.base.Preconditions.checkNotNull;
@@ -31,6 +30,13 @@ public final class HashCode128 {
         this.high = buffer.readLongLE();
     }
 
+    /**
+     * Extracts {@link HashCode128 128-bit hash code} from the first 16 bytes of a byte array.
+     *
+     * @param buffer a {@code byte} array containing a 128-bit hash code.
+     *
+     * @return a new {@link HashCode128} instance representing the value extracted from {@code buffer}.
+     */
     @NotNull
     public static HashCode128 from(@NotNull final byte[] buffer) {
 
@@ -41,13 +47,14 @@ public final class HashCode128 {
     }
 
     /**
-     * Reads a {@link HashCode128} from a {@link ByteBuf}.
+     * Extracts a {@link HashCode128 28-bit hash code} from the first 16 bytes of a {@link ByteBuf}.
      * <p>
      * The hash code is read as a pair of long values serialized in little-endian format. The values are read from the
      * buffer's current reader index which is advanced by 16 bytes: the length of two long values.
      *
      * @param buffer The buffer from which to read the hash code.
-     * @return The hash code read.
+     *
+     * @return a new {@link HashCode128} instance representing the value extracted from {@code buffer}.
      */
     @NotNull
     public static HashCode128 from(@NotNull final ByteBuf buffer) {
@@ -60,14 +67,32 @@ public final class HashCode128 {
         return new HashCode128(buffer);
     }
 
+    /**
+     * Returns the first 8 bytes (64-bits) of this {@link HashCode128}.
+     *
+     * @return the first 8 bytes (64-bits) of this {@link HashCode128}.
+     */
     public long high() {
         return this.high;
     }
 
+    /**
+     * Returns the second 8 bytes (64-bits) of this {@link HashCode128}.
+     *
+     * @return the second 8 bytes (64-bits) of this {@link HashCode128}.
+     */
     public long low() {
         return this.low;
     }
 
+    /**
+     * Creates a new {@link HashCode128} from two {@code long} values.
+     *
+     * @param low the least significant 64-bits of the {@link HashCode128}.
+     * @param high the most significant 64-bits of the {@link HashCode128}.
+     *
+     * @return a new {@link HashCode128} instance created from {@code low} and {@code high}.
+     */
     @NotNull
     public static HashCode128 of(long low, long high) {
         return new HashCode128(low, high);

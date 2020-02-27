@@ -14,7 +14,7 @@
 
 package com.azure.cosmos.base;
 
-import static com.google.common.base.Preconditions.checkPositionIndexes;
+import static com.azure.cosmos.base.Preconditions.checkPositionIndexes;
 import static java.lang.Character.MAX_SURROGATE;
 import static java.lang.Character.MIN_SURROGATE;
 
@@ -197,5 +197,6 @@ public final class Utf8 {
         return "Unpaired surrogate at index " + i;
     }
 
-    private Utf8() {}
+    private Utf8() {
+    }
 }

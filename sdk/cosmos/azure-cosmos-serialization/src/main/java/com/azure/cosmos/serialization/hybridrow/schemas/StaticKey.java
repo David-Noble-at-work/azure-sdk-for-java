@@ -21,6 +21,13 @@ public class StaticKey {
         return this.path;
     }
 
+    /**
+     * Path static key.
+     *
+     * @param value the value
+     *
+     * @return the static key
+     */
     public final StaticKey path(String value) {
         this.path = value;
         return this;

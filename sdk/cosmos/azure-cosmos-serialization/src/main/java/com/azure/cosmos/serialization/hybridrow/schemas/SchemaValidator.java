@@ -3,21 +3,28 @@
 
 package com.azure.cosmos.serialization.hybridrow.schemas;
 
-import com.azure.cosmos.serialization.hybridrow.SchemaId;
-import com.azure.cosmos.core.Json;
 import com.azure.cosmos.base.Strings;
-import org.jetbrains.annotations.NotNull;;
+import com.azure.cosmos.core.Json;
+import com.azure.cosmos.serialization.hybridrow.SchemaId;
+import org.jetbrains.annotations.NotNull;
 
-import org.jetbrains.annotations.NotNull;;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 
 import static com.azure.cosmos.base.Preconditions.checkNotNull;
-import static com.azure.cosmos.base.Strings.lenientFormat;
+import static com.azure.cosmos.base.Strings.lenientFormat;;
 
+/**
+ * The type Schema validator.
+ */
 public final class SchemaValidator {
 
+    /**
+     * Validate.
+     *
+     * @param namespace the namespace
+     */
     public static void validate(@NotNull final Namespace namespace) {
 
         checkNotNull(namespace, "expected non-null namespace");
@@ -227,6 +234,8 @@ public final class SchemaValidator {
          * @param scope The set of existing values within the scope.
          * @param label Diagnostic label describing {@code key}.
          * @param scopeLabel Diagnostic label describing {@code scope}.
+         *
+         * @return the t value
          */
         static <TKey, TValue> TValue exists(TKey key, Map<TKey, TValue> scope, String label, String scopeLabel) {
             TValue value = scope.get(key);
@@ -309,14 +318,32 @@ public final class SchemaValidator {
             return Objects.hash(this.id, this.name);
         }
 
+        /**
+         * Id schema id.
+         *
+         * @return the schema id
+         */
         public SchemaId id() {
             return this.id;
         }
 
+        /**
+         * Name string.
+         *
+         * @return the string
+         */
         public String name() {
             return this.name;
         }
 
+        /**
+         * Of schema identification.
+         *
+         * @param name the name
+         * @param id the id
+         *
+         * @return the schema identification
+         */
         public static SchemaIdentification of(@NotNull String name, @NotNull SchemaId id) {
             return new SchemaIdentification(name, id);
         }

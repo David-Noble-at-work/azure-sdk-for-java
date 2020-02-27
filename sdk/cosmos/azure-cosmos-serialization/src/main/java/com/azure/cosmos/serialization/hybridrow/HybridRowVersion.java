@@ -16,6 +16,9 @@ import java.util.function.Supplier;
  */
 public enum HybridRowVersion {
 
+    /**
+     * Invalid hybrid row version.
+     */
     INVALID((byte) 0),
 
     /**
@@ -23,6 +26,9 @@ public enum HybridRowVersion {
      */
     V1((byte) 0x81);
 
+    /**
+     * The constant BYTES.
+     */
     public static final int BYTES = Byte.BYTES;
 
     private static final Supplier<Byte2ReferenceMap<HybridRowVersion>> mappings = Suppliers.memoize(() -> {
@@ -40,10 +46,22 @@ public enum HybridRowVersion {
         this.value = value;
     }
 
+    /**
+     * From hybrid row version.
+     *
+     * @param value the value
+     *
+     * @return the hybrid row version
+     */
     public static HybridRowVersion from(final byte value) {
         return mappings.get().get(value);
     }
 
+    /**
+     * Value byte.
+     *
+     * @return the byte
+     */
     public byte value() {
         return this.value;
     }

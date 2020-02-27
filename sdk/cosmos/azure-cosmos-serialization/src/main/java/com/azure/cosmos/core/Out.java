@@ -3,6 +3,8 @@
 
 package com.azure.cosmos.core;
 
+import javax.annotation.Nullable;
+import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.function.Consumer;
 
@@ -52,6 +54,7 @@ public final class Out<T> {
      * </ul>
      *
      * @param other an object to be tested for equality
+     *
      * @return {code true} if the other object is equal to this object; otherwise {@code false}
      */
     @Override
@@ -65,10 +68,20 @@ public final class Out<T> {
             return false;
         }
 
-        return Objects.equals(this.value, ((Out) other).value);
+        return Objects.equals(this.value, ((Out<?>) other).value);
     }
 
+    /**
+     * If a value is present in this {@link Out}, returns the value, otherwise throws {@link NoSuchElementException}.
+     *
+     * @return the value of this {@link Out}.
+     *
+     * @throws NoSuchElementException if the value of this {@link Out} is not present.
+     */
     public T get() {
+        if (this.value == null) {
+            throw new NoSuchElementException("expected non-null value");
+        }
         return this.value;
     }
 
@@ -82,11 +95,25 @@ public final class Out<T> {
         return Objects.hashCode(this.value);
     }
 
-    public Out<T> set(T value) {
+    /**
+     * Assigns a value to this {@link Out}.
+     *
+     * @param value a {@link Nullable nullable} value to assign to this {@link Out}.
+     *
+     * @return a reference to this {@link Out}.
+     */
+    public Out<T> set(@Nullable T value) {
         this.value = value;
         return this;
     }
 
+    /**
+     * Assigns a value to this {@link Out} and returns the value assigned.
+     *
+     * @param value a {@link Nullable nullable} value to assign to this {@link Out}.
+     *
+     * @return the {@code value} assigned, which may be {@code null}.
+     */
     public T setAndGet(T value) {
         this.value = value;
         return value;

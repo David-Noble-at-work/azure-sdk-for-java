@@ -14,7 +14,6 @@
 
 package com.azure.cosmos.base;
 
-import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Iterator;
@@ -63,7 +62,6 @@ abstract class AbstractIterator<T> implements Iterator<T> {
 
     protected abstract T computeNext();
 
-    @CanIgnoreReturnValue
     protected final @Nullable T endOfData() {
         state = State.DONE;
         return null;

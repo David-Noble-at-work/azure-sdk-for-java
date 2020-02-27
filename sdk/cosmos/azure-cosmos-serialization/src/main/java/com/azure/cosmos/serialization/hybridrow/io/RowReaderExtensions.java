@@ -3,14 +3,23 @@
 
 package com.azure.cosmos.serialization.hybridrow.io;
 
-import com.azure.cosmos.serialization.hybridrow.Result;
 import com.azure.cosmos.core.Out;
+import com.azure.cosmos.serialization.hybridrow.Result;
+import org.jetbrains.annotations.NotNull;
 
-import org.jetbrains.annotations.NotNull;;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Provides static methods that extend the capabilities of a {@link RowReader}.
+ */
 public final class RowReaderExtensions {
+
+    // TODO (DANOBLE) Consider moving these methods to the RowReader class
+
+    private RowReaderExtensions() {
+    }
+
     /**
      * Read the current field as a nested, structured, sparse scope containing a linear collection of zero or more
      * items.

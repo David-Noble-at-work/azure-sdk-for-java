@@ -3,30 +3,38 @@
 
 package com.azure.cosmos.serialization.hybridrow.layouts;
 
+import com.azure.cosmos.core.Out;
 import com.azure.cosmos.serialization.hybridrow.NullValue;
 import com.azure.cosmos.serialization.hybridrow.Result;
 import com.azure.cosmos.serialization.hybridrow.RowBuffer;
 import com.azure.cosmos.serialization.hybridrow.RowCursor;
-import com.azure.cosmos.core.Out;
-
-import org.jetbrains.annotations.NotNull;;
+import org.jetbrains.annotations.NotNull;
 
 import static com.azure.cosmos.base.Preconditions.checkArgument;
 
+/**
+ * Describes the layout of a Null field.
+ */
 public final class LayoutNull extends LayoutTypePrimitive<NullValue> implements ILayoutType {
 
+    /**
+     * Initializes the layout of a Null field.
+     */
     public LayoutNull() {
         super(LayoutCode.NULL, 0);
     }
 
+    @Override
     public boolean isFixed() {
         return true;
     }
 
+    @Override
     public boolean isNull() {
         return true;
     }
 
+    @Override
     @NotNull
     public String name() {
         return "null";
@@ -34,8 +42,11 @@ public final class LayoutNull extends LayoutTypePrimitive<NullValue> implements 
 
     @Override
     @NotNull
-    public Result readFixed(@NotNull RowBuffer buffer, @NotNull RowCursor scope, @NotNull LayoutColumn column,
-                            @NotNull Out<NullValue> value) {
+    public Result readFixed(
+        @NotNull RowBuffer buffer,
+        @NotNull RowCursor scope,
+        @NotNull LayoutColumn column,
+        @NotNull Out<NullValue> value) {
         checkArgument(scope.scopeType() instanceof LayoutUDT);
         value.set(NullValue.DEFAULT);
         if (!buffer.readBit(scope.start(), column.nullBit())) {
@@ -70,8 +81,11 @@ public final class LayoutNull extends LayoutTypePrimitive<NullValue> implements 
 
     @Override
     @NotNull
-    public Result writeSparse(@NotNull RowBuffer buffer, @NotNull RowCursor edit, @NotNull NullValue value,
-                              @NotNull UpdateOptions options) {
+    public Result writeSparse(
+        @NotNull RowBuffer buffer,
+        @NotNull RowCursor edit,
+        @NotNull NullValue value,
+        @NotNull UpdateOptions options) {
         Result result = prepareSparseWrite(buffer, edit, this.typeArg(), options);
         if (result != Result.SUCCESS) {
             return result;

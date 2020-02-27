@@ -6,8 +6,8 @@ package com.azure.cosmos.serialization.hybridrow.codecs;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.util.ByteProcessor;
+import org.jetbrains.annotations.NotNull;
 
-import org.jetbrains.annotations.NotNull;;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.math.MathContext;
@@ -24,13 +24,16 @@ import static java.lang.Math.min;
  * <p>
  * The serialization format is lossy as the {@link BigDecimal} class represents arbitrary-precision signed decimal
  * numbers while the binary representation of a {@code System.Decimal} value is constrained to a magnitude of 96-bits
- * with a scaling factor of 10 and a scale value between 0 and 28. This yields a precision between 28 and 29
- * decimal digits.
+ * with a scaling factor of 10 and a scale value between 0 and 28. This yields a precision between 28 and 29 decimal
+ * digits.
  *
  * @see <a href="https://referencesource.microsoft.com/mscorlib/system/decimal.cs.html">struct Decimal source</a>
  */
 public final class DecimalCodec {
 
+    /**
+     * The constant BYTES.
+     */
     public static final int BYTES = 4 * Integer.BYTES;
 
     private static final int FLAGS_MASK_INVALID = 0b01111111000000001111111111111111;
@@ -65,7 +68,9 @@ public final class DecimalCodec {
      * Decode an {@link BigDecimal} serialized like a {@code System.Decimal} by {@code MemoryMarshal.Write}.
      *
      * @param bytes an array containing the serialized {@code System.Decimal} to be decoded.
+     *
      * @return a new {@link BigDecimal}.
+     *
      * @see <a href="https://referencesource.microsoft.com/mscorlib/system/decimal.cs.html">struct Decimal source</a>
      */
     public static BigDecimal decode(@NotNull final byte[] bytes) {
@@ -77,7 +82,9 @@ public final class DecimalCodec {
      * Decode an {@link BigDecimal} serialized like a {@code System.Decimal} by {@code MemoryMarshal.Write}.
      *
      * @param in a {@link ByteBuf} containing the serialized {@code System.Decimal} to be decoded.
+     *
      * @return a new {@link BigDecimal}.
+     *
      * @see <a href="https://referencesource.microsoft.com/mscorlib/system/decimal.cs.html">struct Decimal source</a>
      */
     public static BigDecimal decode(@NotNull final ByteBuf in) {
@@ -129,7 +136,9 @@ public final class DecimalCodec {
      * Encode a {@link BigDecimal} like a {@code System.Decimal} serialized by {@code MemoryMarshal.Write}.
      *
      * @param bigDecimal a {@link BigDecimal} to be encoded.
+     *
      * @return a new byte array containing the encoded {@code bigDecimal}.
+     *
      * @see <a href="https://referencesource.microsoft.com/mscorlib/system/decimal.cs.html">struct Decimal source</a>
      */
     public static byte[] encode(final BigDecimal bigDecimal) {
@@ -143,6 +152,7 @@ public final class DecimalCodec {
      *
      * @param value a {@link BigDecimal} to be encoded.
      * @param out an output {@link ByteBuf}.
+     *
      * @see <a href="https://referencesource.microsoft.com/mscorlib/system/decimal.cs.html">struct Decimal source</a>
      */
     public static void encode(@NotNull BigDecimal value, @NotNull final ByteBuf out) {

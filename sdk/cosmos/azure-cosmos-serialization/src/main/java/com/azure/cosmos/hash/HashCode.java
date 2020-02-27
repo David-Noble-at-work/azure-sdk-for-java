@@ -36,40 +36,54 @@ import static com.azure.cosmos.base.Preconditions.checkState;
  */
 @Beta
 public abstract class HashCode {
-    HashCode() {}
+    /**
+     * Instantiates a new Hash code.
+     */
+    HashCode() {
+    }
 
-    /** Returns the number of bits in this hash code; a positive multiple of 8. */
+    /**
+     * Returns the number of bits in this hash code; a positive multiple of 8.
+     *
+     * @return the int
+     */
     public abstract int bits();
 
     /**
-     * Returns the first four bytes of {@linkplain #asBytes() this hashcode's bytes}, converted to an
-     * {@code int} value in little-endian order.
+     * Returns the first four bytes of {@linkplain #asBytes() this hashcode's bytes}, converted to an {@code int} value
+     * in little-endian order.
+     *
+     * @return the int
      *
      * @throws IllegalStateException if {@code bits() < 32}
      */
     public abstract int asInt();
 
     /**
-     * Returns the first eight bytes of {@linkplain #asBytes() this hashcode's bytes}, converted to a
-     * {@code long} value in little-endian order.
+     * Returns the first eight bytes of {@linkplain #asBytes() this hashcode's bytes}, converted to a {@code long} value
+     * in little-endian order.
+     *
+     * @return the long
      *
      * @throws IllegalStateException if {@code bits() < 64}
      */
     public abstract long asLong();
 
     /**
-     * If this hashcode has enough bits, returns {@code asLong()}, otherwise returns a {@code long}
-     * value with {@code asBytes()} as the least-significant bytes and {@code 0x00} as the remaining
-     * most-significant bytes.
+     * If this hashcode has enough bits, returns {@code asLong()}, otherwise returns a {@code long} value with {@code
+     * asBytes()} as the least-significant bytes and {@code 0x00} as the remaining most-significant bytes.
+     *
+     * @return the long
      *
      * @since 14.0 (since 11.0 as {@code Hashing.padToLong(HashCode)})
      */
     public abstract long padToLong();
 
     /**
-     * Returns the value of this hash code as a byte array. The caller may modify the byte array;
-     * changes to it will <i>not</i> be reflected in this {@code HashCode} object or any other arrays
-     * returned by this method.
+     * Returns the value of this hash code as a byte array. The caller may modify the byte array; changes to it will
+     * <i>not</i> be reflected in this {@code HashCode} object or any other arrays returned by this method.
+     *
+     * @return the byte [ ]
      */
     // TODO(user): consider ByteString here, when that is available
     public abstract byte[] asBytes();
@@ -80,7 +94,9 @@ public abstract class HashCode {
      * @param dest the byte array into which the hash code will be written
      * @param offset the start offset in the data
      * @param maxLength the maximum number of bytes to write
+     *
      * @return the number of bytes written to {@code dest}
+     *
      * @throws IndexOutOfBoundsException if there is not enough room in {@code dest}
      */
     @CanIgnoreReturnValue
@@ -91,26 +107,43 @@ public abstract class HashCode {
         return maxLength;
     }
 
+    /**
+     * Write bytes to.
+     *
+     * @param dest the dest
+     * @param offset the offset
+     * @param maxLength the max length
+     */
     abstract void writeBytesToImpl(byte[] dest, int offset, int maxLength);
 
     /**
-     * Returns a mutable view of the underlying bytes for the given {@code HashCode} if it is a
-     * byte-based hashcode. Otherwise it returns {@link HashCode#asBytes}. Do <i>not</i> mutate this
-     * array or else you will break the immutability contract of {@code HashCode}.
+     * Returns a mutable view of the underlying bytes for the given {@code HashCode} if it is a byte-based hashcode.
+     * Otherwise it returns {@link HashCode#asBytes}. Do <i>not</i> mutate this array or else you will break the
+     * immutability contract of {@code HashCode}.
+     *
+     * @return the byte [ ]
      */
     byte[] getBytesInternal() {
         return asBytes();
     }
 
     /**
-     * Returns whether this {@code HashCode} and that {@code HashCode} have the same value, given that
-     * they have the same number of bits.
+     * Returns whether this {@code HashCode} and that {@code HashCode} have the same value, given that they have the
+     * same number of bits.
+     *
+     * @param that the that
+     *
+     * @return the boolean
      */
     abstract boolean equalsSameBits(HashCode that);
 
     /**
-     * Creates a 32-bit {@code HashCode} representation of the given int value. The underlying bytes
-     * are interpreted in little endian order.
+     * Creates a 32-bit {@code HashCode} representation of the given int value. The underlying bytes are interpreted in
+     * little endian order.
+     *
+     * @param hash the hash
+     *
+     * @return the hash code
      *
      * @since 15.0 (since 12.0 in HashCodes)
      */
@@ -119,8 +152,16 @@ public abstract class HashCode {
     }
 
     private static final class IntHashCode extends HashCode implements Serializable {
+        /**
+         * The Hash.
+         */
         final int hash;
 
+        /**
+         * Instantiates a new Int hash code.
+         *
+         * @param hash the hash
+         */
         IntHashCode(int hash) {
             this.hash = hash;
         }
@@ -132,7 +173,7 @@ public abstract class HashCode {
 
         @Override
         public byte[] asBytes() {
-            return new byte[] {(byte) hash, (byte) (hash >> 8), (byte) (hash >> 16), (byte) (hash >> 24)};
+            return new byte[] { (byte) hash, (byte) (hash >> 8), (byte) (hash >> 16), (byte) (hash >> 24) };
         }
 
         @Override
@@ -166,8 +207,12 @@ public abstract class HashCode {
     }
 
     /**
-     * Creates a 64-bit {@code HashCode} representation of the given long value. The underlying bytes
-     * are interpreted in little endian order.
+     * Creates a 64-bit {@code HashCode} representation of the given long value. The underlying bytes are interpreted in
+     * little endian order.
+     *
+     * @param hash the hash
+     *
+     * @return the hash code
      *
      * @since 15.0 (since 12.0 in HashCodes)
      */
@@ -176,8 +221,16 @@ public abstract class HashCode {
     }
 
     private static final class LongHashCode extends HashCode implements Serializable {
+        /**
+         * The Hash.
+         */
         final long hash;
 
+        /**
+         * Instantiates a new Long hash code.
+         *
+         * @param hash the hash
+         */
         LongHashCode(long hash) {
             this.hash = hash;
         }
@@ -232,8 +285,12 @@ public abstract class HashCode {
     }
 
     /**
-     * Creates a {@code HashCode} from a byte array. The array is defensively copied to preserve the
-     * immutability contract of {@code HashCode}. The array cannot be empty.
+     * Creates a {@code HashCode} from a byte array. The array is defensively copied to preserve the immutability
+     * contract of {@code HashCode}. The array cannot be empty.
+     *
+     * @param bytes the bytes
+     *
+     * @return the hash code
      *
      * @since 15.0 (since 12.0 in HashCodes)
      */
@@ -243,16 +300,28 @@ public abstract class HashCode {
     }
 
     /**
-     * Creates a {@code HashCode} from a byte array. The array is <i>not</i> copied defensively, so it
-     * must be handed-off so as to preserve the immutability contract of {@code HashCode}.
+     * Creates a {@code HashCode} from a byte array. The array is <i>not</i> copied defensively, so it must be
+     * handed-off so as to preserve the immutability contract of {@code HashCode}.
+     *
+     * @param bytes the bytes
+     *
+     * @return the hash code
      */
     static HashCode fromBytesNoCopy(byte[] bytes) {
         return new BytesHashCode(bytes);
     }
 
     private static final class BytesHashCode extends HashCode implements Serializable {
+        /**
+         * The Bytes.
+         */
         final byte[] bytes;
 
+        /**
+         * Instantiates a new Bytes hash code.
+         *
+         * @param bytes the bytes
+         */
         BytesHashCode(byte[] bytes) {
             this.bytes = checkNotNull(bytes);
         }
@@ -326,12 +395,16 @@ public abstract class HashCode {
     }
 
     /**
-     * Creates a {@code HashCode} from a hexadecimal ({@code base 16}) encoded string. The string must
-     * be at least 2 characters long, and contain only valid, lower-cased hexadecimal characters.
+     * Creates a {@code HashCode} from a hexadecimal ({@code base 16}) encoded string. The string must be at least 2
+     * characters long, and contain only valid, lower-cased hexadecimal characters.
      *
      * <p>This method accepts the exact format generated by {@link #toString}. If you require more
-     * lenient {@code base 16} decoding, please use {@link com.google.common.io.BaseEncoding#decode}
-     * (and pass the result to {@link #fromBytes}).
+     * lenient {@code base 16} decoding, please use {@link com.google.common.io.BaseEncoding#decode} (and pass the
+     * result to {@link #fromBytes}).
+     *
+     * @param string the string
+     *
+     * @return the hash code
      *
      * @since 15.0
      */
@@ -363,8 +436,8 @@ public abstract class HashCode {
     }
 
     /**
-     * Returns {@code true} if {@code object} is a {@link HashCode} instance with the identical byte
-     * representation to this hash code.
+     * Returns {@code true} if {@code object} is a {@link HashCode} instance with the identical byte representation to
+     * this hash code.
      *
      * <p><b>Security note:</b> this method uses a constant-time (not short-circuiting) implementation
      * to protect against <a href="http://en.wikipedia.org/wiki/Timing_attack">timing attacks</a>.
@@ -379,9 +452,9 @@ public abstract class HashCode {
     }
 
     /**
-     * Returns a "Java hash code" for this {@code HashCode} instance; this is well-defined (so, for
-     * example, you can safely put {@code HashCode} instances into a {@code HashSet}) but is otherwise
-     * probably not what you want to use.
+     * Returns a "Java hash code" for this {@code HashCode} instance; this is well-defined (so, for example, you can
+     * safely put {@code HashCode} instances into a {@code HashSet}) but is otherwise probably not what you want to
+     * use.
      */
     @Override
     public final int hashCode() {
@@ -400,13 +473,13 @@ public abstract class HashCode {
     }
 
     /**
-     * Returns a string containing each byte of {@link #asBytes}, in order, as a two-digit unsigned
-     * hexadecimal number in lower case.
+     * Returns a string containing each byte of {@link #asBytes}, in order, as a two-digit unsigned hexadecimal number
+     * in lower case.
      *
      * <p>Note that if the output is considered to be a single hexadecimal number, this hash code's
-     * bytes are the <i>big-endian</i> representation of that number. This may be surprising since
-     * everything else in the hashing API uniformly treats multibyte values as little-endian. But this
-     * format conveniently matches that of utilities such as the UNIX {@code md5sum} command.
+     * bytes are the <i>big-endian</i> representation of that number. This may be surprising since everything else in
+     * the hashing API uniformly treats multibyte values as little-endian. But this format conveniently matches that of
+     * utilities such as the UNIX {@code md5sum} command.
      *
      * <p>To create a {@code HashCode} from its string representation, see {@link #fromString}.
      */

@@ -5,12 +5,14 @@ package com.azure.cosmos.serialization.hybridrow.layouts;
 
 import com.azure.cosmos.core.Utf8String;
 import com.azure.cosmos.serialization.hybridrow.schemas.StorageKind;
-
-import org.jetbrains.annotations.NotNull;;
+import org.jetbrains.annotations.NotNull;
 
 import static com.azure.cosmos.base.Preconditions.checkNotNull;
 import static com.azure.cosmos.base.Strings.lenientFormat;
 
+/**
+ * The type Layout column.
+ */
 public final class LayoutColumn {
 
     private final LayoutBit booleanBit;
@@ -95,7 +97,7 @@ public final class LayoutColumn {
      * <p>
      * This value also indicates which presence bit controls this column.
      *
-     * @return Zero-based index of the column within the structure.
+     * @return Zero -based index of the column within the structure.
      */
     public int index() {
         return this.index;
@@ -211,11 +213,25 @@ public final class LayoutColumn {
         return (T) this.type().typeAs();
     }
 
+    /**
+     * Index layout column.
+     *
+     * @param value the value
+     *
+     * @return the layout column
+     */
     LayoutColumn index(int value) {
         this.index = value;
         return this;
     }
 
+    /**
+     * Offset layout column.
+     *
+     * @param value the value
+     *
+     * @return the layout column
+     */
     LayoutColumn offset(int value) {
         this.offset = value;
         return this;
