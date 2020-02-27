@@ -8,8 +8,8 @@ import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import org.jetbrains.annotations.NotNull;
 
-import static com.azure.cosmos.base.Preconditions.checkArgument;
-import static com.azure.cosmos.base.Preconditions.checkNotNull;
+import static com.azure.cosmos.implementation.base.Preconditions.checkArgument;
+import static com.azure.cosmos.implementation.base.Preconditions.checkNotNull;
 
 /**
  * The type Float 128 codec.

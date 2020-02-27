@@ -5,27 +5,28 @@ package com.azure.cosmos.core;
 
 import org.jetbrains.annotations.NotNull;
 
-import static com.azure.cosmos.base.Preconditions.checkNotNull;
+import static com.azure.cosmos.implementation.base.Preconditions.checkNotNull;
 import static com.azure.cosmos.core.Utf8String.transcodeUtf16;
 
 /**
  * A string whose memory representation may be either UTF-8 or UTF-16.
  * <p>
  * This type supports polymorphic use of {@link String} and {@link Utf8String} when equality, hashing, and comparison
- * are needed against either encoding.  An API leveraging {@link UtfAnyString} can avoid separate method overloads while
+ * are needed against either encoding. An API leveraging {@link UtfAnyString} can avoid separate method overloads while
  * still accepting either encoding without imposing additional allocations.
  */
 public final class UtfAnyString implements CharSequence, Comparable<UtfAnyString> {
 
     /**
-     * The constant EMPTY.
+     * The empty {@link UtfAnyString}.
      */
     public static final UtfAnyString EMPTY = new UtfAnyString("");
+
     /**
-     * The constant NULL.
+     * The null {@link UtfAnyString}.
      */
     public static final UtfAnyString NULL = new UtfAnyString();
-
+    
     private static final int NULL_HASHCODE = reduceHashCode(5_381, 5_381);
 
     private final CharSequence buffer;

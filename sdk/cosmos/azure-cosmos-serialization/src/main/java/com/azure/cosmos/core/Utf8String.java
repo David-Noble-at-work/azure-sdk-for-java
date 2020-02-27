@@ -3,7 +3,8 @@
 
 package com.azure.cosmos.core;
 
-import com.azure.cosmos.base.Suppliers;
+import com.azure.cosmos.implementation.Json;
+import com.azure.cosmos.implementation.base.Suppliers;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonParseException;
@@ -35,9 +36,9 @@ import java.util.function.Supplier;
 import java.util.stream.IntStream;
 import java.util.stream.StreamSupport;
 
-import static com.azure.cosmos.base.Preconditions.checkArgument;
-import static com.azure.cosmos.base.Preconditions.checkNotNull;
-import static com.azure.cosmos.base.Strings.lenientFormat;
+import static com.azure.cosmos.implementation.base.Preconditions.checkArgument;
+import static com.azure.cosmos.implementation.base.Preconditions.checkNotNull;
+import static com.azure.cosmos.implementation.base.Strings.lenientFormat;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 /**

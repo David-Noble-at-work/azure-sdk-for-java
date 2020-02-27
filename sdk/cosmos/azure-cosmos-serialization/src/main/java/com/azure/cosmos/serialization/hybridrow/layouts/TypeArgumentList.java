@@ -3,7 +3,7 @@
 
 package com.azure.cosmos.serialization.hybridrow.layouts;
 
-import com.azure.cosmos.core.Json;
+import com.azure.cosmos.implementation.Json;
 import com.azure.cosmos.serialization.hybridrow.SchemaId;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.SerializerProvider;
@@ -18,7 +18,7 @@ import java.util.List;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
-import static com.azure.cosmos.base.Preconditions.checkNotNull;
+import static com.azure.cosmos.implementation.base.Preconditions.checkNotNull;
 
 /**
  * The type Type argument list.

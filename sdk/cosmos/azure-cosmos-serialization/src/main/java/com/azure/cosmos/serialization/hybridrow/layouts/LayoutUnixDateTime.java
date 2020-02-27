@@ -10,7 +10,7 @@ import com.azure.cosmos.serialization.hybridrow.RowCursor;
 import com.azure.cosmos.serialization.hybridrow.UnixDateTime;
 import org.jetbrains.annotations.NotNull;
 
-import static com.azure.cosmos.base.Preconditions.checkArgument;
+import static com.azure.cosmos.implementation.base.Preconditions.checkArgument;
 
 /**
  * The type Layout unix date time.

@@ -12,7 +12,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.math.BigDecimal;
 
-import static com.azure.cosmos.base.Preconditions.checkArgument;
+import static com.azure.cosmos.implementation.base.Preconditions.checkArgument;
 
 /**
  * The type Layout decimal.

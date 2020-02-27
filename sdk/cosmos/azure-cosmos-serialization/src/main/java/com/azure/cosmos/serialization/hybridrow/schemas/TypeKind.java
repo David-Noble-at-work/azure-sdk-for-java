@@ -3,7 +3,7 @@
 
 package com.azure.cosmos.serialization.hybridrow.schemas;
 
-import com.azure.cosmos.base.Suppliers;
+import com.azure.cosmos.implementation.base.Suppliers;
 import com.azure.cosmos.serialization.hybridrow.UnixDateTime;
 import com.fasterxml.jackson.annotation.JsonEnumDefaultValue;
 import it.unimi.dsi.fastutil.ints.Int2ReferenceMap;

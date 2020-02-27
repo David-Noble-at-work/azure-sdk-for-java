@@ -3,7 +3,7 @@
 
 package com.azure.cosmos.serialization.hybridrow.schemas;
 
-import com.azure.cosmos.core.Json;
+import com.azure.cosmos.implementation.Json;
 import com.azure.cosmos.serialization.hybridrow.SchemaId;
 import com.azure.cosmos.serialization.hybridrow.layouts.Layout;
 import com.azure.cosmos.serialization.hybridrow.layouts.LayoutCompiler;
@@ -16,8 +16,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
-import static com.azure.cosmos.base.Preconditions.checkArgument;
-import static com.azure.cosmos.base.Preconditions.checkNotNull;
+import static com.azure.cosmos.implementation.base.Preconditions.checkArgument;
+import static com.azure.cosmos.implementation.base.Preconditions.checkNotNull;
 
 /**
  * A schema describes either table or UDT metadata.

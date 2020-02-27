@@ -17,7 +17,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.zip.CRC32;
 
-import static com.azure.cosmos.base.Preconditions.checkNotNull;
+import static com.azure.cosmos.implementation.base.Preconditions.checkNotNull;
 
 /**
  * Provides static methods for formatting a HybridRow record.

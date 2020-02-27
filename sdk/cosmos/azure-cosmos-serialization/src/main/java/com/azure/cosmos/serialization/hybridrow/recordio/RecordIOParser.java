@@ -21,7 +21,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.zip.CRC32;
 
-import static com.azure.cosmos.base.Preconditions.checkNotNull;
+import static com.azure.cosmos.implementation.base.Preconditions.checkNotNull;
 
 /**
  * The type Record io parser.

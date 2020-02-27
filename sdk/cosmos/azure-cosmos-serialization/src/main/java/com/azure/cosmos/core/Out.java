@@ -9,11 +9,7 @@ import java.util.Objects;
 import java.util.function.Consumer;
 
 /**
- * A container object which may or may not contain a non-null value
- * <p>
- * This is a value-based class and as such use of identity-sensitive operations--including reference equality
- * ({@code ==}), identity hash code, or synchronization--on instances of {@code Out} may have unpredictable results and
- * should be avoided.
+ * A container object which may or may not contain a non-null value.
  *
  * @param <T> type of the referent.
  */

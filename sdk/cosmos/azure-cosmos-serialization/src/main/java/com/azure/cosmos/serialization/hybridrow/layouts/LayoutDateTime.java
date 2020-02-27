@@ -12,7 +12,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.time.OffsetDateTime;
 
-import static com.azure.cosmos.base.Preconditions.checkArgument;
+import static com.azure.cosmos.implementation.base.Preconditions.checkArgument;
 
 /**
  * The type Layout date time.

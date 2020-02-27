@@ -20,8 +20,8 @@ import java.io.OutputStream;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Function;
 
-import static com.azure.cosmos.base.Preconditions.checkNotNull;
-import static com.azure.cosmos.base.Preconditions.checkState;
+import static com.azure.cosmos.implementation.base.Preconditions.checkNotNull;
+import static com.azure.cosmos.implementation.base.Preconditions.checkState;
 
 /**
  * Provides static methods for HybridRow record-based IO.

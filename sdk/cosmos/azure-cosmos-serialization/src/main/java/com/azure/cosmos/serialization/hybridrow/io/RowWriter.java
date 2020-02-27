@@ -48,8 +48,8 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.function.Consumer;
 
-import static com.azure.cosmos.base.Preconditions.checkNotNull;
-import static com.azure.cosmos.base.Strings.lenientFormat;
+import static com.azure.cosmos.implementation.base.Preconditions.checkNotNull;
+import static com.azure.cosmos.implementation.base.Strings.lenientFormat;
 
 /**
  * Writes data to a {@link RowBuffer}.

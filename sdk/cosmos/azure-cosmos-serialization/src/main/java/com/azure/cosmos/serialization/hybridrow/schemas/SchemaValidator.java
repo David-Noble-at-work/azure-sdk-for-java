@@ -3,8 +3,8 @@
 
 package com.azure.cosmos.serialization.hybridrow.schemas;
 
-import com.azure.cosmos.base.Strings;
-import com.azure.cosmos.core.Json;
+import com.azure.cosmos.implementation.base.Strings;
+import com.azure.cosmos.implementation.Json;
 import com.azure.cosmos.serialization.hybridrow.SchemaId;
 import org.jetbrains.annotations.NotNull;
 
@@ -12,8 +12,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 
-import static com.azure.cosmos.base.Preconditions.checkNotNull;
-import static com.azure.cosmos.base.Strings.lenientFormat;;
+import static com.azure.cosmos.implementation.base.Preconditions.checkNotNull;
+import static com.azure.cosmos.implementation.base.Strings.lenientFormat;;
 
 /**
  * The type Schema validator.

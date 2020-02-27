@@ -17,8 +17,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
 
-import static com.azure.cosmos.base.Preconditions.checkArgument;
-import static com.azure.cosmos.base.Preconditions.checkNotNull;
+import static com.azure.cosmos.implementation.base.Preconditions.checkArgument;
+import static com.azure.cosmos.implementation.base.Preconditions.checkNotNull;
 
 /**
  * A Layout describes the structure of a Hybrid Row.

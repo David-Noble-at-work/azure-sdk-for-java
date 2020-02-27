@@ -3,11 +3,11 @@
 
 package com.azure.cosmos.serialization.hybridrow.layouts;
 
-import com.azure.cosmos.core.Json;
+import com.azure.cosmos.implementation.Json;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import org.jetbrains.annotations.NotNull;
 
-import static com.azure.cosmos.base.Preconditions.checkNotNull;
+import static com.azure.cosmos.implementation.base.Preconditions.checkNotNull;
 
 /**
  * The type Type argument.

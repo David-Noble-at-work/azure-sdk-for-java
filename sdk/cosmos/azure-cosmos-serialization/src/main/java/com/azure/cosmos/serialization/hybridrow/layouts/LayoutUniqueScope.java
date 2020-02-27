@@ -12,7 +12,7 @@ import com.azure.cosmos.serialization.hybridrow.RowOptions;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import static com.azure.cosmos.base.Preconditions.checkNotNull;
+import static com.azure.cosmos.implementation.base.Preconditions.checkNotNull;
 
 /**
  * Describes the layout of a UniqueScope field.

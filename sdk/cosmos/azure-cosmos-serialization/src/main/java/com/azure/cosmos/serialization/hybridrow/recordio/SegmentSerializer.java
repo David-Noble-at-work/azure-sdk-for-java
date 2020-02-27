@@ -17,7 +17,7 @@ import io.netty.buffer.ByteBuf;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import static com.azure.cosmos.base.Preconditions.checkState;
+import static com.azure.cosmos.implementation.base.Preconditions.checkState;
 
 /**
  * The type Segment serializer.

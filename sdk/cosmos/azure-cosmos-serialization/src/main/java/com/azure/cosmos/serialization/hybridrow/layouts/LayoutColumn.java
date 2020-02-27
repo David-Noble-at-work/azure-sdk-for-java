@@ -7,8 +7,8 @@ import com.azure.cosmos.core.Utf8String;
 import com.azure.cosmos.serialization.hybridrow.schemas.StorageKind;
 import org.jetbrains.annotations.NotNull;
 
-import static com.azure.cosmos.base.Preconditions.checkNotNull;
-import static com.azure.cosmos.base.Strings.lenientFormat;
+import static com.azure.cosmos.implementation.base.Preconditions.checkNotNull;
+import static com.azure.cosmos.implementation.base.Strings.lenientFormat;
 
 /**
  * The type Layout column.

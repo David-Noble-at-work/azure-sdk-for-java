@@ -3,7 +3,7 @@
 
 package com.azure.cosmos.serialization.hybridrow.layouts;
 
-import com.azure.cosmos.base.Suppliers;
+import com.azure.cosmos.implementation.base.Suppliers;
 import it.unimi.dsi.fastutil.bytes.Byte2ReferenceMap;
 import it.unimi.dsi.fastutil.bytes.Byte2ReferenceOpenHashMap;
 import org.jetbrains.annotations.Nullable;

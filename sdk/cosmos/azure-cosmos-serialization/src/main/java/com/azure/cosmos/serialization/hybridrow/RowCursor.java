@@ -14,7 +14,7 @@ import com.azure.cosmos.serialization.hybridrow.layouts.StringToken;
 import com.azure.cosmos.serialization.hybridrow.layouts.TypeArgument;
 import com.azure.cosmos.serialization.hybridrow.layouts.TypeArgumentList;
 
-import static com.azure.cosmos.base.Strings.lenientFormat;
+import static com.azure.cosmos.implementation.base.Strings.lenientFormat;
 
 /**
  * The type Row cursor.

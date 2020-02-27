@@ -9,7 +9,7 @@ import com.azure.cosmos.serialization.hybridrow.RowBuffer;
 import com.azure.cosmos.serialization.hybridrow.RowCursor;
 import org.jetbrains.annotations.NotNull;
 
-import static com.azure.cosmos.base.Preconditions.checkArgument;
+import static com.azure.cosmos.implementation.base.Preconditions.checkArgument;
 
 /**
  * Describes the layout of an Int16 field

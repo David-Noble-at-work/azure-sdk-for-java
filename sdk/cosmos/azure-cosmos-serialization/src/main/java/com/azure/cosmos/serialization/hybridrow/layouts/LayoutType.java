@@ -3,7 +3,7 @@
 
 package com.azure.cosmos.serialization.hybridrow.layouts;
 
-import com.azure.cosmos.core.Json;
+import com.azure.cosmos.implementation.Json;
 import com.azure.cosmos.core.Out;
 import com.azure.cosmos.serialization.hybridrow.Result;
 import com.azure.cosmos.serialization.hybridrow.RowBuffer;
@@ -11,8 +11,8 @@ import com.azure.cosmos.serialization.hybridrow.RowCursor;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import org.jetbrains.annotations.NotNull;
 
-import static com.azure.cosmos.base.Preconditions.checkArgument;
-import static com.azure.cosmos.base.Preconditions.checkNotNull;
+import static com.azure.cosmos.implementation.base.Preconditions.checkArgument;
+import static com.azure.cosmos.implementation.base.Preconditions.checkNotNull;
 
 /**
  * Describes the physical byte layout of a hybrid row field of a specific physical type {@code T}.

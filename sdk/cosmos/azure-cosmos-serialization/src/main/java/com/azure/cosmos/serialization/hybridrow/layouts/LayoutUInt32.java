@@ -9,8 +9,8 @@ import com.azure.cosmos.serialization.hybridrow.RowBuffer;
 import com.azure.cosmos.serialization.hybridrow.RowCursor;
 import org.jetbrains.annotations.NotNull;
 
-import static com.azure.cosmos.base.Preconditions.checkArgument;
-import static com.azure.cosmos.base.Preconditions.checkNotNull;
+import static com.azure.cosmos.implementation.base.Preconditions.checkArgument;
+import static com.azure.cosmos.implementation.base.Preconditions.checkNotNull;
 
 /**
  * Describes the layout of a UInt32 field.

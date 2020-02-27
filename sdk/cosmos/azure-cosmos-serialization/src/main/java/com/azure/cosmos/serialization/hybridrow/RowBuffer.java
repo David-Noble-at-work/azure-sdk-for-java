@@ -77,10 +77,10 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
-import static com.azure.cosmos.base.Preconditions.checkArgument;
-import static com.azure.cosmos.base.Preconditions.checkNotNull;
-import static com.azure.cosmos.base.Preconditions.checkState;
-import static com.azure.cosmos.base.Strings.lenientFormat;// import com.azure.data.cosmos.serialization.hybridrow.RowBuffer.UniqueIndexItem;
+import static com.azure.cosmos.implementation.base.Preconditions.checkArgument;
+import static com.azure.cosmos.implementation.base.Preconditions.checkNotNull;
+import static com.azure.cosmos.implementation.base.Preconditions.checkState;
+import static com.azure.cosmos.implementation.base.Strings.lenientFormat;// import com.azure.data.cosmos.serialization.hybridrow.RowBuffer.UniqueIndexItem;
 
 /**
  * Manages a sequence of bytes representing a Hybrid Row.

@@ -11,7 +11,7 @@ import java.io.File;
 import java.nio.file.Paths;
 import java.util.UUID;
 
-import static com.azure.cosmos.base.Strings.lenientFormat;
+import static com.azure.cosmos.implementation.base.Strings.lenientFormat;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotEquals;
 import static org.testng.Assert.assertNotNull;

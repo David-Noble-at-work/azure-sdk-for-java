@@ -3,7 +3,7 @@
 
 package com.azure.cosmos.serialization.hybridrow.layouts;
 
-import com.azure.cosmos.base.Strings;
+import com.azure.cosmos.implementation.base.Strings;
 import com.azure.cosmos.core.Out;
 import com.azure.cosmos.serialization.hybridrow.SchemaId;
 import com.azure.cosmos.serialization.hybridrow.schemas.ArrayPropertyType;
@@ -25,9 +25,9 @@ import org.jetbrains.annotations.NotNull;
 import java.util.List;
 import java.util.Optional;
 
-import static com.azure.cosmos.base.Preconditions.checkArgument;
-import static com.azure.cosmos.base.Preconditions.checkNotNull;
-import static com.azure.cosmos.base.Strings.lenientFormat;
+import static com.azure.cosmos.implementation.base.Preconditions.checkArgument;
+import static com.azure.cosmos.implementation.base.Preconditions.checkNotNull;
+import static com.azure.cosmos.implementation.base.Strings.lenientFormat;
 
 /**
  * Converts a logical schema into a physical layout.

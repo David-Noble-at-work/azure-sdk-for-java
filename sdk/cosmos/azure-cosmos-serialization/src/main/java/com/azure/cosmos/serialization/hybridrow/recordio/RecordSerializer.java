@@ -12,8 +12,8 @@ import com.azure.cosmos.serialization.hybridrow.layouts.TypeArgument;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import static com.azure.cosmos.base.Preconditions.checkNotNull;
-import static com.azure.cosmos.base.Preconditions.checkState;
+import static com.azure.cosmos.implementation.base.Preconditions.checkNotNull;
+import static com.azure.cosmos.implementation.base.Preconditions.checkState;
 
 /**
  * Provides static read/write operations on a {@link RowReader}.

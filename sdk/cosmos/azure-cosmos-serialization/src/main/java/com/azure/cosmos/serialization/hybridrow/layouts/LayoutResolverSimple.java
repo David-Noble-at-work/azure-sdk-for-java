@@ -8,7 +8,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.function.Function;
 
-import static com.azure.cosmos.base.Preconditions.checkNotNull;
+import static com.azure.cosmos.implementation.base.Preconditions.checkNotNull;
 
 /**
  * The type Layout resolver simple.

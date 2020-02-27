@@ -10,7 +10,7 @@ import com.azure.cosmos.serialization.hybridrow.RowCursor;
 import com.azure.cosmos.serialization.hybridrow.SchemaId;
 import org.jetbrains.annotations.NotNull;
 
-import static com.azure.cosmos.base.Preconditions.checkNotNull;
+import static com.azure.cosmos.implementation.base.Preconditions.checkNotNull;
 
 /**
  * Describes the layout of a UDT field.

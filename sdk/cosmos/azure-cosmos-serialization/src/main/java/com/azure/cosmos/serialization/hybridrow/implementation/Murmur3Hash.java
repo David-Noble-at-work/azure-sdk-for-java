@@ -3,19 +3,19 @@
 
 package com.azure.cosmos.serialization.hybridrow.implementation;
 
-import com.azure.cosmos.base.Utf8;
+import com.azure.cosmos.implementation.base.Utf8;
 import com.azure.cosmos.core.Utf8String;
-import com.azure.cosmos.hash.HashCode;
-import com.azure.cosmos.hash.HashFunction;
-import com.azure.cosmos.hash.Hashing;
+import com.azure.cosmos.implementation.hash.HashCode;
+import com.azure.cosmos.implementation.hash.HashFunction;
+import com.azure.cosmos.implementation.hash.Hashing;
 import com.azure.cosmos.serialization.hybridrow.HashCode128;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufAllocator;
 import io.netty.buffer.Unpooled;
 import org.jetbrains.annotations.NotNull;
 
-import static com.azure.cosmos.base.Preconditions.checkNotNull;
-import static com.azure.cosmos.base.Strings.lenientFormat;
+import static com.azure.cosmos.implementation.base.Preconditions.checkNotNull;
+import static com.azure.cosmos.implementation.base.Strings.lenientFormat;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 /**

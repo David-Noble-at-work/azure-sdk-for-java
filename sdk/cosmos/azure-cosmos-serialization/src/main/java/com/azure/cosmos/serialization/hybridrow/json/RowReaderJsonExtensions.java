@@ -3,7 +3,7 @@
 
 package com.azure.cosmos.serialization.hybridrow.json;
 
-import com.azure.cosmos.core.Json;
+import com.azure.cosmos.implementation.Json;
 import com.azure.cosmos.core.Out;
 import com.azure.cosmos.serialization.hybridrow.Result;
 import com.azure.cosmos.serialization.hybridrow.UnixDateTime;
@@ -11,10 +11,10 @@ import com.azure.cosmos.serialization.hybridrow.io.RowReader;
 import com.azure.cosmos.serialization.hybridrow.layouts.LayoutType;
 import org.jetbrains.annotations.NotNull;
 
-import static com.azure.cosmos.base.Preconditions.checkArgument;
-import static com.azure.cosmos.base.Preconditions.checkNotNull;
-import static com.azure.cosmos.base.Preconditions.checkState;
-import static com.azure.cosmos.base.Strings.lenientFormat;
+import static com.azure.cosmos.implementation.base.Preconditions.checkArgument;
+import static com.azure.cosmos.implementation.base.Preconditions.checkNotNull;
+import static com.azure.cosmos.implementation.base.Preconditions.checkState;
+import static com.azure.cosmos.implementation.base.Strings.lenientFormat;
 
 /**
  * The type Row reader json extensions.

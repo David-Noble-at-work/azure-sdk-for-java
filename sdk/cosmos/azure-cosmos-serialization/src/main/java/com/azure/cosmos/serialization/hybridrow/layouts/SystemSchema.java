@@ -3,7 +3,7 @@
 
 package com.azure.cosmos.serialization.hybridrow.layouts;
 
-import com.azure.cosmos.base.Suppliers;
+import com.azure.cosmos.implementation.base.Suppliers;
 import com.azure.cosmos.serialization.hybridrow.SchemaId;
 import com.azure.cosmos.serialization.hybridrow.schemas.Namespace;
 
@@ -13,7 +13,7 @@ import java.io.InputStream;
 import java.util.Optional;
 import java.util.function.Supplier;
 
-import static com.azure.cosmos.base.Strings.lenientFormat;
+import static com.azure.cosmos.implementation.base.Strings.lenientFormat;
 
 /**
  * The type System schema.

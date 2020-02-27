@@ -3,8 +3,8 @@
 
 package com.azure.cosmos.serialization.hybridrow.io;
 
-import com.azure.cosmos.base.Suppliers;
-import com.azure.cosmos.core.Json;
+import com.azure.cosmos.implementation.base.Suppliers;
+import com.azure.cosmos.implementation.Json;
 import com.azure.cosmos.core.Utf8String;
 import com.azure.cosmos.serialization.hybridrow.layouts.LayoutCode;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -15,7 +15,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.function.Supplier;
 
-import static com.azure.cosmos.base.Preconditions.checkNotNull;
+import static com.azure.cosmos.implementation.base.Preconditions.checkNotNull;
 
 /**
  * A path/type/value triplet representing a field in a HybridRow.

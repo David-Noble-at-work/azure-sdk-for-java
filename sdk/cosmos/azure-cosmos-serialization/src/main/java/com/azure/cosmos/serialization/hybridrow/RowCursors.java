@@ -9,8 +9,8 @@ import com.azure.cosmos.serialization.hybridrow.layouts.LayoutEndScope;
 import com.azure.cosmos.serialization.hybridrow.layouts.StringToken;
 import org.jetbrains.annotations.NotNull;
 
-import static com.azure.cosmos.base.Preconditions.checkArgument;
-import static com.azure.cosmos.base.Preconditions.checkNotNull;
+import static com.azure.cosmos.implementation.base.Preconditions.checkArgument;
+import static com.azure.cosmos.implementation.base.Preconditions.checkNotNull;
 
 /**
  * The type Row cursors.

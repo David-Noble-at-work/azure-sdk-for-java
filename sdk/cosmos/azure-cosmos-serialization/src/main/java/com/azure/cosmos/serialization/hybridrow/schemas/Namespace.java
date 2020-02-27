@@ -3,8 +3,8 @@
 
 package com.azure.cosmos.serialization.hybridrow.schemas;
 
-import com.azure.cosmos.base.Preconditions;
-import com.azure.cosmos.core.Json;
+import com.azure.cosmos.implementation.base.Preconditions;
+import com.azure.cosmos.implementation.Json;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;

@@ -10,8 +10,8 @@ import com.azure.cosmos.serialization.hybridrow.implementation.Murmur3Hash;
 import java.util.Optional;
 import java.util.stream.Stream;
 
-import static com.azure.cosmos.base.Preconditions.checkState;
-import static com.azure.cosmos.base.Strings.lenientFormat;
+import static com.azure.cosmos.implementation.base.Preconditions.checkState;
+import static com.azure.cosmos.implementation.base.Strings.lenientFormat;
 
 /**
  * The type Schema hash.

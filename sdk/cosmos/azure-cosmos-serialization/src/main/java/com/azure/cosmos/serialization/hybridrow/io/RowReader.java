@@ -3,7 +3,7 @@
 
 package com.azure.cosmos.serialization.hybridrow.io;
 
-import com.azure.cosmos.core.Json;
+import com.azure.cosmos.implementation.Json;
 import com.azure.cosmos.core.Out;
 import com.azure.cosmos.core.Utf8String;
 import com.azure.cosmos.serialization.hybridrow.Float128;
@@ -56,9 +56,9 @@ import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.UUID;
 
-import static com.azure.cosmos.base.Preconditions.checkNotNull;
-import static com.azure.cosmos.base.Preconditions.checkState;
-import static com.azure.cosmos.base.Strings.lenientFormat;
+import static com.azure.cosmos.implementation.base.Preconditions.checkNotNull;
+import static com.azure.cosmos.implementation.base.Preconditions.checkState;
+import static com.azure.cosmos.implementation.base.Strings.lenientFormat;
 
 /**
  * A forward-only, streaming, field reader for {@link RowBuffer}.

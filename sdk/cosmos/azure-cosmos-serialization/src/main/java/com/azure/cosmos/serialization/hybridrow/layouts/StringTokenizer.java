@@ -10,8 +10,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Optional;
 
-import static com.azure.cosmos.base.Preconditions.checkArgument;
-import static com.azure.cosmos.base.Preconditions.checkState;
+import static com.azure.cosmos.implementation.base.Preconditions.checkArgument;
+import static com.azure.cosmos.implementation.base.Preconditions.checkState;
 
 /**
  * The type String tokenizer.

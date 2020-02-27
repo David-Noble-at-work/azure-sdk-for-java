@@ -3,7 +3,7 @@
 
 package com.azure.cosmos.serialization.hybridrow.io;
 
-import com.azure.cosmos.base.Strings;
+import com.azure.cosmos.implementation.base.Strings;
 import com.azure.cosmos.core.Out;
 import com.azure.cosmos.core.Utf8String;
 import com.azure.cosmos.serialization.hybridrow.HybridRowVersion;
@@ -27,7 +27,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
-import static com.azure.cosmos.base.Strings.lenientFormat;
+import static com.azure.cosmos.implementation.base.Strings.lenientFormat;
 import static java.lang.System.out;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNull;

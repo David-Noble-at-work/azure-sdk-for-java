@@ -12,7 +12,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.UUID;
 
-import static com.azure.cosmos.base.Preconditions.checkArgument;
+import static com.azure.cosmos.implementation.base.Preconditions.checkArgument;
 
 /**
  * Describes the layout of a Guid field.
