@@ -13,6 +13,7 @@ package com.azure.cosmos.implementation.hash;
 
 //import jdk.internal.misc.Unsafe;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.jetbrains.annotations.Nullable;
 import sun.misc.Unsafe;
 
@@ -26,6 +27,7 @@ import java.util.Random;
  * A package-local class holding common representation and mechanics for classes supporting dynamic striping on 64bit
  * values. The class extends Number so that concrete subclasses must publicly do so.
  */
+@SuppressFBWarnings({ "REC_CATCH_EXCEPTION", "VO_VOLATILE_REFERENCE_TO_ARRAY" })
 abstract class Striped64 extends Number {
     /*
      * This class maintains a lazily-initialized table of atomically

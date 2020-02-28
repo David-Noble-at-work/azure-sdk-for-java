@@ -13,6 +13,7 @@
 
 package com.azure.cosmos.implementation.base;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.Serializable;
@@ -208,21 +209,6 @@ public abstract class Converter<A, B> implements Function<A, B> {
                 };
             }
         };
-    }
-
-    /**
-     * Indicates whether another object is equal to this converter.
-     *
-     * <p>Most implementations will have no reason to override the behavior of {@link Object#equals}.
-     * However, an implementation may also choose to return {@code true} whenever {@code object} is a {@link Converter}
-     * that it considers <i>interchangeable</i> with this one. "Interchangeable"
-     * <i>typically</i> means that {@code Objects.equal(this.convert(a), that.convert(a))} is true for
-     * all {@code a} of type {@code A} (and similarly for {@code reverse}). Note that a {@code false} result from this
-     * method does not imply that the converters are known <i>not</i> to be interchangeable.
-     */
-    @Override
-    public boolean equals(@Nullable Object object) {
-        return super.equals(object);
     }
 
     /**
@@ -424,8 +410,9 @@ public abstract class Converter<A, B> implements Function<A, B> {
         }
     }
 
-    private static final class FunctionBasedConverter<A, B> extends Converter<A, B>
-        implements Serializable {
+    private static final class FunctionBasedConverter<A, B> extends Converter<A, B> implements Serializable {
+
+        private static final long serialVersionUID = -1640180560506545787L;
         private final Function<? super B, ? extends A> backwardFunction;
         private final Function<? super A, ? extends B> forwardFunction;
 
@@ -470,6 +457,7 @@ public abstract class Converter<A, B> implements Function<A, B> {
     /**
      * A converter that always converts or reverses an object to itself. Note that T is now a "pass-through type".
      */
+    @SuppressFBWarnings("HE_INHERITS_EQUALS_USE_HASHCODE")
     private static final class IdentityConverter<T> extends Converter<T, T> implements Serializable {
         /**
          * The Instance.

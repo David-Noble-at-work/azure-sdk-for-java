@@ -15,7 +15,7 @@ import static com.azure.cosmos.implementation.base.Preconditions.checkArgument;
 /**
  * Describes the layout of a Null field.
  */
-public final class LayoutNull extends LayoutTypePrimitive<NullValue> implements ILayoutType {
+public final class LayoutNull extends LayoutTypePrimitive<NullValue> {
 
     /**
      * Initializes the layout of a Null field.

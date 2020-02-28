@@ -12,6 +12,7 @@ import com.azure.cosmos.serialization.hybridrow.io.RowReader;
 import com.azure.cosmos.serialization.hybridrow.io.Segment;
 import com.azure.cosmos.serialization.hybridrow.layouts.SystemSchema;
 import io.netty.buffer.ByteBuf;
+import it.unimi.dsi.fastutil.bytes.Byte2ObjectArrayMap;
 import it.unimi.dsi.fastutil.bytes.Byte2ObjectMap;
 import it.unimi.dsi.fastutil.bytes.Byte2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
@@ -30,18 +31,24 @@ public final class RecordIOParser {
 
     private Record record;
     private Segment segment;
-    private State state = State.START;
+    private State state;
 
+    public RecordIOParser() {
+        this.segment = null;
+        this.record = null;
+        this.state = State.START;
+    }
     /**
      * Processes one buffers worth of data possibly advancing the parser state
      *
      * @param buffer The buffer to consume
      * @param type Indicates the type of Hybrid Row produced in {@code record}
      * @param record If non-empty, then the body of the next record in the sequence
-     * @param need The smallest number of bytes needed to advanced the parser state further <p> It is recommended that
-     * this method not be called again until at least this number of bytes are available.
+     * @param need The smallest number of bytes needed to advanced the parser state further.
+     * <p>
+     * It is recommended that this method not be called again until at least this number of bytes are available.
      *
-     * @return {@link Result#SUCCESS} if no error has occurred;, otherwise the {@link Result} of the last error
+     * @return {@link Result#SUCCESS} if no error has occurred; otherwise the {@link Result} of the last error
      * encountered during parsing.
      */
     @SuppressWarnings("unchecked")
@@ -235,7 +242,7 @@ public final class RecordIOParser {
      * @return {@code true} if a valid segment has been parsed.
      */
     public boolean haveSegment() {
-        return this.state.value() >= State.NEED_HEADER.value();
+        return this.state.ordinal() >= State.NEED_HEADER.ordinal();
     }
 
     /**
@@ -255,60 +262,36 @@ public final class RecordIOParser {
         /**
          * No hybrid row was produced. The parser needs more data.
          */
-        NONE(0),
+        NONE,
 
         /**
          * A new segment row was produced.
          */
-        SEGMENT(1),
+        SEGMENT,
 
         /**
          * A record in the current segment was produced.
          */
-        RECORD(2);
+        RECORD;
 
         /**
          * The constant BYTES.
          */
         public static final int BYTES = Integer.BYTES;
 
-        private static Int2ObjectMap<ProductionType> mappings;
-        private int value;
-
-        ProductionType(int value) {
-            this.value = value;
-            mappings().put(value, this);
-        }
-
-        /**
-         * Value int.
-         *
-         * @return the int
-         */
-        public int value() {
-            return this.value;
-        }
+        private static ProductionType[] mappings = {
+            NONE, SEGMENT, RECORD
+        };
 
         /**
          * From production type.
          *
-         * @param value the value
+         * @param value the ordinal value.
          *
-         * @return the production type
+         * @return the production type.
          */
         public static ProductionType from(int value) {
-            return mappings().get(value);
-        }
-
-        private static Int2ObjectMap<ProductionType> mappings() {
-            if (mappings == null) {
-                synchronized (ProductionType.class) {
-                    if (mappings == null) {
-                        mappings = new Int2ObjectOpenHashMap<>();
-                    }
-                }
-            }
-            return mappings;
+            return 0 <= value && value <= mappings.length ? mappings[value] : null;
         }
     }
 
@@ -320,45 +303,45 @@ public final class RecordIOParser {
         /**
          * The Start.
          */
-        START((byte) 0, "Start: no buffers have yet been provided to the parser"),
+        START("Start: no buffers have yet been provided to the parser"),
         /**
          * The Error.
          */
-        ERROR((byte) 1, "Unrecoverable parse error encountered"),
+        ERROR("Unrecoverable parse error encountered"),
         /**
          * The Need segment length.
          */
-        NEED_SEGMENT_LENGTH((byte) 2, "Parsing segment header length"),
+        NEED_SEGMENT_LENGTH("Parsing segment header length"),
         /**
          * The Need segment.
          */
-        NEED_SEGMENT((byte) 3, "Parsing segment header"),
+        NEED_SEGMENT("Parsing segment header"),
         /**
          * The Need header.
          */
-        NEED_HEADER((byte) 4, "Parsing HybridRow header"),
+        NEED_HEADER("Parsing HybridRow header"),
         /**
          * The Need record.
          */
-        NEED_RECORD((byte) 5, "Parsing record header"),
+        NEED_RECORD("Parsing record header"),
         /**
          * The Need row.
          */
-        NEED_ROW((byte) 6, "Parsing row body");
+        NEED_ROW("Parsing row body");
 
         /**
          * The constant BYTES.
          */
         public static final int BYTES = Byte.SIZE;
 
-        private static Byte2ObjectMap<State> mappings;
-        private final String description;
-        private final byte value;
+        private static State[] mappings = {
+            START, ERROR, NEED_SEGMENT_LENGTH, NEED_SEGMENT, NEED_HEADER, NEED_RECORD, NEED_ROW
+        };
 
-        State(byte value, String description) {
+        private final String description;
+
+        State(String description) {
             this.description = description;
-            this.value = value;
-            mappings().put(value, this);
         }
 
         /**
@@ -371,15 +354,6 @@ public final class RecordIOParser {
         }
 
         /**
-         * Value byte.
-         *
-         * @return the byte
-         */
-        public byte value() {
-            return this.value;
-        }
-
-        /**
          * From state.
          *
          * @param value the value
@@ -387,18 +361,7 @@ public final class RecordIOParser {
          * @return the state
          */
         public static State from(byte value) {
-            return mappings().get(value);
-        }
-
-        private static Byte2ObjectMap<State> mappings() {
-            if (mappings == null) {
-                synchronized (State.class) {
-                    if (mappings == null) {
-                        mappings = new Byte2ObjectOpenHashMap<>();
-                    }
-                }
-            }
-            return mappings;
+            return 0x00 <= value && value <= mappings.length ? mappings[value] : null;
         }
     }
 }

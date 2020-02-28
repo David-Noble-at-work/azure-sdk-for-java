@@ -13,6 +13,7 @@
 
 package com.azure.cosmos.implementation.base;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -676,9 +677,11 @@ public final class Preconditions {
      *
      * @return the non-null reference that was validated.
      *
-     * @throws NullPointerException if {@code reference} is null
+     * @throws NullPointerException if {@code reference} is null.
+     *
      * @see Verify#verifyNotNull Verify.verifyNotNull()
      */
+    @SuppressFBWarnings("NP_PARAMETER_MUST_BE_NONNULL_BUT_MARKED_AS_NULLABLE")
     @NotNull
     public static <T> T checkNotNull(@Nullable T reference) {
         if (reference == null) {

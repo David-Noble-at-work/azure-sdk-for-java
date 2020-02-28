@@ -3,6 +3,9 @@
 
 package com.azure.cosmos.serialization.hybridrow.schemas;
 
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
 import java.util.HashMap;
 
 /**
@@ -19,14 +22,12 @@ public enum SchemaLanguageVersion {
      */
     public static final int BYTES = Byte.BYTES;
 
-    private static HashMap<Byte, SchemaLanguageVersion> mappings;
     private String friendlyName;
     private byte value;
 
     SchemaLanguageVersion(byte value, String text) {
         this.value = value;
         this.friendlyName = text;
-        mappings().put(value, this);
     }
 
     /**
@@ -36,19 +37,22 @@ public enum SchemaLanguageVersion {
      *
      * @see #toString() #toString()
      */
+    @NotNull
     public String friendlyName() {
         return this.friendlyName;
     }
 
     /**
-     * From schema language version.
+     * Gets the {@link SchemaLanguageVersion schema language version} with the given {@code byte} value.
      *
-     * @param value the value
+     * @param value the value.
      *
-     * @return the schema language version
+     * @return the {@link SchemaLanguageVersion schema language version} or {@code null}, if {@code value} does not map
+     * to a {@link SchemaLanguageVersion schema language version}.
      */
-    public static SchemaLanguageVersion from(byte value) {
-        return mappings().get(value);
+    @Nullable
+    public static SchemaLanguageVersion from(final byte value) {
+        return value == 0x00 ? V1 : null;
     }
 
     /**
@@ -69,16 +73,5 @@ public enum SchemaLanguageVersion {
      */
     public byte value() {
         return this.value;
-    }
-
-    private static HashMap<Byte, SchemaLanguageVersion> mappings() {
-        if (mappings == null) {
-            synchronized (SchemaLanguageVersion.class) {
-                if (mappings == null) {
-                    mappings = new HashMap<>();
-                }
-            }
-        }
-        return mappings;
     }
 }

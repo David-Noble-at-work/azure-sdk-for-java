@@ -58,6 +58,7 @@ import com.azure.cosmos.serialization.hybridrow.layouts.StringTokenizer;
 import com.azure.cosmos.serialization.hybridrow.layouts.TypeArgument;
 import com.azure.cosmos.serialization.hybridrow.layouts.TypeArgumentList;
 import com.azure.cosmos.serialization.hybridrow.layouts.UpdateOptions;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufAllocator;
 import org.jetbrains.annotations.NotNull;
@@ -80,7 +81,7 @@ import java.util.function.Supplier;
 import static com.azure.cosmos.implementation.base.Preconditions.checkArgument;
 import static com.azure.cosmos.implementation.base.Preconditions.checkNotNull;
 import static com.azure.cosmos.implementation.base.Preconditions.checkState;
-import static com.azure.cosmos.implementation.base.Strings.lenientFormat;// import com.azure.data.cosmos.serialization.hybridrow.RowBuffer.UniqueIndexItem;
+import static com.azure.cosmos.implementation.base.Strings.lenientFormat;
 
 /**
  * Manages a sequence of bytes representing a Hybrid Row.
@@ -896,10 +897,15 @@ public final class RowBuffer {
      *
      * @return the {@code SparseTypeCode} value read.
      */
-    public LayoutType readSparseTypeCode(int offset) {
-        byte value = this.readInt8(offset);
-        LayoutCode code = LayoutCode.from(value);
-        checkState(code != null, "expected layout code at offset %s, not %s", offset, code);
+    @NotNull
+    public LayoutType readSparseTypeCode(final int offset) {
+
+        final byte value = this.readInt8(offset);
+
+        final LayoutCode code = checkNotNull(LayoutCode.from(value), "expected layout code at offset %s, not %s",
+            offset,
+            value);
+
         return LayoutType.fromLayoutCode(code);
     }
 
@@ -1504,18 +1510,18 @@ public final class RowBuffer {
     }
 
     /**
-     * Write 7 bit encoded int int.
+     * Writes the specified 32-bit integer at the current {@link RowBuffer position} as a 7-bit encoded 32-bit value.
      *
-     * @param value the value
+     * @param value a 32-bit integer.
      *
-     * @return the int
+     * @return the number of bytes written.
      */
-    public int write7BitEncodedInt(final long value) {
+    public int write7BitEncodedInt(final long value) { // TODO (DANOBLE) why is value long?
         return this.write7BitEncodedUInt(RowBuffer.rotateSignToLsb(value));
     }
 
     /**
-     * Sets the specified 64-bit integer at the current {@link RowBuffer position} as a 7-bit encoded 32-bit value.
+     * Writes the specified 64-bit integer at the current {@link RowBuffer position} as a 7-bit encoded 32-bit value.
      * <p>
      * The 64-bit integer value is written 7-bits at a time. The high bit of the byte, when set, indicates there are
      * more bytes. An {@link IllegalArgumentException} is thrown, if the specified 64-bit integer value is outside the
@@ -1523,7 +1529,7 @@ public final class RowBuffer {
      *
      * @param value a 64-bit integer constrained to the range of an unsigned 32-bit integer, [0, 0x00000000FFFFFFFFL]
      *
-     * @return The number of bytes written
+     * @return the number of bytes written.
      */
     public int write7BitEncodedUInt(final long value) {
         checkArgument(0 <= value && value <= 0x00000000FFFFFFFFL, "expected value in range [0, %s], not %s",
@@ -1545,7 +1551,7 @@ public final class RowBuffer {
      * @param value the value
      */
     public void writeDateTime(int offset, OffsetDateTime value) {
-        Item<OffsetDateTime> item = this.write(this::writeDateTime, offset, value);
+        this.write(this::writeDateTime, offset, value);
     }
 
     /**
@@ -1555,7 +1561,7 @@ public final class RowBuffer {
      * @param value the value
      */
     public void writeDecimal(int offset, BigDecimal value) {
-        Item<BigDecimal> item = this.write(this::writeDecimal, offset, value);
+        this.write(this::writeDecimal, offset, value);
     }
 
     /**
@@ -1571,7 +1577,7 @@ public final class RowBuffer {
         checkArgument(offset >= 0, "expected offset >= 0, not %s", offset);
         checkArgument(length >= 0, "expected length >= 0, not %s", length);
 
-        Item<ByteBuf> item = this.write(buffer -> {
+        this.write(buffer -> {
             int writableBytes = Math.min(length, buffer.readableBytes());
             this.buffer.writeBytes(buffer, writableBytes);
             if (writableBytes < length) {
@@ -1610,7 +1616,7 @@ public final class RowBuffer {
         checkArgument(length >= 0, "expected length >= 0, not %s", length);
         checkArgument(0 <= index && index < value.length, "expected in range [0, %s), not index", index);
 
-        Item<byte[]> item = this.write(buffer -> {
+        this.write(buffer -> {
             int writableBytes = Math.min(length, buffer.length - index);
             this.buffer.writeBytes(buffer, index, writableBytes);
             if (writableBytes < length) {
@@ -1628,7 +1634,7 @@ public final class RowBuffer {
     public void writeFixedString(final int offset, @NotNull final Utf8String value) {
         checkNotNull(value, "expected non-null value");
         checkArgument(!value.isNull(), "expected non-null value content");
-        Item<Utf8String> item = this.write(this::writeFixedString, offset, value);
+        this.write(this::writeFixedString, offset, value);
     }
 
     /**
@@ -1649,7 +1655,7 @@ public final class RowBuffer {
      * @param value the value
      */
     public void writeFloat32(final int offset, final float value) {
-        Item<Float> item = this.write(this.buffer::writeFloatLE, offset, value);
+        this.write(this.buffer::writeFloatLE, offset, value);
     }
 
     /**
@@ -1659,18 +1665,18 @@ public final class RowBuffer {
      * @param value the value
      */
     public void writeFloat64(final int offset, final double value) {
-        Item<Double> item = this.write(this.buffer::writeDoubleLE, offset, value);
+        this.write(this.buffer::writeDoubleLE, offset, value);
     }
 
     /**
-     * Write guid.
+     * Writes a {@link UUID} as a Guid value at the specified offset in this {@link RowBuffer row buffer}.
      *
-     * @param offset the offset
-     * @param value the value
+     * @param offset the offset.
+     * @param value the value.
      */
     public void writeGuid(final int offset, @NotNull final UUID value) {
         checkNotNull(value, "expected non-null value");
-        Item<UUID> item = this.write(this::writeGuid, offset, value);
+        this.write(this::writeGuid, offset, value);
     }
 
     /**
@@ -2434,11 +2440,12 @@ public final class RowBuffer {
     }
 
     /**
-     * Write sparse u int 16.
+     * Writes a sparse UInt16 value to the specified {@link RowCursor edit row buffer} with the given {@link
+     * UpdateOptions update options}.
      *
-     * @param edit the edit
-     * @param value the value
-     * @param options the options
+     * @param edit the {@link RowCursor edit row buffer}.
+     * @param value the UInt16 value to be written.
+     * @param options the {@link UpdateOptions update options}.
      */
     public void writeSparseUInt16(
         @NotNull final RowCursor edit, final short value, @NotNull final UpdateOptions options) {
@@ -2446,32 +2453,30 @@ public final class RowBuffer {
         checkNotNull(edit, "expected non-null edit");
         checkNotNull(options, "expected non-null options");
 
-        final int length = Short.BYTES;
-        final LayoutType type = LayoutTypes.UINT_16;
-        final TypeArgumentList typeArgs = TypeArgumentList.EMPTY;
-
-        final Out<Integer> metaBytes = new Out<>();
-        final Out<Integer> spaceNeeded = new Out<>();
-        final Out<Integer> shift = new Out<>();
-
         final int priorLength = this.length();
 
-        this.ensureSparse(length, edit, type, TypeArgumentList.EMPTY, options, metaBytes, spaceNeeded, shift);
-        this.writeSparseMetadata(edit, type, TypeArgumentList.EMPTY, metaBytes.get());
+        final Out<Integer> spaceNeeded = new Out<>();
+        final Out<Integer> metaBytes = new Out<>();
+        final Out<Integer> shift = new Out<>();
+
+        this.ensureSparse(
+            Short.BYTES, edit, LayoutTypes.UINT_16, TypeArgumentList.EMPTY, options, metaBytes, spaceNeeded, shift);
+        this.writeSparseMetadata(edit, LayoutTypes.UINT_16, TypeArgumentList.EMPTY, metaBytes.get());
         this.writeUInt16(edit.valueOffset(), value);
 
-        checkState(spaceNeeded.get() == metaBytes.get() + length);
+        checkState(spaceNeeded.get() == metaBytes.get() + Short.BYTES);
         checkState(this.length() == priorLength + shift.get());
 
         edit.endOffset(edit.metaOffset() + spaceNeeded.get());
     }
 
     /**
-     * Write sparse u int 32.
+     * Writes a sparse UInt32 value to the specified {@link RowCursor edit row buffer} with the given {@link
+     * UpdateOptions update options}.
      *
-     * @param edit the edit
-     * @param value the value
-     * @param options the options
+     * @param edit the {@link RowCursor edit row buffer}.
+     * @param value the UInt32 value to be written.
+     * @param options the {@link UpdateOptions update options}.
      */
     public void writeSparseUInt32(
         @NotNull final RowCursor edit, final int value, @NotNull final UpdateOptions options) {
@@ -2479,21 +2484,18 @@ public final class RowBuffer {
         checkNotNull(edit, "expected non-null edit");
         checkNotNull(options, "expected non-null options");
 
-        final int length = Integer.BYTES;
-        final LayoutType type = LayoutTypes.UINT_32;
-        final TypeArgumentList typeArgs = TypeArgumentList.EMPTY;
-
-        final Out<Integer> metaBytes = new Out<>();
-        final Out<Integer> spaceNeeded = new Out<>();
-        final Out<Integer> shift = new Out<>();
-
         final int priorLength = this.length();
 
-        this.ensureSparse(length, edit, type, TypeArgumentList.EMPTY, options, metaBytes, spaceNeeded, shift);
-        this.writeSparseMetadata(edit, type, TypeArgumentList.EMPTY, metaBytes.get());
+        final Out<Integer> spaceNeeded = new Out<>();
+        final Out<Integer> metaBytes = new Out<>();
+        final Out<Integer> shift = new Out<>();
+
+        this.ensureSparse(
+            Integer.BYTES, edit, LayoutTypes.UINT_32, TypeArgumentList.EMPTY, options, metaBytes, spaceNeeded, shift);
+        this.writeSparseMetadata(edit, LayoutTypes.UINT_32, TypeArgumentList.EMPTY, metaBytes.get());
         this.writeUInt32(edit.valueOffset(), value);
 
-        checkState(spaceNeeded.get() == metaBytes.get() + length);
+        checkState(spaceNeeded.get() == metaBytes.get() + Integer.BYTES);
         checkState(this.length() == priorLength + shift.get());
 
         edit.endOffset(edit.metaOffset() + spaceNeeded.get());
@@ -2511,21 +2513,18 @@ public final class RowBuffer {
         checkNotNull(edit, "expected non-null edit");
         checkNotNull(options, "expected non-null options");
 
-        final int length = Long.BYTES;
-        final LayoutType type = LayoutTypes.UINT_64;
-        final TypeArgumentList typeArgs = TypeArgumentList.EMPTY;
-
-        final Out<Integer> metaBytes = new Out<>();
-        final Out<Integer> spaceNeeded = new Out<>();
-        final Out<Integer> shift = new Out<>();
-
         final int priorLength = this.length();
 
-        this.ensureSparse(length, edit, type, TypeArgumentList.EMPTY, options, metaBytes, spaceNeeded, shift);
-        this.writeSparseMetadata(edit, type, TypeArgumentList.EMPTY, metaBytes.get());
+        final Out<Integer> spaceNeeded = new Out<>();
+        final Out<Integer> metaBytes = new Out<>();
+        final Out<Integer> shift = new Out<>();
+
+        this.ensureSparse(
+            Long.BYTES, edit, LayoutTypes.UINT_64, TypeArgumentList.EMPTY, options, metaBytes, spaceNeeded, shift);
+        this.writeSparseMetadata(edit, LayoutTypes.UINT_64, TypeArgumentList.EMPTY, metaBytes.get());
         this.writeUInt64(edit.valueOffset(), value);
 
-        checkState(spaceNeeded.get() == metaBytes.get() + length);
+        checkState(spaceNeeded.get() == metaBytes.get() + Long.BYTES);
         checkState(this.length() == priorLength + shift.get());
 
         edit.endOffset(edit.metaOffset() + spaceNeeded.get());
@@ -2603,8 +2602,8 @@ public final class RowBuffer {
      * @param value the value
      * @param options the options
      */
-    public void writeSparseVarInt(@NotNull final RowCursor edit, final long value,
-                                  @NotNull final UpdateOptions options) {
+    public void writeSparseVarInt(
+        @NotNull final RowCursor edit, final long value, @NotNull final UpdateOptions options) {
 
         checkNotNull(edit, "expected non-null edit");
         checkNotNull(options, "expected non-null options");
@@ -2851,47 +2850,47 @@ public final class RowBuffer {
      * @param value the value
      */
     public void writeUInt16(final int offset, final short value) {
-        final Item<Short> item = this.write(this::writeUInt16, offset, value);
+        this.write(this::writeUInt16, offset, value);
     }
 
     /**
-     * Write u int 32.
+     * Writes a UInt32 value to the given offset within this {@link RowCursor row buffer}.
      *
-     * @param offset the offset
-     * @param value the value
+     * @param offset offset within this {@link RowCursor row buffer}.
+     * @param value the UInt32 value to be written.
      */
     public void writeUInt32(final int offset, final int value) {
-        final Item<Integer> item = this.write(this::writeUInt32, offset, value);
+        this.write(this::writeUInt32, offset, value);
     }
 
     /**
-     * Write u int 64.
+     * Writes a UInt64 value to the given offset within this {@link RowCursor row buffer}.
      *
-     * @param offset the offset
-     * @param value the value
+     * @param offset offset within this {@link RowCursor row buffer}.
+     * @param value the UInt64 value to be written.
      */
     public void writeUInt64(final int offset, final long value) {
-        final Item<Long> item = this.write(this::writeUInt64, offset, value);
+        this.write(this::writeUInt64, offset, value);
     }
 
     /**
-     * Write u int 8.
+     * Writes a UInt8 value to the given offset within this {@link RowCursor row buffer}.
      *
-     * @param offset the offset
-     * @param value the value
+     * @param offset offset within this {@link RowCursor row buffer}.
+     * @param value the UInt8 value to be written.
      */
     public void writeUInt8(int offset, byte value) {
-        final Item<Byte> item = this.write(this::writeUInt8, offset, value);
+        this.write(this::writeUInt8, offset, value);
     }
 
     /**
-     * Write unix date time.
+     * Writes a UnixDateTime value to the given offset within this {@link RowCursor row buffer}.
      *
-     * @param offset the offset
-     * @param value the value
+     * @param offset offset within this {@link RowCursor row buffer}.
+     * @param value the UnixDateTime value to be written.
      */
     public void writeUnixDateTime(int offset, UnixDateTime value) {
-        final Item<Long> item = this.write(this::writeUInt64, offset, value.milliseconds());
+        this.write(this::writeUInt64, offset, value.milliseconds());
     }
 
     /**
@@ -3523,11 +3522,6 @@ public final class RowBuffer {
         return Item.of(value, offset, actualLength);
     }
 
-    private long read7BitEncodedInt(int offset) {
-        Item<Long> item = this.read(this::read7BitEncodedInt, offset);
-        return item.value();
-    }
-
     private long read7BitEncodedInt() {
         return RowBuffer.rotateSignToMsb(this.read7BitEncodedUInt());
     }
@@ -4102,10 +4096,15 @@ public final class RowBuffer {
     }
 
     private void writeVariableString(@NotNull final Utf8String value) {
+
+        checkNotNull(value, "expected non-null value");
+
         final int length = this.write7BitEncodedUInt(value.encodedLength());
-        assert length == value.encodedLength();
-        assert value.content() != null;
-        this.buffer.writeBytes(value.content().readerIndex(0));
+        final int encodedLength = value.encodedLength();
+
+        checkState(length == encodedLength, "expected length of %s, not %s", encodedLength, length);
+
+        this.buffer.writeBytes(checkNotNull(value.content(), "expected non-null value content").readerIndex(0));
     }
 
     /**

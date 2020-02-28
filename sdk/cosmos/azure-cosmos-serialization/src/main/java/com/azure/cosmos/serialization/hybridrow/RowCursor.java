@@ -428,33 +428,27 @@ public final class RowCursor implements Cloneable {
     @Override
     public String toString() {
 
-        try {
-
-            if (this.scopeType() == null) {
-                return "<Invalid>";
-            }
-
-            TypeArgument scopeTypeArg = (this.scopeType() instanceof LayoutEndScope)
-                ? TypeArgument.NONE
-                : new TypeArgument(this.scopeType(), this.scopeTypeArgs());
-
-            TypeArgument typeArg = (this.cellType() == null) || (this.cellType() instanceof LayoutEndScope)
-                ? TypeArgument.NONE
-                : new TypeArgument(this.cellType(), this.cellTypeArgs());
-
-            String pathOrIndex = this.writePath().isNull() ? String.valueOf(this.index()) : this.writePath().toString();
-
-            return lenientFormat("%s[%s] : %s@%s/%s%s",
-                scopeTypeArg,
-                pathOrIndex,
-                typeArg,
-                this.metaOffset(),
-                this.valueOffset(),
-                this.immutable() ? " immutable" : "");
-
-        } catch (Exception ignored) {
-            return "<???>";
+        if (this.scopeType() == null) {
+            return "<Invalid>";
         }
+
+        TypeArgument scopeTypeArgument = (this.scopeType() instanceof LayoutEndScope)
+            ? TypeArgument.NONE
+            : new TypeArgument(this.scopeType(), this.scopeTypeArgs());
+
+        TypeArgument typeArgument = (this.cellType() == null) || (this.cellType() instanceof LayoutEndScope)
+            ? TypeArgument.NONE
+            : new TypeArgument(this.cellType(), this.cellTypeArgs());
+
+        String pathOrIndex = this.writePath().isNull() ? String.valueOf(this.index()) : this.writePath().toString();
+
+        return lenientFormat("%s[%s] : %s@%s/%s%s",
+            scopeTypeArgument,
+            pathOrIndex,
+            typeArgument,
+            this.metaOffset(),
+            this.valueOffset(),
+            this.immutable() ? " immutable" : "");
     }
 
     /**

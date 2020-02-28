@@ -30,27 +30,32 @@ public final class Schema {
 
     // Required fields
 
+    @JsonProperty(required = true)
+    private String name;
+
+    @JsonProperty(required = true, defaultValue = "schema")
+    private TypeKind type;
+
+    // Optional fields
+
     @JsonProperty
     private String comment;
+
     @JsonProperty()
     private SchemaId id;
 
-    // Optional fields
-    @JsonProperty(required = true)
-    private String name;
     @JsonProperty
     private SchemaOptions options;
-    private List<PartitionKey> partitionKeys;
-    private List<PrimarySortKey> primaryKeys;
+
     @JsonProperty
     private List<Property> properties;
 
-    // TODO: DANOBLE: how do these properties serialize?
-    private List<StaticKey> staticKeys;
-    @JsonProperty(defaultValue = "schema", required = true)
-    private TypeKind type;
     @JsonProperty
     private SchemaLanguageVersion version;
+
+    private List<PartitionKey> partitionKeys;
+    private List<PrimarySortKey> primarySortKeys;
+    private List<StaticKey> staticKeys;
 
     /**
      * Initializes a new instance of the {@link Schema} class.
@@ -59,7 +64,8 @@ public final class Schema {
         this.id = SchemaId.NONE;
         this.type = TypeKind.SCHEMA;
         this.partitionKeys = Collections.emptyList();
-        this.primaryKeys = Collections.emptyList();
+        this.primarySortKeys = Collections.emptyList();
+        this.properties = Collections.emptyList();
         this.staticKeys = Collections.emptyList();
     }
 
@@ -70,6 +76,7 @@ public final class Schema {
      *
      * @return the comment on this {@linkplain Schema schema} or {@code null}, if there is no comment.
      */
+    @Nullable
     public String comment() {
         return this.comment;
     }
@@ -87,21 +94,6 @@ public final class Schema {
     public Schema comment(String value) {
         this.comment = value;
         return this;
-    }
-
-    /**
-     * Compiles this logical schema into a physical layout that can be used to read and write rows.
-     *
-     * @param namespace The namespace within which this schema is defined.
-     *
-     * @return The layout for the schema.
-     */
-    public Layout compile(Namespace namespace) {
-
-        checkNotNull(namespace, "expected non-null ns");
-        checkArgument(namespace.schemas().contains(this));
-
-        return LayoutCompiler.compile(namespace, this);
     }
 
     /**
@@ -126,9 +118,8 @@ public final class Schema {
      *
      * @return a reference to this {@linkplain Schema schema}.
      */
-    @NotNull
     public Schema name(@NotNull String value) {
-        checkNotNull(value);
+        checkNotNull(value, "expected non-null value");
         this.name = value;
         return this;
     }
@@ -173,7 +164,7 @@ public final class Schema {
      *
      * @return list of zero or more logical paths that form the partition key
      */
-    @Nullable
+    @NotNull
     public List<PartitionKey> partitionKeys() {
         return this.partitionKeys;
     }
@@ -185,6 +176,7 @@ public final class Schema {
      *
      * @return the schema
      */
+    @NotNull
     public Schema partitionKeys(@Nullable List<PartitionKey> value) {
         this.partitionKeys = value != null ? value : Collections.emptyList();
         return this;
@@ -197,9 +189,9 @@ public final class Schema {
      *
      * @return list of zero or more logical paths that form the partition key
      */
-    @Nullable
+    @NotNull
     public List<PrimarySortKey> primarySortKeys() {
-        return this.primaryKeys;
+        return this.primarySortKeys;
     }
 
     /**
@@ -209,8 +201,9 @@ public final class Schema {
      *
      * @return the schema
      */
-    public Schema primarySortKeys(ArrayList<PrimarySortKey> value) {
-        this.primaryKeys = value != null ? value : Collections.emptyList();
+    @NotNull
+    public Schema primarySortKeys(@Nullable final ArrayList<PrimarySortKey> value) {
+        this.primarySortKeys = value != null ? value : Collections.emptyList();
         return this;
     }
 
@@ -233,7 +226,8 @@ public final class Schema {
      *
      * @return the schema
      */
-    public Schema properties(List<Property> value) {
+    @NotNull
+    public Schema properties(@Nullable final List<Property> value) {
         this.properties = value != null ? value : Collections.emptyList();
         return this;
     }
@@ -288,16 +282,6 @@ public final class Schema {
     }
 
     /**
-     * Returns a JSON string representation of the current {@link Schema}.
-     *
-     * @return a JSON string representation of the current {@link Schema}
-     */
-    @Override
-    public String toString() {
-        return Json.toString(this);
-    }
-
-    /**
      * The type of this schema.
      * <p>
      * This value MUST be {@link TypeKind#SCHEMA}.
@@ -339,5 +323,30 @@ public final class Schema {
     public Schema version(SchemaLanguageVersion value) {
         this.version = value;
         return this;
+    }
+
+    /**
+     * Compiles this logical schema into a physical layout that can be used to read and write rows.
+     *
+     * @param namespace The namespace within which this schema is defined.
+     *
+     * @return The layout for the schema.
+     */
+    public Layout compile(Namespace namespace) {
+
+        checkNotNull(namespace, "expected non-null ns");
+        checkArgument(namespace.schemas().contains(this));
+
+        return LayoutCompiler.compile(namespace, this);
+    }
+
+    /**
+     * Returns a JSON string representation of the current {@link Schema}.
+     *
+     * @return a JSON string representation of the current {@link Schema}
+     */
+    @Override
+    public String toString() {
+        return Json.toString(this);
     }
 }

@@ -18,6 +18,22 @@ public final class Out<T> {
     private volatile T value;
 
     /**
+     * Initializes a new {@link Out} container instance.
+     */
+    public Out() {
+        this(null);
+    }
+
+    /**
+     * Initializes a new {@link Out} container instance.
+     *
+     * @param value the value to be contained by the new {@link Out} instance.
+     */
+    public Out(T value) {
+        this.value = value;
+    }
+
+    /**
      * If a value is present, invoke the specified consumer with the value, otherwise do nothing.
      *
      * @param consumer block to be executed if a value is present.
@@ -58,6 +74,10 @@ public final class Out<T> {
 
         if (this == other) {
             return true;
+        }
+
+        if (other == null) {
+            return false;
         }
 
         if (other.getClass() != Out.class) {

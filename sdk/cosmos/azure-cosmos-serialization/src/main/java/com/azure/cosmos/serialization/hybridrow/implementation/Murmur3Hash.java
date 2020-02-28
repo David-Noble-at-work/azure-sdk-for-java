@@ -7,12 +7,14 @@ import com.azure.cosmos.implementation.base.Utf8;
 import com.azure.cosmos.core.Utf8String;
 import com.azure.cosmos.implementation.hash.HashCode;
 import com.azure.cosmos.implementation.hash.HashFunction;
+import com.azure.cosmos.implementation.hash.Hasher;
 import com.azure.cosmos.implementation.hash.Hashing;
 import com.azure.cosmos.serialization.hybridrow.HashCode128;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufAllocator;
 import io.netty.buffer.Unpooled;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import static com.azure.cosmos.implementation.base.Preconditions.checkNotNull;
 import static com.azure.cosmos.implementation.base.Strings.lenientFormat;
@@ -24,10 +26,6 @@ import static java.nio.charset.StandardCharsets.UTF_8;
  * @see <a href="https://en.wikipedia.org/wiki/MurmurHash">MurmurHash</a>
  */
 public final class Murmur3Hash {
-
-    private static final ByteBuf FALSE = Constant.add(false);
-    private static final ByteBuf TRUE = Constant.add(true);
-    private static final ByteBuf EMPTY_STRING = Constant.add("");
 
     private static final ByteBufAllocator allocator = ByteBufAllocator.DEFAULT;
 
@@ -45,7 +43,7 @@ public final class Murmur3Hash {
         checkNotNull(seed, "expected non-null seed");
 
         if (item.isEmpty()) {
-            return hash128(EMPTY_STRING, seed);
+            return hash128(Constant.EMPTY_STRING, seed);
         }
 
         Utf8String value = Utf8String.transcodeUtf16(item);
@@ -66,7 +64,7 @@ public final class Murmur3Hash {
      * @return The 128-bit hash represented as two 64-bit words encapsulated by a {@link HashCode128} instance.
      */
     public static HashCode128 hash128(final boolean item, final HashCode128 seed) {
-        return Murmur3Hash.hash128(item ? TRUE : FALSE, seed);
+        return Murmur3Hash.hash128(item ? Constant.TRUE : Constant.FALSE, seed);
     }
 
     public static HashCode128 hash128(short item, HashCode128 seed) {
@@ -92,36 +90,59 @@ public final class Murmur3Hash {
      *
      * @return The 128-bit hash represented as two 64-bit words encapsulated by a {@link HashCode128} instance.
      */
-    public static HashCode128 hash128(ByteBuf item, HashCode128 seed) {
+    public static HashCode128 hash128(@Nullable ByteBuf item, @NotNull HashCode128 seed) {
+
+        checkNotNull(seed, "expected non-null seed");
+
         // TODO: DANOBLE: Support 128-bit hash code seeds by bringing in the murmur3 hash code from the Cosmos Java SDK
-        HashFunction hashFunction = Hashing.murmur3_128(Long.valueOf(seed.high() | 0xFFFFFFFFL).intValue());
-        HashCode hashCode = hashFunction.hashBytes(item.array());
+
+        final HashFunction hashFunction = Hashing.murmur3_128((int) (seed.high() & 0xFFFFFFFFL));
+        final HashCode hashCode;
+
+        if (item == null || item.writerIndex() == 0) {
+            hashCode = hashFunction.newHasher().hash();
+        } else if (item.hasArray()) {
+            hashCode = hashFunction.hashBytes(item.array());
+        } else {
+            Hasher hasher = hashFunction.newHasher();
+            item.forEachByte(b -> {
+                hasher.putByte(b);
+                return true;
+            });
+            hashCode = hasher.hash();
+        }
+
         return HashCode128.from(hashCode.asBytes());
     }
 
+    @SuppressWarnings("SameParameterValue")
     private static final class Constant {
 
-        private static final ByteBuf constants = allocator.heapBuffer();
+        private static final ByteBuf CONSTANTS = allocator.heapBuffer();
+
+        private static final ByteBuf FALSE = add(false);
+        private static final ByteBuf TRUE = add(true);
+        private static final ByteBuf EMPTY_STRING = add("");
 
         private Constant() {
         }
 
         static ByteBuf add(final boolean value) {
-            final int start = constants.writerIndex();
-            constants.writeByte(value ? 1 : 0);
-            return constants.slice(start, Byte.BYTES).asReadOnly();
+            final int start = CONSTANTS.writerIndex();
+            CONSTANTS.writeByte(value ? 1 : 0);
+            return CONSTANTS.slice(start, Byte.BYTES).asReadOnly();
         }
 
         static ByteBuf add(final String value) {
 
-            final int start = constants.writerIndex();
+            final int start = CONSTANTS.writerIndex();
             final int encodedLength = Utf8.encodedLength(value);
             final ByteBuf buffer = allocator.buffer(encodedLength, encodedLength);
 
             final int count = buffer.writeCharSequence(value, UTF_8);
             assert count == encodedLength : lenientFormat("count: %s, encodedLength: %s");
 
-            return constants.slice(start, encodedLength);
+            return CONSTANTS.slice(start, encodedLength);
         }
     }
 }

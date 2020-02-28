@@ -6,10 +6,13 @@ package com.azure.cosmos.serialization.hybridrow.schemas;
 import com.azure.cosmos.serialization.hybridrow.HashCode128;
 import com.azure.cosmos.serialization.hybridrow.SchemaId;
 import com.azure.cosmos.serialization.hybridrow.implementation.Murmur3Hash;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.Optional;
 import java.util.stream.Stream;
 
+import static com.azure.cosmos.implementation.base.Preconditions.checkNotNull;
 import static com.azure.cosmos.implementation.base.Preconditions.checkState;
 import static com.azure.cosmos.implementation.base.Strings.lenientFormat;
 
@@ -17,6 +20,9 @@ import static com.azure.cosmos.implementation.base.Strings.lenientFormat;
  * The type Schema hash.
  */
 public final class SchemaHash {
+
+    private SchemaHash() {
+    }
 
     /**
      * Computes the logical hash for a logical schema.
@@ -27,41 +33,44 @@ public final class SchemaHash {
      *
      * @return The logical 128-bit hash as a two-tuple (low, high).
      */
-    public static HashCode128 computeHash(Namespace namespace, Schema schema, HashCode128 seed) {
+    @NotNull
+    public static HashCode128 computeHash(
+        @NotNull final Namespace namespace, @NotNull final Schema schema, @NotNull final HashCode128 seed) {
+
+        checkNotNull(namespace, "expected non-null namespace");
+        checkNotNull(schema, "expected non-null schema");
+        checkNotNull(seed, "expected non-null seed");
+
         HashCode128 hash = seed;
 
         hash = Murmur3Hash.hash128(schema.schemaId().value(), hash);
         hash = Murmur3Hash.hash128(schema.type().value(), hash);
         hash = computeHash(namespace, schema.options(), hash);
 
-        if (schema.partitionKeys() != null) {
-            for (PartitionKey partitionKey : schema.partitionKeys()) {
-                hash = SchemaHash.computeHash(namespace, partitionKey, hash);
-            }
+        for (PartitionKey partitionKey : schema.partitionKeys()) {
+            hash = SchemaHash.computeHash(namespace, partitionKey, hash);
         }
 
-        if (schema.primarySortKeys() != null) {
-            for (PrimarySortKey p : schema.primarySortKeys()) {
-                hash = SchemaHash.computeHash(namespace, p, hash);
-            }
+        for (PrimarySortKey p : schema.primarySortKeys()) {
+            hash = SchemaHash.computeHash(namespace, p, hash);
         }
 
-        if (schema.staticKeys() != null) {
-            for (StaticKey p : schema.staticKeys()) {
-                hash = SchemaHash.computeHash(namespace, p, hash);
-            }
+        for (StaticKey p : schema.staticKeys()) {
+            hash = SchemaHash.computeHash(namespace, p, hash);
         }
 
-        if (schema.properties() != null) {
-            for (Property p : schema.properties()) {
-                hash = SchemaHash.computeHash(namespace, p, hash);
-            }
+        for (Property p : schema.properties()) {
+            hash = SchemaHash.computeHash(namespace, p, hash);
         }
 
         return hash;
     }
 
-    private static HashCode128 computeHash(Namespace namespace, SchemaOptions options, HashCode128 seed) {
+    // region Privates
+
+    @NotNull
+    private static HashCode128 computeHash(
+        @NotNull final Namespace namespace, @Nullable final SchemaOptions options, @NotNull final HashCode128 seed) {
 
         HashCode128 hash = seed;
 
@@ -72,30 +81,34 @@ public final class SchemaHash {
         return hash;
     }
 
-    private static HashCode128 computeHash(Namespace ns, Property p, HashCode128 seed) {
+    @NotNull
+    private static HashCode128 computeHash(
+        @NotNull final Namespace namespace, @NotNull final Property property, @NotNull final HashCode128 seed) {
 
         HashCode128 hash = seed;
 
-        hash = Murmur3Hash.hash128(p.path(), hash);
-        hash = SchemaHash.computeHash(ns, p.type(), hash);
+        hash = Murmur3Hash.hash128(property.path(), hash);
+        hash = SchemaHash.computeHash(namespace, property.type(), hash);
 
         return hash;
     }
 
-    private static HashCode128 computeHash(Namespace namespace, PropertyType p, HashCode128 seed) {
+    @NotNull
+    private static HashCode128 computeHash(
+        @NotNull final Namespace namespace, @NotNull final PropertyType propertyType, @NotNull final HashCode128 seed) {
 
         HashCode128 hash = seed;
 
-        hash = Murmur3Hash.hash128(p.type().value(), hash);
-        hash = Murmur3Hash.hash128(p.nullable(), hash);
+        hash = Murmur3Hash.hash128(propertyType.type().value(), hash);
+        hash = Murmur3Hash.hash128(propertyType.nullable(), hash);
 
-        if (p.apiType() != null) {
-            hash = Murmur3Hash.hash128(p.apiType(), hash);
+        if (propertyType.apiType() != null) {
+            hash = Murmur3Hash.hash128(propertyType.apiType(), hash);
         }
 
-        if (p instanceof PrimitivePropertyType) {
+        if (propertyType instanceof PrimitivePropertyType) {
 
-            PrimitivePropertyType pp = (PrimitivePropertyType) p;
+            PrimitivePropertyType pp = (PrimitivePropertyType) propertyType;
 
             hash = Murmur3Hash.hash128(pp.storage().value(), hash);
             hash = Murmur3Hash.hash128(pp.length(), hash);
@@ -103,20 +116,20 @@ public final class SchemaHash {
             return hash;
         }
 
-        checkState(p instanceof ScopePropertyType);
-        ScopePropertyType pp = (ScopePropertyType) p;
+        checkState(propertyType instanceof ScopePropertyType);
+        ScopePropertyType pp = (ScopePropertyType) propertyType;
         hash = Murmur3Hash.hash128(pp.immutable(), hash);
 
-        if (p instanceof ArrayPropertyType) {
-            ArrayPropertyType spp = (ArrayPropertyType) p;
+        if (propertyType instanceof ArrayPropertyType) {
+            ArrayPropertyType spp = (ArrayPropertyType) propertyType;
             if (spp.items() != null) {
                 hash = computeHash(namespace, spp.items(), hash);
             }
             return hash;
         }
 
-        if (p instanceof ObjectPropertyType) {
-            ObjectPropertyType spp = (ObjectPropertyType) p;
+        if (propertyType instanceof ObjectPropertyType) {
+            ObjectPropertyType spp = (ObjectPropertyType) propertyType;
             if (spp.properties() != null) {
                 for (Property opp : spp.properties()) {
                     hash = SchemaHash.computeHash(namespace, opp, hash);
@@ -125,9 +138,9 @@ public final class SchemaHash {
             return hash;
         }
 
-        if (p instanceof MapPropertyType) {
+        if (propertyType instanceof MapPropertyType) {
 
-            MapPropertyType spp = (MapPropertyType) p;
+            MapPropertyType spp = (MapPropertyType) propertyType;
 
             if (spp.keys() != null) {
                 hash = SchemaHash.computeHash(namespace, spp.keys(), hash);
@@ -140,9 +153,9 @@ public final class SchemaHash {
             return hash;
         }
 
-        if (p instanceof SetPropertyType) {
+        if (propertyType instanceof SetPropertyType) {
 
-            SetPropertyType spp = (SetPropertyType) p;
+            SetPropertyType spp = (SetPropertyType) propertyType;
 
             if (spp.items() != null) {
                 hash = computeHash(namespace, spp.items(), hash);
@@ -151,22 +164,9 @@ public final class SchemaHash {
             return hash;
         }
 
-        if (p instanceof TaggedPropertyType) {
+        if (propertyType instanceof TaggedPropertyType) {
 
-            TaggedPropertyType spp = (TaggedPropertyType) p;
-
-            if (spp.items() != null) {
-                for (PropertyType pt : spp.items()) {
-                    hash = SchemaHash.computeHash(namespace, pt, hash);
-                }
-            }
-
-            return hash;
-        }
-
-        if (p instanceof TuplePropertyType) {
-
-            TuplePropertyType spp = (TuplePropertyType) p;
+            TaggedPropertyType spp = (TaggedPropertyType) propertyType;
 
             if (spp.items() != null) {
                 for (PropertyType pt : spp.items()) {
@@ -177,10 +177,23 @@ public final class SchemaHash {
             return hash;
         }
 
-        if (p instanceof UdtPropertyType) {
+        if (propertyType instanceof TuplePropertyType) {
+
+            TuplePropertyType spp = (TuplePropertyType) propertyType;
+
+            if (spp.items() != null) {
+                for (PropertyType pt : spp.items()) {
+                    hash = SchemaHash.computeHash(namespace, pt, hash);
+                }
+            }
+
+            return hash;
+        }
+
+        if (propertyType instanceof UdtPropertyType) {
 
             Stream<Schema> schemaStream = namespace.schemas().stream();
-            UdtPropertyType spp = (UdtPropertyType) p;
+            UdtPropertyType spp = (UdtPropertyType) propertyType;
             Optional<Schema> udtSchema;
 
             if (spp.schemaId() == SchemaId.INVALID) {
@@ -195,23 +208,31 @@ public final class SchemaHash {
             return SchemaHash.computeHash(namespace, udtSchema.get(), hash);
         }
 
-        throw new IllegalStateException(lenientFormat("unrecognized property type: %s", p.getClass()));
+        throw new IllegalStateException(lenientFormat("unrecognized property type: %s", propertyType.getClass()));
     }
 
-    private static HashCode128 computeHash(Namespace namespace, PartitionKey key, HashCode128 seed) {
-        return key == null ? seed : Murmur3Hash.hash128(key.path(), seed);
+    @NotNull
+    private static HashCode128 computeHash(
+        @NotNull final Namespace namespace, @NotNull final PartitionKey partitionKey, @NotNull final HashCode128 seed) {
+        return partitionKey == null ? seed : Murmur3Hash.hash128(partitionKey.path(), seed);
     }
 
-    private static HashCode128 computeHash(Namespace namespace, PrimarySortKey key, HashCode128 seed) {
+    @NotNull
+    private static HashCode128 computeHash(
+        @NotNull final Namespace namespace, @NotNull final PrimarySortKey primarySortKey, @NotNull HashCode128 seed) {
         HashCode128 hash = seed;
-        if (key != null) {
-            hash = Murmur3Hash.hash128(key.path(), hash);
-            hash = Murmur3Hash.hash128(key.direction().value(), hash);
+        if (primarySortKey != null) {
+            hash = Murmur3Hash.hash128(primarySortKey.path(), hash);
+            hash = Murmur3Hash.hash128(primarySortKey.direction().value(), hash);
         }
         return hash;
     }
 
-    private static HashCode128 computeHash(Namespace ns, StaticKey key, HashCode128 seed) {
-        return key == null ? seed : Murmur3Hash.hash128(key.path(), seed);
+    @NotNull
+    private static HashCode128 computeHash(
+        @NotNull final Namespace namespace, @NotNull final StaticKey staticKey, @NotNull final HashCode128 seed) {
+        return staticKey == null ? seed : Murmur3Hash.hash128(staticKey.path(), seed);
     }
+
+    // endregion
 }

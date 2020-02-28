@@ -3,6 +3,7 @@
 
 package com.azure.cosmos.core;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.jetbrains.annotations.NotNull;
 
 import static com.azure.cosmos.implementation.base.Preconditions.checkNotNull;
@@ -26,7 +27,7 @@ public final class UtfAnyString implements CharSequence, Comparable<UtfAnyString
      * The null {@link UtfAnyString}.
      */
     public static final UtfAnyString NULL = new UtfAnyString();
-    
+
     private static final int NULL_HASHCODE = reduceHashCode(5_381, 5_381);
 
     private final CharSequence buffer;
@@ -120,11 +121,12 @@ public final class UtfAnyString implements CharSequence, Comparable<UtfAnyString
      * @return a negative integer, zero, or a positive integer as this {@link UtfAnyString} is less than, equal to, or
      * greater than {@code value}.
      */
+    @SuppressFBWarnings("ES_COMPARING_PARAMETER_STRING_WITH_EQ")
     public int compareTo(@NotNull final String value) {
 
         checkNotNull(value, "expected non-null value");
 
-        if (value == this.buffer) {
+        if (this.buffer == value) {  // ES_COMPARING_PARAMETER_STRING_WITH_EQ is intentional
             return 0;
         }
 
@@ -145,6 +147,7 @@ public final class UtfAnyString implements CharSequence, Comparable<UtfAnyString
      * @return a negative integer, zero, or a positive integer as this {@link UtfAnyString} is less than, equal to, or
      * greater than {@code value}.
      */
+    @SuppressFBWarnings("RV_NEGATING_RESULT_OF_COMPARETO")
     public int compareTo(@NotNull final Utf8String value) {
 
         checkNotNull(value, "expected non-null value");
@@ -157,7 +160,7 @@ public final class UtfAnyString implements CharSequence, Comparable<UtfAnyString
             return -1;
         }
 
-        return this.buffer instanceof String
+        return this.buffer instanceof String  // RV_NEGATING_RESULT_OF_COMPARETO is intentional
             ? -value.compareTo((String) this.buffer)
             : ((Utf8String) this.buffer).compareTo(value);
     }
@@ -171,6 +174,7 @@ public final class UtfAnyString implements CharSequence, Comparable<UtfAnyString
      * greater than the {@code other} one.
      */
     @Override
+    @SuppressFBWarnings("RV_NEGATING_RESULT_OF_COMPARETO")
     public int compareTo(@NotNull final UtfAnyString other) {
 
         checkNotNull(other, "expected non-null other");
@@ -188,7 +192,7 @@ public final class UtfAnyString implements CharSequence, Comparable<UtfAnyString
         }
 
         if (this.buffer instanceof String) {
-            return other.buffer instanceof String
+            return other.buffer instanceof String  // RV_NEGATING_RESULT_OF_COMPARETO is intentional
                 ? ((String) this.buffer).compareTo((String) other.buffer)
                 : -((Utf8String) other.buffer).compareTo((String) this.buffer);
         }
@@ -210,19 +214,15 @@ public final class UtfAnyString implements CharSequence, Comparable<UtfAnyString
     @Override
     public boolean equals(final Object other) {
 
-        if (other == null) {
+        if (this == other) {
+            return true;
+        }
+
+        if (null == other) {
             return false;
         }
 
-        if (other instanceof String) {
-            return this.equals((String) other);
-        }
-
-        if (other instanceof Utf8String) {
-            return this.equals((Utf8String) other);
-        }
-
-        if (other instanceof UtfAnyString) {
+        if (other.getClass() == UtfAnyString.class) {
             return this.equals((UtfAnyString) other);
         }
 
@@ -288,15 +288,15 @@ public final class UtfAnyString implements CharSequence, Comparable<UtfAnyString
     @Override
     public int hashCode() {
 
-        final long[] hash = { 5_381, 5_381 };
-
         if (this.buffer == null) {
             return NULL_HASHCODE;
         }
 
         if (this.buffer instanceof String) {
 
-            final int ignored = this.buffer.codePoints().reduce(0, (index, codePoint) -> {
+            final long[] hash = { 5_381, 5_381 };
+
+            this.buffer.codePoints().reduce(0, (index, codePoint) -> {
                 if (index % 2 == 0) {
                     hash[0] = ((hash[0] << 5) + hash[0]) ^ codePoint;
                 } else {

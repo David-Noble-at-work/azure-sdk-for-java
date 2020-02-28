@@ -25,6 +25,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
+import java.util.Locale;
 import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.Optional;
@@ -791,8 +792,8 @@ public final class Utf8String implements ByteBufHolder, CharSequence, Comparable
                 case NULL:
                     return null;
                 default:
-                    String message = lenientFormat("expected string value or null, not %s", type.name().toLowerCase());
-                    throw new JsonParseException(parser, message);
+                    throw new JsonParseException(parser, lenientFormat("expected string value or null, not %s",
+                        type.name().toLowerCase(Locale.ROOT)));
             }
         }
     }

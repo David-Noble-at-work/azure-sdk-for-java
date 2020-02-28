@@ -49,7 +49,7 @@ public final class RecordIOStream {
     public static CompletableFuture<Result> readRecordIOAsync(
         @NotNull InputStream inputStream,
         @NotNull Function<ByteBuf, Result> visitRecord) {
-        return readRecordIOAsync(inputStream, visitRecord, null, null);
+        return readRecordIOAsync(inputStream, visitRecord, null);
     }
 
     /**
@@ -106,8 +106,8 @@ public final class RecordIOStream {
         checkNotNull(visitRecord, "expected non-null visitRecord");
         checkNotNull(buffer, "expected non-null buffer");
 
-        Out<Integer> need = new Out<Integer>().set(0);
-        RecordIOParser parser = null;
+        final RecordIOParser parser = new RecordIOParser();
+        final Out<Integer> need = new Out<>(0);
 
         try {
             do {
@@ -116,12 +116,12 @@ public final class RecordIOStream {
                 }
             } while (buffer.readableBytes() < need.get());
 
+            final Out<ProductionType> productionType = new Out<>();
+            final Out<ByteBuf> record = new Out<>();
+
             while (buffer.readableBytes() > 0) {
 
                 // Loop around processing available data until we don't have anymore
-
-                Out<ProductionType> productionType = new Out<>();
-                Out<ByteBuf> record = new Out<>();
 
                 Result result = parser.process(buffer, productionType, record, need);
 
@@ -133,24 +133,24 @@ public final class RecordIOStream {
                     return CompletableFuture.completedFuture(result);
                 }
 
-                if (productionType.get() == ProductionType.SEGMENT) {
+                switch (productionType.get()) {
+                    case SEGMENT:
+                        checkState(record.get().readableBytes() >= 0, "expected readable bytes");
+                        result = visitSegment != null ? visitSegment.apply(record.get()) : Result.SUCCESS;
 
-                    checkState(record.get().readableBytes() >= 0, "expected readable bytes");
-                    result = visitSegment != null ? visitSegment.apply(record.get()) : Result.SUCCESS;
+                        if (result != Result.SUCCESS) {
+                            return CompletableFuture.completedFuture(result);
+                        }
+                        break;
 
-                    if (result != Result.SUCCESS) {
-                        return CompletableFuture.completedFuture(result);
-                    }
-                }
+                    case RECORD:
+                        checkState(record.get().readableBytes() >= 0, "expected readable bytes");
+                        result = visitRecord.apply(record.get());
 
-                if (productionType.get() == ProductionType.RECORD) {
-
-                    checkState(record.get().readableBytes() >= 0, "expected readable bytes");
-                    result = visitRecord.apply(record.get());
-
-                    if (result != Result.SUCCESS) {
-                        return CompletableFuture.completedFuture(result);
-                    }
+                        if (result != Result.SUCCESS) {
+                            return CompletableFuture.completedFuture(result);
+                        }
+                        break;
                 }
             }
 

@@ -14,6 +14,7 @@
 
 package com.azure.cosmos.implementation.hash;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.jetbrains.annotations.TestOnly;
 
 import static com.azure.cosmos.implementation.base.Preconditions.checkPositionIndexes;
@@ -125,6 +126,7 @@ final class FarmHashFingerprint64 extends AbstractNonStreamingHashFunction {
         output[1] = seedB + c;
     }
 
+    @SuppressFBWarnings("ICAST_INTEGER_MULTIPLY_CAST_TO_LONG")
     private static long hashLength0to16(byte[] bytes, int offset, int length) {
         if (length >= 8) {
             long mul = K2 + length * 2;
@@ -150,6 +152,7 @@ final class FarmHashFingerprint64 extends AbstractNonStreamingHashFunction {
         return K2;
     }
 
+    @SuppressFBWarnings("ICAST_INTEGER_MULTIPLY_CAST_TO_LONG")
     private static long hashLength17to32(byte[] bytes, int offset, int length) {
         long mul = K2 + length * 2;
         long a = load64(bytes, offset) * K1;
@@ -160,6 +163,7 @@ final class FarmHashFingerprint64 extends AbstractNonStreamingHashFunction {
             rotateRight(a + b, 43) + rotateRight(c, 30) + d, a + rotateRight(b + K2, 18) + c, mul);
     }
 
+    @SuppressFBWarnings("ICAST_INTEGER_MULTIPLY_CAST_TO_LONG")
     private static long hashLength33To64(byte[] bytes, int offset, int length) {
         long mul = K2 + length * 2;
         long a = load64(bytes, offset) * K2;

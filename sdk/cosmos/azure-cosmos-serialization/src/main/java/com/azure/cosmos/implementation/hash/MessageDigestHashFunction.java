@@ -30,7 +30,7 @@ import static com.azure.cosmos.implementation.base.Preconditions.checkState;
  * @author Kevin Bourrillion
  * @author Dimitris Andreou
  */
-final class MessageDigestHashFunction extends AbstractHashFunction implements Serializable {
+final class MessageDigestHashFunction extends AbstractHashFunction {
 
     @SuppressWarnings("Immutable") // cloned before each use
     private final MessageDigest prototype;

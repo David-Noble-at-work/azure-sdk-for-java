@@ -5,6 +5,7 @@ package com.azure.cosmos.serialization.hybridrow.json;
 
 import com.azure.cosmos.implementation.Json;
 import com.azure.cosmos.core.Out;
+import com.azure.cosmos.serialization.hybridrow.Float128;
 import com.azure.cosmos.serialization.hybridrow.Result;
 import com.azure.cosmos.serialization.hybridrow.UnixDateTime;
 import com.azure.cosmos.serialization.hybridrow.io.RowReader;
@@ -103,6 +104,8 @@ public final class RowReaderJsonExtensions {
     private static Result toJson(@NotNull final RowReader reader, @NotNull final ReaderStringContext context) {
 
         int index = 0;
+        char scopeBracket = '\0';
+        char scopeCloseBracket = '\0';
 
         while (reader.read()) {
 
@@ -124,13 +127,9 @@ public final class RowReaderJsonExtensions {
                 context.builder().append(context.separator());
             }
 
+            final LayoutType type = checkNotNull(reader.type(), "expected non-null layout type");
             @SuppressWarnings("rawtypes") final Out out = new Out<>();
-            Result result;
-            char scopeBracket = '\0';
-            char scopeCloseBracket = '\0';
-
-            LayoutType type = reader.type();
-            checkState(type != null, "expected non-null reader.type");
+            final Result result;
 
             switch (type.layoutCode()) {
 
@@ -153,7 +152,7 @@ public final class RowReaderJsonExtensions {
                         return result;
                     }
 
-                    context.builder().append(out.get());
+                    context.builder().append((boolean) out.get());
                     break;
 
                 case INT_8:
@@ -164,7 +163,7 @@ public final class RowReaderJsonExtensions {
                         return result;
                     }
 
-                    context.builder().append(out.get());
+                    context.builder().append((byte) out.get());
                     break;
 
                 case INT_16:
@@ -175,7 +174,7 @@ public final class RowReaderJsonExtensions {
                         return result;
                     }
 
-                    context.builder().append(out.get());
+                    context.builder().append((short) out.get());
                     break;
 
                 case INT_32:
@@ -186,7 +185,7 @@ public final class RowReaderJsonExtensions {
                         return result;
                     }
 
-                    context.builder().append(out.get());
+                    context.builder().append((int) out.get());
                     break;
 
                 case INT_64:
@@ -197,7 +196,7 @@ public final class RowReaderJsonExtensions {
                         return result;
                     }
 
-                    context.builder().append(out.get());
+                    context.builder().append((long) out.get());
                     break;
 
                 case UINT_8:
@@ -208,7 +207,7 @@ public final class RowReaderJsonExtensions {
                         return result;
                     }
 
-                    context.builder().append(out.get());
+                    context.builder().append((short) out.get());
                     break;
 
                 case UINT_16:
@@ -219,7 +218,7 @@ public final class RowReaderJsonExtensions {
                         return result;
                     }
 
-                    context.builder().append(out.get());
+                    context.builder().append((int) out.get());
                     break;
 
                 case UINT_32:
@@ -230,7 +229,7 @@ public final class RowReaderJsonExtensions {
                         return result;
                     }
 
-                    context.builder().append(out.get());
+                    context.builder().append((long) out.get());
                     break;
 
                 case UINT_64:
@@ -241,7 +240,7 @@ public final class RowReaderJsonExtensions {
                         return result;
                     }
 
-                    context.builder().append(out.get());
+                    context.builder().append((long) out.get());
                     break;
 
                 case VAR_INT:
@@ -252,7 +251,7 @@ public final class RowReaderJsonExtensions {
                         return result;
                     }
 
-                    context.builder().append(out.get());
+                    context.builder().append((long ) out.get());
                     break;
 
                 case VAR_UINT:
@@ -263,7 +262,7 @@ public final class RowReaderJsonExtensions {
                         return result;
                     }
 
-                    context.builder().append(out.get());
+                    context.builder().append((long) out.get());
                     break;
 
                 case FLOAT_32:
@@ -274,7 +273,7 @@ public final class RowReaderJsonExtensions {
                         return result;
                     }
 
-                    context.builder().append(out.get());
+                    context.builder().append((float) out.get());
                     break;
 
                 case FLOAT_64:
@@ -285,7 +284,7 @@ public final class RowReaderJsonExtensions {
                         return result;
                     }
 
-                    context.builder().append(out.get());
+                    context.builder().append((double) out.get());
                     break;
 
                 case FLOAT_128:
@@ -296,8 +295,9 @@ public final class RowReaderJsonExtensions {
                         return result;
                     }
 
-                    // context.Builder.AppendFormat("High: {0}, Low: {1}\n", value.High, value.Low);
-                    throw new UnsupportedOperationException("Float128 values are not supported.");
+                    Float128 value = (Float128) out.get();
+                    context.builder().append(lenientFormat("High: %s, Low: %s", value.high(), value.low()));
+                    break;
 
                 case DECIMAL:
 
@@ -345,28 +345,6 @@ public final class RowReaderJsonExtensions {
                     context.builder().append(context.settings().quoteChar());
                     context.builder().append(out.get());
                     context.builder().append(context.settings().quoteChar());
-                    break;
-
-                case MONGODB_OBJECT_ID:
-
-                    // TODO: DANOBLE: Resurrect this code block
-                    //                    MongoDbObjectId value;
-                    //                    Out<azure.data.cosmos.serialization.hybridrow.MongoDbObjectId>
-                    //                    tempOut_value18 =
-                    //                        new Out<azure.data.cosmos.serialization.hybridrow.MongoDbObjectId>();
-                    //                    result = reader.ReadMongoDbObjectId(tempOut_value18);
-                    //                    value = tempOut_value18.get();
-                    //                    if (result != Result.SUCCESS) {
-                    //                        return result;
-                    //                    }
-                    //
-                    //                    context.builder().append(context.settings().quoteChar());
-                    //                    //C# TO JAVA CONVERTER WARNING: Unsigned integer types have no direct
-                    //                    equivalent in Java:
-                    //                    //ORIGINAL LINE: ReadOnlyMemory<byte> bytes = value.ToByteArray();
-                    //                    ReadOnlyMemory<Byte> bytes = value.ToByteArray();
-                    //                    context.builder().append(bytes.Span.ToHexString());
-                    //                    context.builder().append(context.settings().quoteChar());
                     break;
 
                 case UTF_8:
@@ -420,7 +398,10 @@ public final class RowReaderJsonExtensions {
                 case TAGGED2_SCOPE:
                 case IMMUTABLE_TAGGED2_SCOPE:
 
-                    result = endScope(reader, context, scopeBracket = '[', scopeCloseBracket = ']');
+                    scopeBracket= '[';
+                    scopeCloseBracket = ']';
+
+                    result = endScope(reader, context, '[', ']');
 
                     if (result != Result.SUCCESS) {
                         return result;
@@ -432,7 +413,10 @@ public final class RowReaderJsonExtensions {
                 case SCHEMA:
                 case IMMUTABLE_SCHEMA:
 
-                    result = endScope(reader, context, scopeBracket = '{', scopeCloseBracket = '}');
+                    scopeBracket= '{';
+                    scopeCloseBracket = '}';
+
+                    result = endScope(reader, context, '{', '}');
 
                     if (result != Result.SUCCESS) {
                         return result;

@@ -17,10 +17,11 @@ import io.netty.buffer.ByteBuf;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import static com.azure.cosmos.implementation.base.Preconditions.checkNotNull;
 import static com.azure.cosmos.implementation.base.Preconditions.checkState;
 
 /**
- * The type Segment serializer.
+ * Provides static methods for HybridRow {@link Segment segment} serialization.
  */
 public final class SegmentSerializer {
 
@@ -52,7 +53,8 @@ public final class SegmentSerializer {
      *
      * @throws IllegalStateException if an illegal state is encountered while processing data from {@code reader}.
      */
-    public static Result read(RowReader reader, Out<Segment> segment) {
+    @NotNull
+    public static Result read(@NotNull final RowReader reader, @NotNull final Out<Segment> segment) {
 
         segment.set(new Segment(null, null));
 
@@ -62,10 +64,8 @@ public final class SegmentSerializer {
 
         while (reader.read()) {
 
-            final String path = reader.path().toUtf16();
+            final String path = checkNotNull(reader.path().toUtf16(), "expected non-null path");
             final Result result;
-
-            checkState(path != null, "expected non-null path");
 
             // TODO: Use Path tokens here.
 

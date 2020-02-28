@@ -15,7 +15,7 @@ import static com.azure.cosmos.implementation.base.Preconditions.checkNotNull;
 /**
  * The type Layout boolean.
  */
-public final class LayoutBoolean extends LayoutTypePrimitive<Boolean> implements ILayoutType {
+public final class LayoutBoolean extends LayoutTypePrimitive<Boolean> {
 
     /**
      * Instantiates a new Layout boolean.

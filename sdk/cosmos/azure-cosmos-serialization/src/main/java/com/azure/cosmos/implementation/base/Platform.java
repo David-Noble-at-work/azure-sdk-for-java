@@ -13,6 +13,7 @@
 
 package com.azure.cosmos.implementation.base;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.jetbrains.annotations.Nullable;
 
 import java.lang.ref.WeakReference;
@@ -103,6 +104,7 @@ final class Platform {
         return new JdkPatternCompiler();
     }
 
+    @SuppressFBWarnings("UPM_UNCALLED_PRIVATE_METHOD")
     private static void logPatternCompilerError(ServiceConfigurationError e) {
         logger.log(Level.WARNING, "Error loading regex compiler, falling back to next option", e);
     }

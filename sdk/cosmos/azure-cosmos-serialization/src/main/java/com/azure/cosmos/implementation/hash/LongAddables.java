@@ -58,6 +58,9 @@ final class LongAddables {
     }
 
     private static final class PureJavaLongAddable extends AtomicLong implements LongAddable {
+        
+        private static final long serialVersionUID = 3671261026551550742L;
+
         @Override
         public void increment() {
             getAndIncrement();

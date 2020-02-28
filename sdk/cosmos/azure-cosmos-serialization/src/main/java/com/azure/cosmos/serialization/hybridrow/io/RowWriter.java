@@ -36,6 +36,7 @@ import com.azure.cosmos.serialization.hybridrow.layouts.LayoutUtf8Writable;
 import com.azure.cosmos.serialization.hybridrow.layouts.TypeArgument;
 import com.azure.cosmos.serialization.hybridrow.layouts.TypeArgumentList;
 import com.azure.cosmos.serialization.hybridrow.layouts.UpdateOptions;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import org.jetbrains.annotations.NotNull;
@@ -625,6 +626,7 @@ public final class RowWriter {
      *
      * @return {@link Result#SUCCESS} if the write is successful, an error {@link Result} otherwise.
      */
+    @SuppressFBWarnings("UPM_UNCALLED_PRIVATE_METHOD") // TODO (DANOBLE) Use or lose uncalled private method
     private <TLayoutType extends LayoutType & LayoutUtf8Writable> Result writePrimitive(
         final UtfAnyString path, final Utf8String value, final TLayoutType type, final Consumer<Utf8String> sparse) {
 
@@ -698,6 +700,7 @@ public final class RowWriter {
      *
      * @return {@link Result#SUCCESS} if the write is successful, an error {@link Result} otherwise.
      */
+    @SuppressFBWarnings("UPM_UNCALLED_PRIVATE_METHOD") // TODO (DANOBLE) Use or lose uncalled private method
     private <TLayoutType extends LayoutType & LayoutListWritable<TValue>, TValue> Result writePrimitiveList(
         final UtfAnyString path,
         final List<TValue> value,

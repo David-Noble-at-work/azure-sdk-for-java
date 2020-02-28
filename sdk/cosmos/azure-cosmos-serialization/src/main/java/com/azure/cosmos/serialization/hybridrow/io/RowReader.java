@@ -46,6 +46,7 @@ import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.databind.ser.std.StdSerializer;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.netty.buffer.ByteBuf;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -54,6 +55,7 @@ import java.io.IOException;
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 import java.util.List;
+import java.util.Locale;
 import java.util.UUID;
 
 import static com.azure.cosmos.implementation.base.Preconditions.checkNotNull;
@@ -301,6 +303,7 @@ public final class RowReader {
      *
      * @return {@link Result#SUCCESS} if the read is successful, an error {@link Result} otherwise.
      */
+    @SuppressFBWarnings("UPM_UNCALLED_PRIVATE_METHOD") // TODO (DANOBLE) Use or lose uncalled private method
     public Result readBinaryArray(Out<byte[]> value) {
 
         Out<ByteBuf> buffer = new Out<>();
@@ -1063,40 +1066,6 @@ public final class RowReader {
         }
     }
 
-    //    /**
-    //     * Reads a generic schematized field value via the scope's layout
-    //     *
-    //     * @param value On success, receives the value, undefined otherwise
-    //     * @return {@link Result#SUCCESS} if the read is successful; an error {@link Result} otherwise
-    //     */
-    //    private Result readPrimitiveValue(Out<Utf8String> value) {
-    //
-    //        LayoutColumn column = this.columns.get(this.columnIndex);
-    //        LayoutType type = this.columns.get(this.columnIndex).type();
-    //
-    //        if (!(type instanceof LayoutUtf8Readable)) {
-    //            value.set(null);
-    //            return Result.TYPE_MISMATCH;
-    //        }
-    //
-    //        StorageKind storage = column == null ? StorageKind.NONE : column.storage();
-    //
-    //        switch (storage) {
-    //
-    //            case FIXED:
-    //                return type.<LayoutUtf8Readable>typeAs().readFixed(this.row, this.cursor, column, value);
-    //
-    //            case VARIABLE:
-    //                return type.<LayoutUtf8Readable>typeAs().readVariable(this.row, this.cursor, column, value);
-    //
-    //            default:
-    //                assert false : lenientFormat("expected FIXED or VARIABLE column storage, not %s", storage);
-    //                value.set(null);
-    //                return Result.FAILURE;
-    //        }
-    //    }
-    //
-
     /**
      * Reads a generic schematized field value via the scope's layout
      *
@@ -1105,6 +1074,7 @@ public final class RowReader {
      *
      * @return {@link Result#SUCCESS} if the read is successful, an error {@link Result} otherwise.
      */
+    @SuppressFBWarnings("UPM_UNCALLED_PRIVATE_METHOD") // TODO (DANOBLE) Use or lose uncalled private method
     private <TElement> Result readPrimitiveValueList(Out<List<TElement>> value) {
 
         LayoutColumn column = this.columns.get(this.columnIndex);
@@ -1165,7 +1135,7 @@ public final class RowReader {
         private final String friendlyName;
 
         States() {
-            this.friendlyName = this.name().toLowerCase();
+            this.friendlyName = this.name().toLowerCase(Locale.ROOT);
         }
 
         /**

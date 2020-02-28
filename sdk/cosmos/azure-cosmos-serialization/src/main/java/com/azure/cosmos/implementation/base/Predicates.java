@@ -502,8 +502,7 @@ public final class Predicates {
     /**
      * @see Predicates#compose(Predicate, Function)
      */
-    private static final class CompositionPredicate<A, B> implements Predicate<A>, Serializable {
-        private static final long serialVersionUID = 0;
+    private static final class CompositionPredicate<A, B> implements Predicate<A> {
         /**
          * The F.
          */
@@ -738,12 +737,12 @@ public final class Predicates {
     /**
      * @see Predicates#not(Predicate)
      */
-    private static class NotPredicate<T> implements Predicate<T>, Serializable {
-        private static final long serialVersionUID = 0;
+    private static class NotPredicate<T> implements Predicate<T> {
+
         /**
          * The Predicate.
          */
-        final Predicate<T> predicate;
+        transient final Predicate<T> predicate;
 
         /**
          * Instantiates a new Not predicate.

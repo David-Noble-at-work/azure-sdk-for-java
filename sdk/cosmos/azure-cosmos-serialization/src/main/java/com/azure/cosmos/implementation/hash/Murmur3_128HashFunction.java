@@ -25,6 +25,7 @@
 
 package com.azure.cosmos.implementation.hash;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.Serializable;
@@ -135,6 +136,7 @@ final class Murmur3_128HashFunction extends AbstractHashFunction implements Seri
             h2 = h2 * 5 + 0x38495ab5;
         }
 
+        @SuppressFBWarnings("SF_SWITCH_FALLTHROUGH")
         @SuppressWarnings("fallthrough")
         @Override
         protected void processRemaining(ByteBuffer bb) {

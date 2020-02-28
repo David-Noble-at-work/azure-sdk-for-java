@@ -19,6 +19,7 @@ import java.util.Optional;
 
 import static com.azure.cosmos.implementation.base.Preconditions.checkArgument;
 import static com.azure.cosmos.implementation.base.Preconditions.checkNotNull;
+import static com.azure.cosmos.implementation.base.Strings.lenientFormat;
 
 /**
  * A Layout describes the structure of a Hybrid Row.
@@ -189,28 +190,37 @@ public final class Layout {
     @NotNull
     public String toString() {
 
-        StringBuilder sb = new StringBuilder();
+        StringBuilder builder = new StringBuilder();
 
-        sb.append("Layout:\n");
-        sb.append(String.format("\tCount: %1$s\n", this.topColumns.size()));
-        sb.append(String.format("\tFixedSize: %1$s\n", this.size()));
+        builder.append("Layout:\n");
+        builder.append(lenientFormat("\tCount: %s\n", this.topColumns.size()));
+        builder.append(lenientFormat("\tFixedSize: %s\n", this.size()));
 
         for (LayoutColumn column : this.topColumns) {
             if (column.type().isFixed()) {
                 if (column.type().isBoolean()) {
-                    sb.append(String.format("\t%1$s: %2$s @ %3$s:%4$s:%5$s\n", column.fullPath(),
-                        column.type().name(), column.offset(), column.nullBit(), column.booleanBit()));
+                    builder.append(lenientFormat("\t%s: %s @ %s:%s:%s\n",
+                        column.fullPath(),
+                        column.type().name(),
+                        column.offset(),
+                        column.nullBit(),
+                        column.booleanBit()));
                 } else {
-                    sb.append(String.format("\t%1$s: %2$s @ %3$s\n", column.fullPath(), column.type().name(),
+                    builder.append(lenientFormat("\t%s: %s @ %s\n",
+                        column.fullPath(),
+                        column.type().name(),
                         column.offset()));
                 }
             } else {
-                sb.append(String.format("\t%1$s: %2$s[%4$s] @ %3$s\n", column.fullPath(), column.type().name(),
-                    column.offset(), column.size()));
+                builder.append(lenientFormat("\t%s: %s[%s] @ %s\n",
+                    column.fullPath(),
+                    column.type().name(),
+                    column.offset(),
+                    column.size()));
             }
         }
 
-        return sb.toString();
+        return builder.toString();
     }
 
     /**

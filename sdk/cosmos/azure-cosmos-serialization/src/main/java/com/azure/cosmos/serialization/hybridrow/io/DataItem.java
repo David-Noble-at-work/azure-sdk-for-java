@@ -22,14 +22,17 @@ import static com.azure.cosmos.implementation.base.Preconditions.checkNotNull;
  */
 public class DataItem {
 
-    private final Supplier<String> name;
     @JsonProperty
     private final List<String> nodes;
-    private final Supplier<String> path;
+
     @JsonProperty
     private final LayoutCode type;
+
     @JsonProperty
     private final Object value;
+
+    private final Supplier<String> name;
+    private final Supplier<String> path;
 
     /**
      * Instantiates a new Data item.
@@ -51,10 +54,9 @@ public class DataItem {
         checkNotNull(type, "expected non-null type");
         checkNotNull(value, "expected non-null value");
 
-        //noinspection ConstantConditions
         this.nodes = ImmutableList.<String>builderWithExpectedSize(nodes.size() + 1)
             .addAll(nodes.stream().map(Utf8String::toUtf16).iterator())
-            .add(name.toUtf16())
+            .add(checkNotNull(name.toUtf16(), "expected non-null name"))
             .build();
 
         this.type = type;

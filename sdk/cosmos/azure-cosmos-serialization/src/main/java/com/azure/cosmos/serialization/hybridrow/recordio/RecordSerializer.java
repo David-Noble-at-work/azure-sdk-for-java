@@ -8,6 +8,7 @@ import com.azure.cosmos.core.UtfAnyString;
 import com.azure.cosmos.serialization.hybridrow.Result;
 import com.azure.cosmos.serialization.hybridrow.io.RowReader;
 import com.azure.cosmos.serialization.hybridrow.io.RowWriter;
+import com.azure.cosmos.serialization.hybridrow.io.Segment;
 import com.azure.cosmos.serialization.hybridrow.layouts.TypeArgument;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -16,7 +17,7 @@ import static com.azure.cosmos.implementation.base.Preconditions.checkNotNull;
 import static com.azure.cosmos.implementation.base.Preconditions.checkState;
 
 /**
- * Provides static read/write operations on a {@link RowReader}.
+ * Provides static methods for HybridRow {@link Record record} serialization.
  */
 public final class RecordSerializer {
 
@@ -38,15 +39,14 @@ public final class RecordSerializer {
     @NotNull
     public static Result read(@NotNull final RowReader reader, @NotNull final Out<Record> record) {
 
-        Out<Long> value = new Out<>();
+        final Out<Long> value = new Out<>();
         long length = Long.MIN_VALUE;
         long crc32 = Long.MIN_VALUE;
 
         while (reader.read()) {
 
-            String path = reader.path().toUtf16();
-            checkState(path != null);
-            Result result;
+            final String path = checkNotNull(reader.path().toUtf16(), "expected non-null path");
+            final Result result;
 
             // TODO (DANOBLE) Use Path tokens here
 

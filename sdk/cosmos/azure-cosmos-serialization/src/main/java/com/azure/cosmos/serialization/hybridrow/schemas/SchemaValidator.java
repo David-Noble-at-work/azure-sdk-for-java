@@ -9,6 +9,7 @@ import com.azure.cosmos.serialization.hybridrow.SchemaId;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
@@ -60,6 +61,8 @@ public final class SchemaValidator {
 
         SchemaValidator.visit(namespace, nameDupCheck, idDupCheck);
     }
+
+    // region Privates
 
     /**
      * Visit an entire namespace and validate its constraints.
@@ -282,6 +285,10 @@ public final class SchemaValidator {
         }
     }
 
+    // endregion
+
+    // region Types
+
     private static final class SchemaIdentification implements Comparable<SchemaIdentification> {
 
         private final SchemaId id;
@@ -353,4 +360,6 @@ public final class SchemaValidator {
             return Json.toString(this);
         }
     }
+
+    // endregion
 }

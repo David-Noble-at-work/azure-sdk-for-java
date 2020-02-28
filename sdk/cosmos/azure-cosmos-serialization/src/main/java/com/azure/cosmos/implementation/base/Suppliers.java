@@ -13,6 +13,7 @@
 
 package com.azure.cosmos.implementation.base;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.TestOnly;
 
@@ -165,12 +166,12 @@ public final class Suppliers {
      */
     @TestOnly
     @SuppressWarnings("GoodTime") // lots of violations
-    static class ExpiringMemoizingSupplier<T> implements Supplier<T>, Serializable {
-        private static final long serialVersionUID = 0;
+    static class ExpiringMemoizingSupplier<T> implements Supplier<T> {
+
         /**
          * The Delegate.
          */
-        final Supplier<T> delegate;
+        transient final Supplier<T> delegate;
         /**
          * The Duration nanos.
          */
@@ -238,8 +239,9 @@ public final class Suppliers {
      * @param <T> the type parameter
      */
     @TestOnly
-    static class MemoizingSupplier<T> implements Supplier<T>, Serializable {
-        private static final long serialVersionUID = 0;
+    @SuppressFBWarnings("IS2_INCONSISTENT_SYNC")
+    static class MemoizingSupplier<T> implements Supplier<T> {
+
         /**
          * The Delegate.
          */
@@ -294,6 +296,7 @@ public final class Suppliers {
      * @param <T> the type parameter
      */
     @TestOnly
+    @SuppressFBWarnings("IS2_INCONSISTENT_SYNC")
     static class NonSerializableMemoizingSupplier<T> implements Supplier<T> {
         /**
          * The Delegate.
@@ -367,8 +370,8 @@ public final class Suppliers {
     private interface SupplierFunction<T> extends Function<Supplier<T>, T> {
     }
 
-    private static class SupplierComposition<F, T> implements Supplier<T>, Serializable {
-        private static final long serialVersionUID = 0;
+    private static class SupplierComposition<F, T> implements Supplier<T> {
+
         /**
          * The Function.
          */
@@ -455,7 +458,7 @@ public final class Suppliers {
         }
     }
 
-    private static class ThreadSafeSupplier<T> implements Supplier<T>, Serializable {
+    private static class ThreadSafeSupplier<T> implements Supplier<T> {
         private static final long serialVersionUID = 0;
         /**
          * The Delegate.

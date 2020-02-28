@@ -62,7 +62,7 @@ import static com.azure.cosmos.implementation.base.Preconditions.checkNotNull;
  * @author Kevin Bourrillion
  * @since 11.0 (thread-safe since 23.0)
  */
-public final class BloomFilter<T> implements Predicate<T>, Serializable {
+public final class BloomFilter<T> implements Predicate<T> {
     /**
      * A strategy to translate T instances, to {@code numHashFunctions} bit indexes.
      *

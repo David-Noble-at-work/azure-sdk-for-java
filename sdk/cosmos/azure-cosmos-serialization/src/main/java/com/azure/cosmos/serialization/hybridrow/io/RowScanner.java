@@ -155,13 +155,12 @@ public final class RowScanner implements AutoCloseable, Iterable<DataItem> {
 
         while (reader.read()) {
 
-            Utf8String path = reader.path();
-            checkState(!path.isNull(), "expected non-null value for path");
-
-            LayoutType type = reader.type();
-            checkState(type != null, "expected non-null type");
-
             final Result result;
+
+            final LayoutType type = checkNotNull(reader.type(), "expected non-null type");
+            final Utf8String path = reader.path();
+
+            checkState(!path.isNull(), "expected non-null value for path");
             value.set(null);
 
             switch (type.layoutCode()) {
@@ -409,11 +408,8 @@ public final class RowScanner implements AutoCloseable, Iterable<DataItem> {
 
                     final Result result;
 
-                    Utf8String path = this.reader.path();
-                    checkState(!path.isNull(), "expected non-null value for path");
-
-                    LayoutType type = this.reader.type();
-                    checkState(type != null, "expected non-null type");
+                    final Utf8String path = checkNotNull(this.reader.path(), "expected non-null value for path");
+                    final LayoutType type = checkNotNull(this.reader.type(), "expected non-null type");
 
                     switch (type.layoutCode()) {
 
