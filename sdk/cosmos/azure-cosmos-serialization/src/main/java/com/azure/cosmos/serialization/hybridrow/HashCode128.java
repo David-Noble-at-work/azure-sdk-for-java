@@ -38,7 +38,7 @@ public final class HashCode128 {
      * @return a new {@link HashCode128} instance representing the value extracted from {@code buffer}.
      */
     @NotNull
-    public static HashCode128 from(@NotNull final byte[] buffer) {
+    public static HashCode128 decode(@NotNull final byte[] buffer) {
 
         checkNotNull(buffer, "expected non-null buffer");
         checkArgument(buffer.length >= 2 * Long.BYTES, "expected buffer length >= 16, not %s", buffer.length);
@@ -57,7 +57,7 @@ public final class HashCode128 {
      * @return a new {@link HashCode128} instance representing the value extracted from {@code buffer}.
      */
     @NotNull
-    public static HashCode128 from(@NotNull final ByteBuf buffer) {
+    public static HashCode128 decode(@NotNull final ByteBuf buffer) {
 
         checkNotNull(buffer, "expected non-null buffer");
 
