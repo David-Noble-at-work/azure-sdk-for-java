@@ -35,8 +35,8 @@ import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import static com.azure.cosmos.implementation.base.Preconditions.checkState;
 import static com.azure.cosmos.implementation.directconnectivity.rntbd.RntbdReporter.reportIssueUnless;
-import static com.google.common.base.Preconditions.checkState;
 
 /**
  * {@link ChannelPool} implementation that enforces a maximum number of concurrent direct TCP Cosmos connections

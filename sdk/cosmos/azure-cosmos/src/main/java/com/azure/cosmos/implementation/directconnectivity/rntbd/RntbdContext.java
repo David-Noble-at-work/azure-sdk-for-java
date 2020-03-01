@@ -15,9 +15,9 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.UUID;
 
-import static com.azure.cosmos.implementation.directconnectivity.rntbd.RntbdConstants.CurrentProtocolVersion;
+import static com.azure.cosmos.implementation.base.Preconditions.checkState;
+import static com.azure.cosmos.implementation.directconnectivity.rntbd.RntbdConstants.CURRENT_PROTOCOL_VERSION;
 import static com.azure.cosmos.implementation.directconnectivity.rntbd.RntbdConstants.RntbdContextHeader;
-import static com.google.common.base.Preconditions.checkState;
 
 public final class RntbdContext {
 
@@ -165,7 +165,7 @@ public final class RntbdContext {
 
         headers.clientVersion.setValue(request.getClientVersion());
         headers.idleTimeoutInSeconds.setValue(0);
-        headers.protocolVersion.setValue(CurrentProtocolVersion);
+        headers.protocolVersion.setValue(CURRENT_PROTOCOL_VERSION);
         headers.serverAgent.setValue(properties.getAgent());
         headers.serverVersion.setValue(properties.getVersion());
         headers.unauthenticatedTimeoutInSeconds.setValue(0);

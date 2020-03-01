@@ -11,9 +11,9 @@ import io.netty.handler.codec.CorruptedFrameException;
 
 import java.util.stream.Collector;
 
+import static com.azure.cosmos.implementation.base.Preconditions.checkNotNull;
+import static com.azure.cosmos.implementation.base.Strings.lenientFormat;
 import static com.azure.cosmos.implementation.directconnectivity.rntbd.RntbdConstants.RntbdHeader;
-import static com.google.common.base.Preconditions.checkNotNull;
-import static com.azure.cosmos.implementation.guava27.Strings.lenientFormat;
 
 @SuppressWarnings("UnstableApiUsage")
 abstract class RntbdTokenStream<T extends Enum<T> & RntbdHeader> {

@@ -15,9 +15,9 @@ import org.slf4j.LoggerFactory;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicLongFieldUpdater;
 
+import static com.azure.cosmos.implementation.base.Preconditions.checkArgument;
+import static com.azure.cosmos.implementation.base.Preconditions.checkNotNull;
 import static com.azure.cosmos.implementation.directconnectivity.rntbd.RntbdReporter.reportIssueUnless;
-import static com.google.common.base.Preconditions.checkArgument;
-import static com.google.common.base.Preconditions.checkNotNull;
 import static java.util.concurrent.atomic.AtomicLongFieldUpdater.newUpdater;
 
 public final class RntbdClientChannelHealthChecker implements ChannelHealthChecker {

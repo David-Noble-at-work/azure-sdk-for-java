@@ -54,6 +54,12 @@ Licensed under the MIT License.
   <dependencies>
 
     <dependency>
+      <groupId>com.azure</groupId>
+      <artifactId>azure-cosmos-serialization</artifactId>
+      <version>4.0.1-beta.1</version> <!-- {x-version-update;com.azure:azure-cosmos-serialization;current} -->
+    </dependency>
+
+    <dependency>
       <groupId>io.netty</groupId>
       <artifactId>netty-codec-http</artifactId>
       <version>4.1.45.Final</version> <!-- {x-version-update;cosmos_io.netty:netty-codec-http;external_dependency} -->
