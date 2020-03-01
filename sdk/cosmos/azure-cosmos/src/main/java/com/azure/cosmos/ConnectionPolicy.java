@@ -11,27 +11,26 @@ import java.util.List;
  * Represents the Connection policy associated with a DocumentClient in the Azure Cosmos DB database service.
  */
 public final class ConnectionPolicy {
-    private static final int DEFAULT_REQUEST_TIMEOUT_IN_MILLIS = 60 * 1000;
-    // defaultMediaRequestTimeout is based upon the blob client timeout and the
-    // retry policy.
-    private static final int DEFAULT_MEDIA_REQUEST_TIMEOUT_IN_MILLIS = 300 * 1000;
     private static final int DEFAULT_IDLE_CONNECTION_TIMEOUT_IN_MILLIS = 60 * 1000;
-
     private static final int DEFAULT_MAX_POOL_SIZE = 1000;
-
+    // The defaultMediaRequestTimeout is based upon the blob client timeout and the retry policy.
+    private static final int DEFAULT_MEDIA_REQUEST_TIMEOUT_IN_MILLIS = 300 * 1000;
+    private static final int DEFAULT_REQUEST_TIMEOUT_IN_MILLIS = 60 * 1000;
     private static ConnectionPolicy defaultPolicy = null;
-    private int requestTimeoutInMillis;
+
     private final int mediaRequestTimeoutInMillis;
+    private boolean allowBulkExecution;
     private ConnectionMode connectionMode;
-    private int maxPoolSize;
-    private int idleConnectionTimeoutInMillis;
-    private String userAgentSuffix;
-    private RetryOptions retryOptions;
     private boolean enableEndpointDiscovery = true;
-    private List<String> preferredLocations;
-    private boolean usingMultipleWriteLocations = true;
-    private InetSocketAddress inetSocketProxyAddress;
     private Boolean enableReadRequestsFallback;
+    private int idleConnectionTimeoutInMillis;
+    private InetSocketAddress inetSocketProxyAddress;
+    private int maxPoolSize;
+    private List<String> preferredLocations;
+    private int requestTimeoutInMillis;
+    private RetryOptions retryOptions;
+    private String userAgentSuffix;
+    private boolean usingMultipleWriteLocations = true;
 
     /**
      * Constructor.
@@ -45,6 +44,7 @@ public final class ConnectionPolicy {
         this.requestTimeoutInMillis = ConnectionPolicy.DEFAULT_REQUEST_TIMEOUT_IN_MILLIS;
         this.retryOptions = new RetryOptions();
         this.userAgentSuffix = "";
+        this.allowBulkExecution = true;  // TODO (DANOBLE) disallow bulk execution when Direct HTTP is in use (?)
     }
 
     /**
@@ -57,6 +57,27 @@ public final class ConnectionPolicy {
             ConnectionPolicy.defaultPolicy = new ConnectionPolicy();
         }
         return ConnectionPolicy.defaultPolicy;
+    }
+
+    /**
+     * Gets a value indicating whether bulk execution is enabled.
+     *
+     * @return {@code true} if bulk execution is enabled.
+     */
+    public boolean getAllowBulkExecution() {
+        return this.allowBulkExecution;
+    }
+
+    /**
+     * Sets a value indicating whether bulk execution is enabled.
+     *
+     * @param value {@code true} if bulk execution should be enabled; {@code false} otherwise.
+     *
+     * @return the current {@link ConnectionPolicy connection policy}.
+     */
+    public ConnectionPolicy setAllowBulkExecution(boolean value) {
+        this.allowBulkExecution = value;
+        return this;
     }
 
     /**

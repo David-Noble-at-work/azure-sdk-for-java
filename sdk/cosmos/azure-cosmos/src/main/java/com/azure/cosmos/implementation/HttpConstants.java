@@ -192,7 +192,7 @@ public class HttpConstants {
 
         public static final String LSN = "lsn";
 
-        // CUSTOM DocDB JavaScript logging headers
+        // Custom JavaScript logging headers
         public static final String SCRIPT_ENABLE_LOGGING = "x-ms-documentdb-script-enable-logging";
         public static final String SCRIPT_LOG_RESULTS = "x-ms-documentdb-script-log-results";
 
@@ -244,6 +244,11 @@ public class HttpConstants {
         public static final String API_TYPE = "x-ms-cosmos-apitype";
         public static final String QUERY_METRICS = "x-ms-documentdb-query-metrics";
 
+        // Batch operations
+        public static final String IS_BATCH_ATOMIC = "x-ms-cosmos-batch-atomic";
+        public static final String IS_BATCH_ORDERED = "x-ms-cosmos-batch-ordered";
+        public static final String IS_BATCH_REQUEST = "x-ms-cosmos-is-batch-request";
+        public static final String SHOULD_BATCH_CONTINUE_ON_ERROR = "x-ms-cosmos-batch-continue-on-error";
     }
 
     public static class A_IMHeaderValues {

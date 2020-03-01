@@ -232,7 +232,7 @@ public class CosmosClientException extends RuntimeException {
      *
      * @return the resource address associated with this exception.
      */
-    String getResourceAddress() {
+    public String getResourceAddress() {
         return this.resourceAddress;
     }
 

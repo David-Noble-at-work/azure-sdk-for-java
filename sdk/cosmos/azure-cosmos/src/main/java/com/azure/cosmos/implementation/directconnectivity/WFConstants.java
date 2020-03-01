@@ -74,5 +74,10 @@ public class WFConstants {
         public static final String CONTENT_SERIALIZATION_FORMAT = "x-ms-documentdb-content-serialization-format";
         public static final String ALLOW_TENTATIVE_WRITES = "x-ms-cosmos-allow-tentative-writes";
         public static final String IS_USER_REQUEST = "x-ms-cosmos-internal-is-user-request";
+        public static final String PRESERVE_FULL_CONTENT = "x-ms-cosmos-preserve-full-content";
+        public static final String EFFECTIVE_PARTITION_KEY_STRING = "x-ms-effective-partition-key-string";
+        public static final String SCHEMA_OWNER_RID = "x-ms-schema-owner-rid";
+        public static final String SCHEMA_HASH = "x-ms-schema-hash";
+        public static final String POPULATE_LOG_STORE_INFO = "x-ms-cosmos-populate-logstoreinfo";
     }
 }

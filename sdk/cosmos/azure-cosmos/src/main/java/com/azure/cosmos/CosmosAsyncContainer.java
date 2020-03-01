@@ -636,7 +636,8 @@ public class CosmosAsyncContainer {
         return database.getLink();
     }
 
-    String getLink() {
+    public String getLink() {
+        // TODO (DANOBLE) understand and adjust the code based on the impact and wisdom of making this method public
         return this.link;
     }
 }
