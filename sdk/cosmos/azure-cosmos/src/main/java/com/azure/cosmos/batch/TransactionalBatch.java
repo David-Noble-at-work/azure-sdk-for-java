@@ -13,7 +13,7 @@ import javax.annotation.Nonnull;
 import java.io.InputStream;
 import java.util.concurrent.CompletableFuture;
 
-import static com.google.common.base.Preconditions.checkNotNull;
+import static com.azure.cosmos.implementation.base.Preconditions.checkNotNull;
 
 /**
  * Represents a batch of operations against items with the same {@link PartitionKey} in a container.

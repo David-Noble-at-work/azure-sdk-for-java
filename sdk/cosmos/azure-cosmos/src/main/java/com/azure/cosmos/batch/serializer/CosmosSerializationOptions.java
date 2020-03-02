@@ -3,7 +3,7 @@
 
 package com.azure.cosmos.batch.serializer;
 
-import static com.google.common.base.Preconditions.checkNotNull;
+import static com.azure.cosmos.implementation.base.Preconditions.checkNotNull;
 
 /**
  * This class provides a way to configure basic serializer settings.

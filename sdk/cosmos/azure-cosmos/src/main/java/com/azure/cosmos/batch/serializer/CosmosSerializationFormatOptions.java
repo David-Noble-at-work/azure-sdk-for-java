@@ -12,7 +12,7 @@ import javax.annotation.Nonnull;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
-import static com.google.common.base.Preconditions.checkNotNull;
+import static com.azure.cosmos.implementation.base.Preconditions.checkNotNull;
 
 public final class CosmosSerializationFormatOptions {
 

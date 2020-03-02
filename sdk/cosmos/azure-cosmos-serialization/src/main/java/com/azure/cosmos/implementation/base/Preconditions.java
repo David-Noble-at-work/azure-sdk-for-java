@@ -1939,6 +1939,82 @@ public final class Preconditions {
         }
     }
 
+    /**
+     * Throws a new {@link IllegalArgumentException} with the specified formatted error message.
+     *
+     * @param template a string containing one {@code "%s"} placeholder sequences. {@code null} is treated as the
+     * four-character string {@code "null"}
+     * @param arg1 the argument to be substituted into the message template.
+     *
+     * @throws IllegalArgumentException with the specified formatted {@link IllegalArgumentException#getMessage error
+     * message}.
+     */
+    public static void throwIllegalArgument(@NotNull String template, Object arg1) {
+        throw new IllegalArgumentException(lenientFormat(template, arg1));
+    }
+
+    /**
+     * Throws a new {@link IllegalArgumentException} with the specified formatted error message.
+     *
+     * @param template a string containing two {@code "%s"} placeholder sequences. {@code null} is treated as the
+     * four-character string {@code "null"}
+     * @param arg1 the first argument to be substituted into the message {@code template}.
+     * @param arg2 the second argument to be substituted into the message {@code template}.
+     *
+     * @throws IllegalArgumentException with the specified formatted {@link IllegalArgumentException#getMessage error
+     * message}.
+     */
+    public static void throwIllegalArgumentException(@NotNull String template, Object arg1, Object arg2) {
+        throw new IllegalArgumentException(lenientFormat(template, arg1, arg2));
+    }
+
+    /**
+     * Throws a new {@link IllegalArgumentException} with the specified formatted error message.
+     *
+     * @param template a string containing three {@code "%s"} placeholder sequences. {@code null} is treated as the
+     * four-character string {@code "null"}
+     * @param arg1 the first argument to be substituted into the message template.
+     * @param arg2 the second argument to be substituted into the message {@code template}.
+     * @param arg3 the third argument to be substituted into the message {@code template}.
+     *
+     * @throws IllegalArgumentException with the specified formatted {@link IllegalArgumentException#getMessage error
+     * message}.
+     */
+    public static void throwIllegalArgumentException(@NotNull String template, Object arg1, Object arg2, Object arg3) {
+        throw new IllegalArgumentException(lenientFormat(template, arg1, arg2, arg3));
+    }
+
+    /**
+     * Throws a new {@link IllegalArgumentException} with the specified formatted error message.
+     *
+     * @param template a string containing four {@code "%s"} placeholder sequences. {@code null} is treated as the
+     * four-character string {@code "null"}.
+     * @param arg1 the argument to be substituted into the message template.
+     * @param arg2 the second argument to be substituted into the message {@code template}.
+     * @param arg3 the third argument to be substituted into the message {@code template}.
+     * @param arg4 the fourth argument to be substituted into the message {@code template}.
+     *
+     * @throws IllegalArgumentException with the specified formatted {@link IllegalArgumentException#getMessage error
+     * message}.
+     */
+    public static void throwIllegalArgumentException(@NotNull String template, Object arg1, Object arg2, Object arg3, Object arg4) {
+        throw new IllegalArgumentException(lenientFormat(template, arg1, arg2, arg3, arg4));
+    }
+
+    /**
+     * Throws a new {@link IllegalArgumentException} with the specified formatted error message.
+     *
+     * @param template a string containing zero or more {@code "%s"} placeholder sequences. {@code null} is treated as
+     * the four-character string {@code "null"}
+     * @param args the arguments to be substituted into the message template.
+     *
+     * @throws IllegalArgumentException with the specified formatted {@link IllegalArgumentException#getMessage error
+     * message}.
+     */
+    public static void throwIllegalArgumentException(@NotNull String template, @Nullable Object... args) {
+        throw new IllegalArgumentException(lenientFormat(template, args));
+    }
+
     private static String badElementIndex(int index, int size, @Nullable String desc) {
         if (index < 0) {
             return lenientFormat("%s (%s) must not be negative", desc, index);

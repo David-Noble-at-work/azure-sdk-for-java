@@ -20,8 +20,8 @@ import javax.annotation.Nonnull;
 import java.io.InputStream;
 import java.time.Duration;
 
-import static com.google.common.base.Preconditions.checkNotNull;
-import static com.google.common.base.Preconditions.checkState;
+import static com.azure.cosmos.implementation.base.Preconditions.checkNotNull;
+import static com.azure.cosmos.implementation.base.Preconditions.checkState;
 
 /**
  * Represents a result for a specific operation that was part of a {@link TransactionalBatch} request.

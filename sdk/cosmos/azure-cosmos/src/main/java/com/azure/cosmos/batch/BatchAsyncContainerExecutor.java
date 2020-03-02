@@ -36,8 +36,8 @@ import static com.azure.cosmos.BridgeInternal.getPartitionKeyInternal;
 import static com.azure.cosmos.batch.TransactionalBatchResponse.fromResponseMessageAsync;
 import static com.azure.cosmos.implementation.base.Preconditions.checkState;
 import static com.azure.cosmos.implementation.routing.PartitionKeyInternalHelper.getEffectivePartitionKeyString;
-import static com.google.common.base.Preconditions.checkArgument;
-import static com.google.common.base.Preconditions.checkNotNull;
+import static com.azure.cosmos.implementation.base.Preconditions.checkArgument;
+import static com.azure.cosmos.implementation.base.Preconditions.checkNotNull;
 
 /**
  * Bulk batch executor for operations in the same container.

@@ -26,8 +26,8 @@ import java.nio.channels.AsynchronousByteChannel;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
-import static com.google.common.base.Preconditions.checkArgument;
-import static com.google.common.base.Preconditions.checkNotNull;
+import static com.azure.cosmos.implementation.base.Preconditions.checkArgument;
+import static com.azure.cosmos.implementation.base.Preconditions.checkNotNull;
 
 /**
  * Represents an operation on an item which will be executed as part of a batch request on a container.

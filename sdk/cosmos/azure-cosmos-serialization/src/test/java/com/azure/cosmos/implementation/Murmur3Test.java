@@ -22,6 +22,7 @@ import static org.testng.Assert.fail;
 /**
  * Tests the Murmur3 class
  */
+@Test(groups = "unit")
 public class Murmur3Test {
 
     private static Logger logger = LoggerFactory.getLogger(Murmur3Test.class);
@@ -39,15 +40,7 @@ public class Murmur3Test {
         }
 
         if (datum.expected != null) {
-
-            System.out.println(lenientFormat("value : %s = %s",
-                datum.value == null
-                    ? "Nothing"
-                    : datum.value.getClass().getSimpleName(),
-                datum.value == null
-                    ? "null"
-                    : Json.toString(datum.value)));
-
+            System.out.println(datum.toString());
             assertEquals(observed, datum.expected);
         }
     }
@@ -329,6 +322,17 @@ public class Murmur3Test {
             this.seed = seed;
             this.value = value;
             this.expected = expected;
+        }
+
+        @Override
+        public String toString() {
+            return lenientFormat("value : %s = %s",
+                this.value == null
+                    ? "Nothing"
+                    : this.value.getClass().getSimpleName(),
+                this.value == null
+                    ? "null"
+                    : Json.toString(this.value));
         }
     }
 }

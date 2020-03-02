@@ -3,11 +3,9 @@
 
 package com.azure.cosmos.serialization.hybridrow;
 
-import com.azure.cosmos.implementation.base.Suppliers;
-import it.unimi.dsi.fastutil.bytes.Byte2ReferenceMap;
-import it.unimi.dsi.fastutil.bytes.Byte2ReferenceOpenHashMap;
+import javax.annotation.Nonnull;
 
-import java.util.function.Supplier;
+import static com.azure.cosmos.implementation.base.Preconditions.throwIllegalArgumentException;
 
 /**
  * Versions of HybridRow.
@@ -27,19 +25,9 @@ public enum HybridRowVersion {
     V1((byte) 0x81);
 
     /**
-     * The constant BYTES.
+     * The number of bytes in the {@link #value} of this {@link HybridRowVersion HybridRow version}.
      */
     public static final int BYTES = Byte.BYTES;
-
-    private static final Supplier<Byte2ReferenceMap<HybridRowVersion>> mappings = Suppliers.memoize(() -> {
-        final HybridRowVersion[] constants = HybridRowVersion.class.getEnumConstants();
-        final byte[] values = new byte[constants.length];
-        for (int i = 0; i < constants.length; i++) {
-            values[i] = constants[i].value();
-        }
-        return new Byte2ReferenceOpenHashMap<>(values, constants);
-    });
-
     private final byte value;
 
     HybridRowVersion(final byte value) {
@@ -47,20 +35,31 @@ public enum HybridRowVersion {
     }
 
     /**
-     * From hybrid row version.
+     * Returns the {@link HybridRowVersion HybridRow version} associated with the given {@code byte} value.
      *
-     * @param value the value
+     * @param value the value.
      *
-     * @return the hybrid row version
+     * @return a {@link HybridRowVersion HybridRow version}.
+     *
+     * @throws IllegalArgumentException if {@code value} does not map to a a {@link HybridRowVersion HybridRow version}.
      */
+    @Nonnull
     public static HybridRowVersion from(final byte value) {
-        return mappings.get().get(value);
+        switch (value) {
+            case (byte) 0x00:
+                return INVALID;
+            case (byte) 0x81:
+                return V1;
+            default:
+                throwIllegalArgumentException("unrecognized HybridRowVersion number: %s", value);
+                return null;
+        }
     }
 
     /**
-     * Value byte.
+     * Returns the {@code byte} value of this {@link HybridRowVersion HybridRow version}.
      *
-     * @return the byte
+     * @return the the {@code byte} value of this {@link HybridRowVersion HybridRow version}.
      */
     public byte value() {
         return this.value;

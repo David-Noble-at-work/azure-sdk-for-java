@@ -7,7 +7,7 @@ import javax.annotation.Nonnull;
 import java.io.Serializable;
 import java.util.List;
 
-import static com.google.common.base.Preconditions.checkNotNull;
+import static com.azure.cosmos.implementation.base.Preconditions.checkNotNull;
 
 final class ServerOperationBatchRequest implements Serializable {
 

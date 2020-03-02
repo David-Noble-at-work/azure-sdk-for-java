@@ -9,7 +9,7 @@ import javax.annotation.Nonnull;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
-import static com.google.common.base.Preconditions.checkNotNull;
+import static com.azure.cosmos.implementation.base.Preconditions.checkNotNull;
 
 final class PartitionKeyRangeServerBatchRequest extends ServerBatchRequest {
 

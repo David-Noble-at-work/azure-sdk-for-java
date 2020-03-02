@@ -7,7 +7,7 @@ import com.azure.cosmos.serialization.hybridrow.layouts.Layout;
 import com.azure.cosmos.serialization.hybridrow.layouts.LayoutResolverNamespace;
 import com.azure.cosmos.serialization.hybridrow.layouts.SystemSchema;
 import com.azure.cosmos.serialization.hybridrow.schemas.Namespace;
-import com.google.common.base.Suppliers;
+import com.azure.cosmos.implementation.base.Suppliers;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
