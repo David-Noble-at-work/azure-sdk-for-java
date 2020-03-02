@@ -5,7 +5,7 @@ package com.azure.cosmos.batch;
 
 import com.azure.cosmos.CosmosAsyncContainer;
 import com.azure.cosmos.PartitionKeyDefinition;
-import com.azure.cosmos.RetryOptions;
+import com.azure.cosmos.ThrottlingRetryOptions;
 import com.azure.cosmos.batch.implementation.BulkPartitionKeyRangeGoneRetryPolicy;
 import com.azure.cosmos.batch.unimplemented.CosmosDiagnosticScope;
 import com.azure.cosmos.batch.unimplemented.CosmosDiagnosticsContext;
@@ -64,7 +64,7 @@ public class BatchAsyncContainerExecutor implements AutoCloseable {
     private final int dispatchTimerInSeconds;
     private final int maxOperationCount;
     private final int maxPayloadLength;
-    private final RetryOptions retryOptions;
+    private final ThrottlingRetryOptions throttlingRetryOptions;
 
     public BatchAsyncContainerExecutor(
         @Nonnull final CosmosClientContext clientContext,
@@ -106,7 +106,7 @@ public class BatchAsyncContainerExecutor implements AutoCloseable {
         this.maxOperationCount = maxOperationCount;
         this.maxPayloadLength = maxPayloadLength;
         this.dispatchTimerInSeconds = dispatchTimerInSeconds;
-        this.retryOptions = clientContext.getConnectionPolicy().getRetryOptions();
+        this.throttlingRetryOptions = clientContext.getConnectionPolicy().getThrottlingRetryOptions();
     }
 
 
@@ -132,7 +132,7 @@ public class BatchAsyncContainerExecutor implements AutoCloseable {
 
             final ItemBatchOperationContext context = new ItemBatchOperationContext(
                 resolvedPartitionKeyRangeId,
-                BatchAsyncContainerExecutor.getRetryPolicy(this.retryOptions));
+                BatchAsyncContainerExecutor.getRetryPolicy(this.throttlingRetryOptions));
 
             operation.attachContext(context);
             streamer.add(operation);
@@ -241,11 +241,11 @@ public class BatchAsyncContainerExecutor implements AutoCloseable {
         });
     }
 
-    private static DocumentClientRetryPolicy getRetryPolicy(RetryOptions retryOptions) {
+    private static DocumentClientRetryPolicy getRetryPolicy(ThrottlingRetryOptions throttlingRetryOptions) {
         return new BulkPartitionKeyRangeGoneRetryPolicy(
             new ResourceThrottleRetryPolicy(
-                retryOptions.getMaxRetryAttemptsOnThrottledRequests(),
-                retryOptions.getMaxRetryWaitTimeInSeconds()));
+                throttlingRetryOptions.getMaxRetryAttemptsOnThrottledRequests(),
+                throttlingRetryOptions.getMaxRetryWaitTimeInSeconds()));
     }
 
     private CompletableFuture<Void> ReBatchAsync(ItemBatchOperation<?> operation) {

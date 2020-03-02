@@ -11,33 +11,37 @@ import java.util.List;
  * Represents the Connection policy associated with a DocumentClient in the Azure Cosmos DB database service.
  */
 public final class ConnectionPolicy {
-    private static final int DEFAULT_REQUEST_TIMEOUT_IN_MILLIS = 60 * 1000;
-    // defaultMediaRequestTimeout is based upon the blob client timeout and the
-    // retry policy.
-    private static final int DEFAULT_MEDIA_REQUEST_TIMEOUT_IN_MILLIS = 300 * 1000;
-    private static final int DEFAULT_IDLE_CONNECTION_TIMEOUT_IN_MILLIS = 60 * 1000;
 
+    private static final int DEFAULT_REQUEST_TIMEOUT_IN_MILLIS = 60 * 1000;
+
+    // The defaultMediaRequestTimeout is based upon the blob client timeout and the throttling retry policy.
+    private static final int DEFAULT_MEDIA_REQUEST_TIMEOUT_IN_MILLIS = 300 * 1000;
+
+    private static final int DEFAULT_IDLE_CONNECTION_TIMEOUT_IN_MILLIS = 60 * 1000;
     private static final int DEFAULT_MAX_POOL_SIZE = 1000;
 
     private static ConnectionPolicy defaultPolicy = null;
-    private int requestTimeoutInMillis;
+
     private final int mediaRequestTimeoutInMillis;
+
     private boolean allowBulkExecution;
     private ConnectionMode connectionMode;
-    private int maxPoolSize;
-    private int idleConnectionTimeoutInMillis;
-    private String userAgentSuffix;
-    private ThrottlingRetryOptions throttlingRetryOptions;
     private boolean endpointDiscoveryEnabled = true;
-    private List<String> preferredLocations;
-    private boolean usingMultipleWriteLocations = true;
+    private int idleConnectionTimeoutInMillis;
     private InetSocketAddress inetSocketProxyAddress;
+    private int maxPoolSize;
+    private List<String> preferredLocations;
     private Boolean readRequestsFallbackEnabled;
+    private int requestTimeoutInMillis;
+    private ThrottlingRetryOptions throttlingRetryOptions;
+    private String userAgentSuffix;
+    private boolean usingMultipleWriteLocations = true;
 
     /**
      * Constructor.
      */
     public ConnectionPolicy() {
+
         this.connectionMode = ConnectionMode.DIRECT;
         this.readRequestsFallbackEnabled = null;
         this.idleConnectionTimeoutInMillis = DEFAULT_IDLE_CONNECTION_TIMEOUT_IN_MILLIS;
@@ -46,7 +50,9 @@ public final class ConnectionPolicy {
         this.requestTimeoutInMillis = ConnectionPolicy.DEFAULT_REQUEST_TIMEOUT_IN_MILLIS;
         this.throttlingRetryOptions = new ThrottlingRetryOptions();
         this.userAgentSuffix = "";
-        this.allowBulkExecution = true;  // TODO (DANOBLE) disallow bulk execution when Direct HTTP is in use (?)
+
+        // TODO (DANOBLE) disable allowBulkExecution when protocol is HTTPS, not TCP
+        this.allowBulkExecution = true;
     }
 
     /**
@@ -193,8 +199,8 @@ public final class ConnectionPolicy {
      *
      * @return the RetryOptions instance.
      */
-    public RetryOptions getRetryOptions() {
-        return this.retryOptions;
+    public ThrottlingRetryOptions getThrottlingRetryOptions() {
+        return this.throttlingRetryOptions;
     }
 
     /**
@@ -205,16 +211,16 @@ public final class ConnectionPolicy {
      * default values for configuring the retry policies.  See RetryOptions class for
      * more details.
      *
-     * @param retryOptions the RetryOptions instance.
+     * @param throttlingRetryOptions the RetryOptions instance.
      * @return the ConnectionPolicy.
      * @throws IllegalArgumentException thrown if an error occurs
      */
-    public ConnectionPolicy setRetryOptions(RetryOptions retryOptions) {
-        if (retryOptions == null) {
+    public ConnectionPolicy setThrottlingRetryOptions(ThrottlingRetryOptions throttlingRetryOptions) {
+        if (throttlingRetryOptions == null) {
             throw new IllegalArgumentException("retryOptions value must not be null.");
         }
 
-        this.retryOptions = retryOptions;
+        this.throttlingRetryOptions = throttlingRetryOptions;
         return this;
     }
 
@@ -223,8 +229,8 @@ public final class ConnectionPolicy {
      *
      * @return whether endpoint discovery is enabled.
      */
-    public boolean getEnableEndpointDiscovery() {
-        return this.enableEndpointDiscovery;
+    public boolean isEndpointDiscoveryEnabled() {
+        return this.endpointDiscoveryEnabled;
     }
 
     /**
@@ -236,11 +242,11 @@ public final class ConnectionPolicy {
      * <p>
      * The default value for this property is true indicating endpoint discovery is enabled.
      *
-     * @param enableEndpointDiscovery true if EndpointDiscovery is enabled.
+     * @param endpointDiscoveryEnabled true if EndpointDiscovery is enabled.
      * @return the ConnectionPolicy.
      */
-    public ConnectionPolicy setEnableEndpointDiscovery(boolean enableEndpointDiscovery) {
-        this.enableEndpointDiscovery = enableEndpointDiscovery;
+    public ConnectionPolicy setEndpointDiscoveryEnabled(boolean endpointDiscoveryEnabled) {
+        this.endpointDiscoveryEnabled = endpointDiscoveryEnabled;
         return this;
     }
 
@@ -259,7 +265,7 @@ public final class ConnectionPolicy {
      *
      * @return flag to enable writes on any locations (regions) for geo-replicated database accounts.
      */
-    public boolean getUsingMultipleWriteLocations() {
+    public boolean isUsingMultipleWriteLocations() {
         return this.usingMultipleWriteLocations;
     }
 
@@ -270,13 +276,13 @@ public final class ConnectionPolicy {
      * <p>
      * If this property is not set, the default is true for all Consistency Levels other than Bounded Staleness,
      * The default is false for Bounded Staleness.
-     * 1. {@link #enableEndpointDiscovery} is true
+     * 1. {@link #endpointDiscoveryEnabled} is true
      * 2. the Azure Cosmos DB account has more than one region
      *
      * @return flag to allow for reads to go to multiple regions configured on an account of Azure Cosmos DB service.
      */
-    public Boolean getEnableReadRequestsFallback() {
-        return this.enableReadRequestsFallback;
+    public Boolean isReadRequestsFallbackEnabled() {
+        return this.readRequestsFallbackEnabled;
     }
 
     /**
@@ -308,15 +314,15 @@ public final class ConnectionPolicy {
      * <p>
      * If this property is not set, the default is true for all Consistency Levels other than Bounded Staleness,
      * The default is false for Bounded Staleness.
-     * 1. {@link #enableEndpointDiscovery} is true
+     * 1. {@link #endpointDiscoveryEnabled} is true
      * 2. the Azure Cosmos DB account has more than one region
      *
-     * @param enableReadRequestsFallback flag to enable reads to go to multiple regions configured on an account of
+     * @param readRequestsFallbackEnabled flag to enable reads to go to multiple regions configured on an account of
      * Azure Cosmos DB service.
      * @return the ConnectionPolicy.
      */
-    public ConnectionPolicy setEnableReadRequestsFallback(Boolean enableReadRequestsFallback) {
-        this.enableReadRequestsFallback = enableReadRequestsFallback;
+    public ConnectionPolicy setReadRequestsFallbackEnabled(Boolean readRequestsFallbackEnabled) {
+        this.readRequestsFallbackEnabled = readRequestsFallbackEnabled;
         return this;
     }
 
@@ -360,29 +366,29 @@ public final class ConnectionPolicy {
      * This will create the InetSocketAddress for proxy server,
      * all the requests to cosmoDB will route from this address.
      *
-     * @param proxyHost The proxy server host.
-     * @param proxyPort The proxy server port.
+     * @param proxy The proxy server.
      * @return the ConnectionPolicy.
      */
-    public ConnectionPolicy setProxy(String proxyHost, int proxyPort) {
-        this.inetSocketProxyAddress = new InetSocketAddress(proxyHost, proxyPort);
+
+    public ConnectionPolicy setProxy(InetSocketAddress proxy) {
+        this.inetSocketProxyAddress = proxy;
         return this;
     }
 
     @Override
     public String toString() {
         return "ConnectionPolicy{"
-                   + "requestTimeoutInMillis=" + requestTimeoutInMillis
-                   + ", mediaRequestTimeoutInMillis=" + mediaRequestTimeoutInMillis
-                   + ", connectionMode=" + connectionMode
-                   + ", maxPoolSize=" + maxPoolSize
-                   + ", idleConnectionTimeoutInMillis=" + idleConnectionTimeoutInMillis
-                   + ", userAgentSuffix='" + userAgentSuffix + '\''
-                   + ", retryOptions=" + retryOptions
-                   + ", enableEndpointDiscovery=" + enableEndpointDiscovery
-                   + ", preferredLocations=" + preferredLocations
-                   + ", usingMultipleWriteLocations=" + usingMultipleWriteLocations
-                   + ", inetSocketProxyAddress=" + inetSocketProxyAddress
-                   + '}';
+            + "requestTimeoutInMillis=" + requestTimeoutInMillis
+            + ", mediaRequestTimeoutInMillis=" + mediaRequestTimeoutInMillis
+            + ", connectionMode=" + connectionMode
+            + ", maxPoolSize=" + maxPoolSize
+            + ", idleConnectionTimeoutInMillis=" + idleConnectionTimeoutInMillis
+            + ", userAgentSuffix='" + userAgentSuffix + '\''
+            + ", retryOptions=" + throttlingRetryOptions
+            + ", enableEndpointDiscovery=" + endpointDiscoveryEnabled
+            + ", preferredLocations=" + preferredLocations
+            + ", usingMultipleWriteLocations=" + usingMultipleWriteLocations
+            + ", inetSocketProxyAddress=" + inetSocketProxyAddress
+            + '}';
     }
 }
