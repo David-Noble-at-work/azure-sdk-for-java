@@ -11,38 +11,40 @@ import java.util.List;
  * Represents the Connection policy associated with a DocumentClient in the Azure Cosmos DB database service.
  */
 public final class ConnectionPolicy {
-    private static final int DEFAULT_IDLE_CONNECTION_TIMEOUT_IN_MILLIS = 60 * 1000;
-    private static final int DEFAULT_MAX_POOL_SIZE = 1000;
-    // The defaultMediaRequestTimeout is based upon the blob client timeout and the retry policy.
-    private static final int DEFAULT_MEDIA_REQUEST_TIMEOUT_IN_MILLIS = 300 * 1000;
     private static final int DEFAULT_REQUEST_TIMEOUT_IN_MILLIS = 60 * 1000;
-    private static ConnectionPolicy defaultPolicy = null;
+    // defaultMediaRequestTimeout is based upon the blob client timeout and the
+    // retry policy.
+    private static final int DEFAULT_MEDIA_REQUEST_TIMEOUT_IN_MILLIS = 300 * 1000;
+    private static final int DEFAULT_IDLE_CONNECTION_TIMEOUT_IN_MILLIS = 60 * 1000;
 
+    private static final int DEFAULT_MAX_POOL_SIZE = 1000;
+
+    private static ConnectionPolicy defaultPolicy = null;
+    private int requestTimeoutInMillis;
     private final int mediaRequestTimeoutInMillis;
     private boolean allowBulkExecution;
     private ConnectionMode connectionMode;
-    private boolean enableEndpointDiscovery = true;
-    private Boolean enableReadRequestsFallback;
-    private int idleConnectionTimeoutInMillis;
-    private InetSocketAddress inetSocketProxyAddress;
     private int maxPoolSize;
-    private List<String> preferredLocations;
-    private int requestTimeoutInMillis;
-    private RetryOptions retryOptions;
+    private int idleConnectionTimeoutInMillis;
     private String userAgentSuffix;
+    private ThrottlingRetryOptions throttlingRetryOptions;
+    private boolean endpointDiscoveryEnabled = true;
+    private List<String> preferredLocations;
     private boolean usingMultipleWriteLocations = true;
+    private InetSocketAddress inetSocketProxyAddress;
+    private Boolean readRequestsFallbackEnabled;
 
     /**
      * Constructor.
      */
     public ConnectionPolicy() {
         this.connectionMode = ConnectionMode.DIRECT;
-        this.enableReadRequestsFallback = null;
+        this.readRequestsFallbackEnabled = null;
         this.idleConnectionTimeoutInMillis = DEFAULT_IDLE_CONNECTION_TIMEOUT_IN_MILLIS;
         this.maxPoolSize = DEFAULT_MAX_POOL_SIZE;
         this.mediaRequestTimeoutInMillis = ConnectionPolicy.DEFAULT_MEDIA_REQUEST_TIMEOUT_IN_MILLIS;
         this.requestTimeoutInMillis = ConnectionPolicy.DEFAULT_REQUEST_TIMEOUT_IN_MILLIS;
-        this.retryOptions = new RetryOptions();
+        this.throttlingRetryOptions = new ThrottlingRetryOptions();
         this.userAgentSuffix = "";
         this.allowBulkExecution = true;  // TODO (DANOBLE) disallow bulk execution when Direct HTTP is in use (?)
     }
