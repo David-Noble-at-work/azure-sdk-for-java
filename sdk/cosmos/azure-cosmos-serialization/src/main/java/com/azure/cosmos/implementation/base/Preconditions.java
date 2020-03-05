@@ -1943,7 +1943,7 @@ public final class Preconditions {
      * Throws a new {@link IllegalArgumentException} with the specified formatted error message.
      *
      * @param template a string containing one {@code "%s"} placeholder sequences. {@code null} is treated as the
-     * four-character string {@code "null"}
+     * four-character string {@code "null"}.
      * @param arg1 the argument to be substituted into the message template.
      *
      * @throws IllegalArgumentException with the specified formatted {@link IllegalArgumentException#getMessage error
@@ -1957,7 +1957,7 @@ public final class Preconditions {
      * Throws a new {@link IllegalArgumentException} with the specified formatted error message.
      *
      * @param template a string containing two {@code "%s"} placeholder sequences. {@code null} is treated as the
-     * four-character string {@code "null"}
+     * four-character string {@code "null"}.
      * @param arg1 the first argument to be substituted into the message {@code template}.
      * @param arg2 the second argument to be substituted into the message {@code template}.
      *
@@ -1972,7 +1972,7 @@ public final class Preconditions {
      * Throws a new {@link IllegalArgumentException} with the specified formatted error message.
      *
      * @param template a string containing three {@code "%s"} placeholder sequences. {@code null} is treated as the
-     * four-character string {@code "null"}
+     * four-character string {@code "null"}.
      * @param arg1 the first argument to be substituted into the message template.
      * @param arg2 the second argument to be substituted into the message {@code template}.
      * @param arg3 the third argument to be substituted into the message {@code template}.
@@ -1997,7 +1997,12 @@ public final class Preconditions {
      * @throws IllegalArgumentException with the specified formatted {@link IllegalArgumentException#getMessage error
      * message}.
      */
-    public static void throwIllegalArgumentException(@NotNull String template, Object arg1, Object arg2, Object arg3, Object arg4) {
+    public static void throwIllegalArgumentException(
+        @NotNull final String template,
+        @Nullable final Object arg1,
+        @Nullable final Object arg2,
+        @Nullable final Object arg3,
+        @Nullable final Object arg4) {
         throw new IllegalArgumentException(lenientFormat(template, arg1, arg2, arg3, arg4));
     }
 
@@ -2005,15 +2010,95 @@ public final class Preconditions {
      * Throws a new {@link IllegalArgumentException} with the specified formatted error message.
      *
      * @param template a string containing zero or more {@code "%s"} placeholder sequences. {@code null} is treated as
-     * the four-character string {@code "null"}
+     * the four-character string {@code "null"}.
      * @param args the arguments to be substituted into the message template.
      *
      * @throws IllegalArgumentException with the specified formatted {@link IllegalArgumentException#getMessage error
      * message}.
      */
-    public static void throwIllegalArgumentException(@NotNull String template, @Nullable Object... args) {
+    public static void throwIllegalArgumentException(
+        @NotNull final String template,
+        @Nullable Object... args) {
         throw new IllegalArgumentException(lenientFormat(template, args));
     }
+
+    /**
+     * Throws a new {@link UnsupportedOperationException} with the specified formatted error message.
+     *
+     * @param template a string containing one {@code "%s"} placeholder sequences. {@code null} is treated as the
+     * four-character string {@code "null"}.
+     * @param arg1 the argument to be substituted into the message template.
+     *
+     * @throws UnsupportedOperationException with the specified formatted
+     * {@link UnsupportedOperationException#getMessage error message}.
+     */
+    public static void throwUnsupportedOperationException(@NotNull String template, Object arg1) {
+        throw new UnsupportedOperationException(lenientFormat(template, arg1));
+    }
+
+    /**
+     * Throws a new {@link UnsupportedOperationException} with the specified formatted error message.
+     *
+     * @param template a string containing two {@code "%s"} placeholder sequences. {@code null} is treated as the
+     * four-character string {@code "null"}.
+     * @param arg1 the first argument to be substituted into the message {@code template}.
+     * @param arg2 the second argument to be substituted into the message {@code template}.
+     *
+     * @throws UnsupportedOperationException with the specified formatted
+     * {@link UnsupportedOperationException#getMessage error message}.
+     */
+    public static void throwUnsupportedOperationException(@NotNull String template, Object arg1, Object arg2) {
+        throw new UnsupportedOperationException(lenientFormat(template, arg1, arg2));
+    }
+
+    /**
+     * Throws a new {@link UnsupportedOperationException} with the specified formatted error message.
+     *
+     * @param template a string containing three {@code "%s"} placeholder sequences. {@code null} is treated as the
+     * four-character string {@code "null"}.
+     * @param arg1 the first argument to be substituted into the message template.
+     * @param arg2 the second argument to be substituted into the message {@code template}.
+     * @param arg3 the third argument to be substituted into the message {@code template}.
+     *
+     * @throws UnsupportedOperationException with the specified formatted
+     * {@link UnsupportedOperationException#getMessage error message}.
+     */
+    public static void throwUnsupportedOperationException(@NotNull String template, Object arg1, Object arg2, Object arg3) {
+        throw new UnsupportedOperationException(lenientFormat(template, arg1, arg2, arg3));
+    }
+
+    /**
+     * Throws a new {@link UnsupportedOperationException} with the specified formatted error message.
+     *
+     * @param template a string containing four {@code "%s"} placeholder sequences. {@code null} is treated as the
+     * four-character string {@code "null"}.
+     * @param arg1 the argument to be substituted into the message template.
+     * @param arg2 the second argument to be substituted into the message {@code template}.
+     * @param arg3 the third argument to be substituted into the message {@code template}.
+     * @param arg4 the fourth argument to be substituted into the message {@code template}.
+     *
+     * @throws UnsupportedOperationException with the specified formatted
+     * {@link UnsupportedOperationException#getMessage error message}.
+     */
+    public static void throwUnsupportedOperationException(@NotNull String template, Object arg1, Object arg2, Object arg3, Object arg4) {
+        throw new UnsupportedOperationException(lenientFormat(template, arg1, arg2, arg3, arg4));
+    }
+
+    /**
+     * Throws a new {@link UnsupportedOperationException} with the specified formatted error message.
+     *
+     * @param template a string containing zero or more {@code "%s"} placeholder sequences. {@code null} is treated as
+     * the four-character string {@code "null"}
+     * @param args the arguments to be substituted into the message template.
+     *
+     * @throws UnsupportedOperationException with the specified formatted {@link UnsupportedOperationException#getMessage error
+     * message}.
+     */
+    public static void throwUnsupportedOperationException(@NotNull String template, @Nullable Object... args) {
+        throw new UnsupportedOperationException(lenientFormat(template, args));
+    }
+
+    // region Privates
 
     private static String badElementIndex(int index, int size, @Nullable String desc) {
         if (index < 0) {
@@ -2045,4 +2130,6 @@ public final class Preconditions {
         // end < start
         return lenientFormat("end index (%s) must not be less than start index (%s)", end, start);
     }
+
+    // endregion
 }

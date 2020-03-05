@@ -10,11 +10,11 @@ import java.io.InputStream;
 import static com.azure.cosmos.implementation.base.Preconditions.checkNotNull;
 import static com.azure.cosmos.implementation.base.Preconditions.checkState;
 
-public class CosmosSerializerWrapper implements CosmosSerializer {
+class CosmosSerializerWrapper implements CosmosSerializer {
 
     private final CosmosSerializer serializer;
 
-    public CosmosSerializerWrapper(CosmosSerializer serializer) {
+    CosmosSerializerWrapper(CosmosSerializer serializer) {
         checkNotNull(serializer, "expected non-null serializer");
         this.serializer = serializer;
     }
@@ -24,6 +24,7 @@ public class CosmosSerializerWrapper implements CosmosSerializer {
     }
 
     @Override
+    @Nonnull
     public <T> T fromStream(@Nonnull final InputStream inputStream, @Nonnull final Class<T> type) throws IOException {
 
         checkNotNull(inputStream, "expected non-null inputStream");

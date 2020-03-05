@@ -364,6 +364,7 @@ public class BatchAsyncContainerExecutor implements AutoCloseable {
         //  CosmosContainerProperties from a CosmosAsyncContainer like this:
         //    container.getCachedContainerProperties();
         //  I found no such accessor.
+
         return /*await*/ this.container.GetNonePartitionKeyValueAsync();
     }
 

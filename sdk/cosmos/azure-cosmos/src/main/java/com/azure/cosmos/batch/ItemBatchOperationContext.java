@@ -28,10 +28,21 @@ public class ItemBatchOperationContext implements AutoCloseable {
     private final String partitionKeyRangeId;
     private final DocumentClientRetryPolicy retryPolicy;
 
+    /**
+     * Instantiates a new Item batch operation context.
+     *
+     * @param partitionKeyRangeId the partition key range id
+     */
     public ItemBatchOperationContext(@Nonnull final String partitionKeyRangeId) {
         this(partitionKeyRangeId, null);
     }
 
+    /**
+     * Instantiates a new Item batch operation context.
+     *
+     * @param partitionKeyRangeId the partition key range id
+     * @param retryPolicy the retry policy
+     */
     public ItemBatchOperationContext(
         @Nonnull final String partitionKeyRangeId, @Nullable final DocumentClientRetryPolicy retryPolicy) {
 
@@ -41,22 +52,48 @@ public class ItemBatchOperationContext implements AutoCloseable {
         this.retryPolicy = retryPolicy;
     }
 
+    /**
+     * Gets current batcher.
+     *
+     * @return the current batcher
+     */
     public final BatchAsyncBatcher getCurrentBatcher() {
         return currentBatcher;
     }
 
+    /**
+     * Sets current batcher.
+     *
+     * @param value the value
+     */
     public final void setCurrentBatcher(BatchAsyncBatcher value) {
         currentBatcher = value;
     }
 
+    /**
+     * Gets operation result future.
+     *
+     * @return the operation result future
+     */
     public final CompletableFuture<TransactionalBatchOperationResult<?>> getOperationResultFuture() {
         return this.operationResultFuture;
     }
 
+    /**
+     * Gets partition key range id.
+     *
+     * @return the partition key range id
+     */
     public final String getPartitionKeyRangeId() {
         return partitionKeyRangeId;
     }
 
+    /**
+     * Complete.
+     *
+     * @param completer the completer
+     * @param result the result
+     */
     public final void complete(BatchAsyncBatcher completer, TransactionalBatchOperationResult<?> result) {
         if (this.assertBatcher(completer)) {
             this.operationResultFuture.complete(result);
@@ -64,6 +101,12 @@ public class ItemBatchOperationContext implements AutoCloseable {
         this.close();
     }
 
+    /**
+     * Fail.
+     *
+     * @param completer the completer
+     * @param error the error
+     */
     public final void fail(BatchAsyncBatcher completer, Throwable error) {
         if (this.assertBatcher(completer, error)) {
             this.operationResultFuture.completeExceptionally(error);
@@ -90,6 +133,9 @@ public class ItemBatchOperationContext implements AutoCloseable {
         return this.retryPolicy.shouldRetry(responseMessage);
     }
 
+    /**
+     * Closes the current {@link ItemBatchOperationContext item batch operation context}.
+     */
     public final void close() {
         this.operationResultFuture.cancel(true);
         this.setCurrentBatcher(null);
