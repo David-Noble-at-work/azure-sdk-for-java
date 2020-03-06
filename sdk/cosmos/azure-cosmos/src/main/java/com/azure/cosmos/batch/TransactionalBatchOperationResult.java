@@ -16,6 +16,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nonnull;
+import java.io.IOException;
 import java.io.InputStream;
 import java.time.Duration;
 
@@ -24,6 +25,8 @@ import static com.azure.cosmos.implementation.base.Preconditions.checkState;
 
 /**
  * Represents a result for a specific operation that was part of a {@link TransactionalBatch} request.
+ *
+ * @param <TResource> the type parameter
  */
 public class TransactionalBatchOperationResult<TResource> {
 
@@ -48,10 +51,20 @@ public class TransactionalBatchOperationResult<TResource> {
      */
     private int subStatusCode;
 
+    /**
+     * Instantiates a new Transactional batch operation result.
+     *
+     * @param responseStatus the response status
+     */
     public TransactionalBatchOperationResult(final HttpResponseStatus responseStatus) {
         this.responseStatus = responseStatus;
     }
 
+    /**
+     * Instantiates a new Transactional batch operation result.
+     *
+     * @param other the other
+     */
     public TransactionalBatchOperationResult(@Nonnull final TransactionalBatchOperationResult<TResource> other) {
 
         checkNotNull(other, "expected non-null other");
@@ -67,6 +80,12 @@ public class TransactionalBatchOperationResult<TResource> {
         this.diagnosticsContext = null;
     }
 
+    /**
+     * Instantiates a new Transactional batch operation result.
+     *
+     * @param result the result
+     * @param resource the resource
+     */
     public TransactionalBatchOperationResult(TransactionalBatchOperationResult<TResource> result, TResource resource) {
         this(result);
         this.resource = resource;
@@ -87,6 +106,13 @@ public class TransactionalBatchOperationResult<TResource> {
         return this.diagnosticsContext;
     }
 
+    /**
+     * Sets diagnostics context.
+     *
+     * @param value the value
+     *
+     * @return the diagnostics context
+     */
     public TransactionalBatchOperationResult<TResource> setDiagnosticsContext(final CosmosDiagnosticsContext value) {
         this.diagnosticsContext = value;
         return this;
@@ -103,6 +129,13 @@ public class TransactionalBatchOperationResult<TResource> {
         return this.eTag;
     }
 
+    /**
+     * Sets e tag.
+     *
+     * @param value the value
+     *
+     * @return the e tag
+     */
     public TransactionalBatchOperationResult<TResource> setETag(final String value) {
         this.eTag = value;
         return this;
@@ -117,6 +150,13 @@ public class TransactionalBatchOperationResult<TResource> {
         return requestCharge;
     }
 
+    /**
+     * Sets request charge.
+     *
+     * @param value the value
+     *
+     * @return the request charge
+     */
     public TransactionalBatchOperationResult<TResource> setRequestCharge(final double value) {
         this.requestCharge = value;
         return this;
@@ -131,6 +171,13 @@ public class TransactionalBatchOperationResult<TResource> {
         return this.resource;
     }
 
+    /**
+     * Sets resource.
+     *
+     * @param value the value
+     *
+     * @return the resource
+     */
     public TransactionalBatchOperationResult<TResource> setResource(final TResource value) {
         this.resource = value;
         return this;
@@ -145,32 +192,73 @@ public class TransactionalBatchOperationResult<TResource> {
         return this.resourceStream;
     }
 
+    /**
+     * Sets resource stream.
+     *
+     * @param value the value
+     *
+     * @return the resource stream
+     */
     public TransactionalBatchOperationResult<TResource> setResourceStream(final InputStream value) {
         this.resourceStream = value;
         return this;
     }
 
+    /**
+     * Gets retry after.
+     *
+     * @return the retry after
+     */
     public Duration getRetryAfter() {
         return this.retryAfter;
     }
 
+    /**
+     * Sets retry after.
+     *
+     * @param value the value
+     *
+     * @return the retry after
+     */
     public TransactionalBatchOperationResult<TResource> setRetryAfter(final Duration value) {
         this.retryAfter = value;
         return this;
     }
 
+    /**
+     * Gets status.
+     *
+     * @return the status
+     */
     public HttpResponseStatus getStatus() {
         return this.responseStatus;
     }
 
+    /**
+     * Gets status code.
+     *
+     * @return the status code
+     */
     public int getStatusCode() {
         return this.responseStatus.code();
     }
 
+    /**
+     * Gets sub status code.
+     *
+     * @return the sub status code
+     */
     public int getSubStatusCode() {
         return this.subStatusCode;
     }
 
+    /**
+     * Sets sub status code.
+     *
+     * @param value the value
+     *
+     * @return the sub status code
+     */
     public TransactionalBatchOperationResult<TResource> setSubStatusCode(final int value) {
         this.subStatusCode = value;
         return this;
@@ -186,6 +274,14 @@ public class TransactionalBatchOperationResult<TResource> {
         return 200 <= statusCode && statusCode <= 299;
     }
 
+    /**
+     * Read batch operation result result.
+     *
+     * @param in the in
+     * @param out the out
+     *
+     * @return the result
+     */
     public static Result readBatchOperationResult(
         @Nonnull final ByteBuf in, @Nonnull final Out<TransactionalBatchOperationResult<?>> out) {
 
@@ -217,7 +313,16 @@ public class TransactionalBatchOperationResult<TResource> {
         return Result.SUCCESS;
     }
 
-    public final BatchResponseMessage toResponseMessage() {
+    /**
+     * Converts the current {@link TransactionalBatchOperationResult transactional batch operation result} to a {@link
+     * BatchResponseMessage batch response message}.
+     *
+     * @return a new {@link BatchResponseMessage batch response message}.
+     *
+     * @throws IOException if the {@link TransactionalBatchOperationResult result} body cannot be read from the current
+     * {@link TransactionalBatchOperationResult#getResourceStream resource stream}.
+     */
+    public final BatchResponseMessage toResponseMessage() throws IOException {
 
         BatchResponseMessage.Headers headers = BatchResponseMessage.Headers.builder()
             .subStatusCode(this.getSubStatusCode())
@@ -236,6 +341,11 @@ public class TransactionalBatchOperationResult<TResource> {
             this.getDiagnosticsContext() != null ? this.getDiagnosticsContext() : new CosmosDiagnosticsContext());
     }
 
+    /**
+     * Gets response status.
+     *
+     * @return the response status
+     */
     protected HttpResponseStatus getResponseStatus() {
         return this.responseStatus;
     }

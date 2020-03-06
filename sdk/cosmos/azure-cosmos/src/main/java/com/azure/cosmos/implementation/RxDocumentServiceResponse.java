@@ -101,7 +101,7 @@ public class RxDocumentServiceResponse {
         try {
             resource =  c.getConstructor(String.class).newInstance(responseBody);
         } catch (InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException
-                | NoSuchMethodException | SecurityException e) {
+            | NoSuchMethodException | SecurityException e) {
             throw new IllegalStateException("Failed to instantiate class object.", e);
         }
         if(PathsHelper.isPublicResource(resource)) {
@@ -136,17 +136,17 @@ public class RxDocumentServiceResponse {
                 // In that case it needs to encapsulated in a special document
 
                 String resourceJson = jToken.isValueNode() || jToken.isArray()// to add nulls, arrays, objects
-                        ? String.format("{\"%s\": %s}", Constants.Properties.VALUE, jToken.toString())
-                                : toJson(jToken);
-                        T resource = null;
-                        try {
-                            resource = c.getConstructor(String.class).newInstance(resourceJson);
-                        } catch (InstantiationException | IllegalAccessException | IllegalArgumentException
-                                | InvocationTargetException | NoSuchMethodException | SecurityException e) {
-                            throw new IllegalStateException("Failed to instantiate class object.", e);
-                        }
+                    ? String.format("{\"%s\": %s}", Constants.Properties.VALUE, jToken.toString())
+                    : toJson(jToken);
+                T resource = null;
+                try {
+                    resource = c.getConstructor(String.class).newInstance(resourceJson);
+                } catch (InstantiationException | IllegalAccessException | IllegalArgumentException
+                    | InvocationTargetException | NoSuchMethodException | SecurityException e) {
+                    throw new IllegalStateException("Failed to instantiate class object.", e);
+                }
 
-                        queryResults.add(resource);
+                queryResults.add(resource);
             }
         }
 

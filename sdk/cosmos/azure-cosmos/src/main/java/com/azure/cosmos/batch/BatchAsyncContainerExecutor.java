@@ -9,12 +9,11 @@ import com.azure.cosmos.CosmosBridgeInternal;
 import com.azure.cosmos.PartitionKey;
 import com.azure.cosmos.PartitionKeyDefinition;
 import com.azure.cosmos.ThrottlingRetryOptions;
-import com.azure.cosmos.batch.implementation.BulkPartitionKeyRangeGoneRetryPolicy;
+import com.azure.cosmos.batch.implementation.BatchPartitionKeyRangeGoneRetryPolicy;
 import com.azure.cosmos.batch.unimplemented.CosmosDiagnosticScope;
 import com.azure.cosmos.batch.unimplemented.CosmosDiagnosticsContext;
 import com.azure.cosmos.core.Out;
 import com.azure.cosmos.implementation.AsyncDocumentClient;
-import com.azure.cosmos.implementation.DocumentClientRetryPolicy;
 import com.azure.cosmos.implementation.HttpConstants.HttpHeaders;
 import com.azure.cosmos.implementation.OperationType;
 import com.azure.cosmos.implementation.RequestOptions;
@@ -190,7 +189,7 @@ public class BatchAsyncContainerExecutor implements AutoCloseable {
         final Semaphore limiter = this.getOrAddLimiterForPartitionKeyRange(request.getPartitionKeyRangeId());
         final CosmosDiagnosticsContext diagnosticsContext = new CosmosDiagnosticsContext();
 
-        try (CosmosDiagnosticScope unused = diagnosticsContext.createScope("BatchAsyncContainerExecutor.Limiter")) {
+        try (CosmosDiagnosticScope ignored = diagnosticsContext.createScope("BatchAsyncContainerExecutor.Limiter")) {
             limiter.acquire();
         } catch (InterruptedException error) {
             CompletableFuture<PartitionKeyRangeBatchExecutionResult> future = new CompletableFuture<>();
@@ -218,16 +217,10 @@ public class BatchAsyncContainerExecutor implements AutoCloseable {
             scope.set(diagnosticsContext.createScope("BatchAsyncContainerExecutor.ToResponse"));
             return responseMessage;
 
-        }).thenComposeAsync(responseMessage -> {
-            try {
-                return fromResponseMessageAsync(responseMessage, request, this.clientContext.getSerializerCore());
-            } catch (IOException error) {
-                CompletableFuture<TransactionalBatchResponse> response = new CompletableFuture<>();
-                response.completeExceptionally(error);
-                return response;
-            }
+        }).thenComposeAsync(responseMessage ->
+            fromResponseMessageAsync(responseMessage, request, this.clientContext.getSerializerCore())
 
-        }).thenApplyAsync(response -> new PartitionKeyRangeBatchExecutionResult(
+        ).thenApplyAsync(response -> new PartitionKeyRangeBatchExecutionResult(
             request.getPartitionKeyRangeId(),
             request.getOperations(),
             response)
@@ -243,8 +236,8 @@ public class BatchAsyncContainerExecutor implements AutoCloseable {
         });
     }
 
-    private static DocumentClientRetryPolicy getRetryPolicy(ThrottlingRetryOptions throttlingRetryOptions) {
-        return new BulkPartitionKeyRangeGoneRetryPolicy(
+    private static BatchPartitionKeyRangeGoneRetryPolicy getRetryPolicy(ThrottlingRetryOptions throttlingRetryOptions) {
+        return new BatchPartitionKeyRangeGoneRetryPolicy(
             new ResourceThrottleRetryPolicy(
                 throttlingRetryOptions.getMaxRetryAttemptsOnThrottledRequests(),
                 throttlingRetryOptions.getMaxRetryWaitTimeInSeconds()));

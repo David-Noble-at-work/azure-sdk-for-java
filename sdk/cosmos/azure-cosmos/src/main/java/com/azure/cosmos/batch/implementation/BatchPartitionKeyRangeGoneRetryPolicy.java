@@ -14,14 +14,14 @@ import reactor.core.publisher.Mono;
 import javax.annotation.Nullable;
 import java.time.Duration;
 
-public final class BulkPartitionKeyRangeGoneRetryPolicy extends DocumentClientRetryPolicy {
+public final class BatchPartitionKeyRangeGoneRetryPolicy extends DocumentClientRetryPolicy {
 
     private static final int MAX_RETRIES = 1;
 
     private final DocumentClientRetryPolicy nextRetryPolicy;
     private int attemptedRetries;
 
-    public BulkPartitionKeyRangeGoneRetryPolicy(DocumentClientRetryPolicy nextRetryPolicy) {
+    public BatchPartitionKeyRangeGoneRetryPolicy(DocumentClientRetryPolicy nextRetryPolicy) {
         this.nextRetryPolicy = nextRetryPolicy;
     }
 
@@ -49,7 +49,6 @@ public final class BulkPartitionKeyRangeGoneRetryPolicy extends DocumentClientRe
         return this.nextRetryPolicy.shouldRetry(exception);
     }
 
-    @Override
     public Mono<ShouldRetryResult> shouldRetry(@Nullable final BatchResponseMessage message) {
 
         if (message != null) {
@@ -64,13 +63,9 @@ public final class BulkPartitionKeyRangeGoneRetryPolicy extends DocumentClientRe
             }
         }
 
-        if (this.nextRetryPolicy == null) {
-            return Mono.just(ShouldRetryResult.noRetry());
-        }
-
-        return this.nextRetryPolicy.shouldRetry(message);
+        // We know the answer for null batch response messages (no need to chain)
+        return Mono.just(ShouldRetryResult.noRetry());
     }
-
 
     public void onBeforeSendRequest(RxDocumentServiceRequest request) {
         this.nextRetryPolicy.onBeforeSendRequest(request);

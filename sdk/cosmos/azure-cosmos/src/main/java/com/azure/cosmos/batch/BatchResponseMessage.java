@@ -221,6 +221,7 @@ public final class BatchResponseMessage extends Resource implements AutoCloseabl
             public Builder activityId(@Nonnull final UUID value) {
                 checkNotNull(value, "expected non-null value");
                 this.headers.put(HttpHeaders.ACTIVITY_ID, value.toString());
+                return this;
             }
 
             public Builder etag(@Nonnull final String value) {

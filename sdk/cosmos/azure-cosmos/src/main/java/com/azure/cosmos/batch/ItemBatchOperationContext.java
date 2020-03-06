@@ -3,6 +3,7 @@
 
 package com.azure.cosmos.batch;
 
+import com.azure.cosmos.batch.implementation.BatchPartitionKeyRangeGoneRetryPolicy;
 import com.azure.cosmos.implementation.DocumentClientRetryPolicy;
 import com.azure.cosmos.implementation.IRetryPolicy.ShouldRetryResult;
 import org.slf4j.Logger;
@@ -11,6 +12,7 @@ import reactor.core.publisher.Mono;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import java.io.IOException;
 import java.util.concurrent.CompletableFuture;
 
 import static com.azure.cosmos.implementation.base.Preconditions.checkNotNull;
@@ -25,7 +27,7 @@ public class ItemBatchOperationContext implements AutoCloseable {
     private final CompletableFuture<TransactionalBatchOperationResult<?>> operationResultFuture;
     private BatchAsyncBatcher currentBatcher;
     private final String partitionKeyRangeId;
-    private final DocumentClientRetryPolicy retryPolicy;
+    private final BatchPartitionKeyRangeGoneRetryPolicy retryPolicy;
 
     /**
      * Instantiates a new Item batch operation context.
@@ -43,7 +45,7 @@ public class ItemBatchOperationContext implements AutoCloseable {
      * @param retryPolicy the retry policy
      */
     public ItemBatchOperationContext(
-        @Nonnull final String partitionKeyRangeId, @Nullable final DocumentClientRetryPolicy retryPolicy) {
+        @Nonnull final String partitionKeyRangeId, @Nullable final BatchPartitionKeyRangeGoneRetryPolicy retryPolicy) {
 
         checkNotNull(partitionKeyRangeId, "expected non-null partitionKeyRangeId");
         this.operationResultFuture = new CompletableFuture<>();
@@ -120,6 +122,7 @@ public class ItemBatchOperationContext implements AutoCloseable {
      *
      * @return indicates whether a retry should be attempted.
      */
+    @SuppressWarnings("BlockingMethodInNonBlockingContext")
     public final Mono<ShouldRetryResult> shouldRetry(@Nonnull final TransactionalBatchOperationResult<?> result) {
 
         checkNotNull(result, "expected non-null result");
@@ -128,7 +131,15 @@ public class ItemBatchOperationContext implements AutoCloseable {
             return Mono.just(ShouldRetryResult.noRetry());
         }
 
-        BatchResponseMessage responseMessage = result.toResponseMessage();
+        final BatchResponseMessage responseMessage;
+
+        try {
+            // Does not block inappropriately as IO is performed on memory-based InputStream
+            responseMessage = result.toResponseMessage();
+        } catch (IOException error) {
+            return Mono.error(error);
+        }
+
         return this.retryPolicy.shouldRetry(responseMessage);
     }
 
