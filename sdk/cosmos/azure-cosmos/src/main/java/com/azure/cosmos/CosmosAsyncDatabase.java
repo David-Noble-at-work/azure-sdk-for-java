@@ -433,7 +433,8 @@ public class CosmosAsyncDatabase {
      * @return Cosmos Container
      */
     public CosmosAsyncContainer getContainer(String id) {
-        return new CosmosAsyncContainer(id, this);
+        // TODO (DANOBLE) create this CosmosAsyncContainer with properties, if it is both desirable and possible
+        return new CosmosAsyncContainer(id, this, null);
     }
 
     /** User operations **/

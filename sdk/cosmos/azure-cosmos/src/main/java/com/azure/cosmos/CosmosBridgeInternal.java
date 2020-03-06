@@ -36,8 +36,9 @@ public class CosmosBridgeInternal {
     public static CosmosAsyncContainer getCosmosContainerWithNewClient(CosmosAsyncContainer cosmosContainer,
                                                                        CosmosAsyncDatabase cosmosDatabase,
                                                                        CosmosAsyncClient client) {
-        return new CosmosAsyncContainer(cosmosContainer.getId(),
-            CosmosBridgeInternal.getCosmosDatabaseWithNewClient(cosmosDatabase, client));
+        // TODO (DANOBLE) create this CosmosAsyncContainer with properties, if that's both desirable and possible
+        return new CosmosAsyncContainer(
+            cosmosContainer.getId(), CosmosBridgeInternal.getCosmosDatabaseWithNewClient(cosmosDatabase, client), null);
     }
 
     public static Mono<DatabaseAccount> getDatabaseAccount(CosmosAsyncClient client) {

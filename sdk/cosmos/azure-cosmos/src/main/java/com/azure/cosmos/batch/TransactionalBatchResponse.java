@@ -7,7 +7,6 @@ import com.azure.cosmos.Resource;
 import com.azure.cosmos.batch.serializer.CosmosSerializerCore;
 import com.azure.cosmos.batch.unimplemented.CosmosDiagnostics;
 import com.azure.cosmos.batch.unimplemented.CosmosDiagnosticsContext;
-import com.azure.cosmos.batch.unimplemented.ResponseMessage;
 import com.azure.cosmos.core.Out;
 import com.azure.cosmos.implementation.HttpConstants.HttpHeaders;
 import com.azure.cosmos.implementation.HttpConstants.SubStatusCodes;
@@ -280,7 +279,7 @@ public class TransactionalBatchResponse implements AutoCloseable, List<Transacti
     }
 
     public static CompletableFuture<TransactionalBatchResponse> fromResponseMessageAsync(
-        ResponseMessage responseMessage,
+        BatchResponseMessage responseMessage,
         ServerBatchRequest serverRequest,
         CosmosSerializerCore serializer) {
         return fromResponseMessageAsync(responseMessage, serverRequest, serializer, true);
@@ -288,16 +287,16 @@ public class TransactionalBatchResponse implements AutoCloseable, List<Transacti
 
     /** Creates a transactional batch response} from a response message
      *
-     * @param message the {@link ResponseMessage response message}.
+     * @param message the {@link BatchResponseMessage response message}.
      * @param request the {@link ServerBatchRequest batch request} that produced {@code message}.
      * @param serializer a serializer that will be used to deserialize {@code message} content.
      * @param shouldPromoteOperationStatus indicates whether the operation status should be promoted.
      *
      * @return a future that provides the {@link TransactionalBatchResponse transactional batch response} created
-     * from {@link ResponseMessage message} when the asynchronous operation completes.
+     * from {@link BatchResponseMessage message} when the asynchronous operation completes.
      */
     public static CompletableFuture<TransactionalBatchResponse> fromResponseMessageAsync(
-        @Nonnull final ResponseMessage message,
+        @Nonnull final BatchResponseMessage message,
         @Nonnull final ServerBatchRequest request,
         @Nonnull final CosmosSerializerCore serializer,
         final boolean shouldPromoteOperationStatus) {
@@ -562,7 +561,7 @@ public class TransactionalBatchResponse implements AutoCloseable, List<Transacti
     @Nonnull
     private static CompletableFuture<TransactionalBatchResponse> populateFromContentAsync(
         @Nonnull final InputStream inputStream,
-        @Nonnull final ResponseMessage message,
+        @Nonnull final BatchResponseMessage message,
         @Nonnull final ServerBatchRequest request,
         @Nonnull final CosmosSerializerCore serializer,
         final boolean shouldPromoteOperationStatus) {

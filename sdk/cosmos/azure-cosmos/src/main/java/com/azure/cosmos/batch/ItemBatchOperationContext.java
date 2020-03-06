@@ -3,7 +3,6 @@
 
 package com.azure.cosmos.batch;
 
-import com.azure.cosmos.batch.unimplemented.ResponseMessage;
 import com.azure.cosmos.implementation.DocumentClientRetryPolicy;
 import com.azure.cosmos.implementation.IRetryPolicy.ShouldRetryResult;
 import org.slf4j.Logger;
@@ -129,7 +128,7 @@ public class ItemBatchOperationContext implements AutoCloseable {
             return Mono.just(ShouldRetryResult.noRetry());
         }
 
-        ResponseMessage responseMessage = result.toResponseMessage();
+        BatchResponseMessage responseMessage = result.toResponseMessage();
         return this.retryPolicy.shouldRetry(responseMessage);
     }
 

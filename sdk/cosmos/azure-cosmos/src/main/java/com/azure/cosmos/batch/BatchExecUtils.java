@@ -167,6 +167,8 @@ public final class BatchExecUtils {
      */
     public static byte[] readAll(@Nonnull final InputStream inputStream) throws IOException {
 
+        checkNotNull(inputStream, "expected non-null inputStream");
+
         int length = max(inputStream.available(), MINIMUM_BUFFER_SIZE);
         final ByteBuf buffer = Unpooled.buffer(length);
 

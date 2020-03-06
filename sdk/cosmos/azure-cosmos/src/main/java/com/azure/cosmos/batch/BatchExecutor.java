@@ -7,7 +7,6 @@ import com.azure.cosmos.CosmosAsyncContainer;
 import com.azure.cosmos.PartitionKey;
 import com.azure.cosmos.batch.unimplemented.CosmosDiagnosticScope;
 import com.azure.cosmos.batch.unimplemented.CosmosDiagnosticsContext;
-import com.azure.cosmos.batch.unimplemented.ResponseMessage;
 import com.azure.cosmos.core.Out;
 import com.azure.cosmos.implementation.OperationType;
 import com.azure.cosmos.implementation.RequestOptions;
@@ -102,7 +101,7 @@ public final class BatchExecutor {
             },
             this.diagnosticsContext)
 
-            .thenComposeAsync((ResponseMessage message) -> {
+            .thenComposeAsync((BatchResponseMessage message) -> {
                 responseScope.set(this.diagnosticsContext.createScope("TransactionalBatchResponse"));
                 return fromResponseMessageAsync(message, request, serializerCore);
             })

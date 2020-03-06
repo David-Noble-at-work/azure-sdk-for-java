@@ -3,14 +3,17 @@
 
 package com.azure.cosmos.batch;
 
+import com.azure.cosmos.BridgeInternal;
 import com.azure.cosmos.CosmosAsyncContainer;
+import com.azure.cosmos.CosmosBridgeInternal;
+import com.azure.cosmos.PartitionKey;
 import com.azure.cosmos.PartitionKeyDefinition;
 import com.azure.cosmos.ThrottlingRetryOptions;
 import com.azure.cosmos.batch.implementation.BulkPartitionKeyRangeGoneRetryPolicy;
 import com.azure.cosmos.batch.unimplemented.CosmosDiagnosticScope;
 import com.azure.cosmos.batch.unimplemented.CosmosDiagnosticsContext;
-import com.azure.cosmos.batch.unimplemented.RequestMessage;
 import com.azure.cosmos.core.Out;
+import com.azure.cosmos.implementation.AsyncDocumentClient;
 import com.azure.cosmos.implementation.DocumentClientRetryPolicy;
 import com.azure.cosmos.implementation.HttpConstants.HttpHeaders;
 import com.azure.cosmos.implementation.OperationType;
@@ -18,7 +21,6 @@ import com.azure.cosmos.implementation.RequestOptions;
 import com.azure.cosmos.implementation.ResourceThrottleRetryPolicy;
 import com.azure.cosmos.implementation.ResourceType;
 import com.azure.cosmos.implementation.directconnectivity.WFConstants.BackendHeaders;
-import com.azure.cosmos.implementation.routing.CollectionRoutingMap;
 import com.azure.cosmos.implementation.routing.PartitionKeyInternal;
 import io.netty.util.HashedWheelTimer;
 
@@ -34,10 +36,10 @@ import java.util.concurrent.Semaphore;
 
 import static com.azure.cosmos.BridgeInternal.getPartitionKeyInternal;
 import static com.azure.cosmos.batch.TransactionalBatchResponse.fromResponseMessageAsync;
-import static com.azure.cosmos.implementation.base.Preconditions.checkState;
-import static com.azure.cosmos.implementation.routing.PartitionKeyInternalHelper.getEffectivePartitionKeyString;
 import static com.azure.cosmos.implementation.base.Preconditions.checkArgument;
 import static com.azure.cosmos.implementation.base.Preconditions.checkNotNull;
+import static com.azure.cosmos.implementation.base.Preconditions.checkState;
+import static com.azure.cosmos.implementation.routing.PartitionKeyInternalHelper.getEffectivePartitionKeyString;
 
 /**
  * Bulk batch executor for operations in the same container.
@@ -176,10 +178,10 @@ public class BatchAsyncContainerExecutor implements AutoCloseable {
 
     // region Privates
 
-    private static void addHeadersToRequestMessage(RequestMessage requestMessage, String partitionKeyRangeId) {
+    private static void addHeadersToRequestMessage(BatchRequestMessage requestMessage, String partitionKeyRangeId) {
         requestMessage.getHeaders().setPartitionKeyRangeId(partitionKeyRangeId);
-        requestMessage.getHeaders().put(HttpHeaders.IS_BATCH_REQUEST, Boolean.TRUE);
-        requestMessage.getHeaders().put(HttpHeaders.SHOULD_BATCH_CONTINUE_ON_ERROR, Boolean.TRUE);
+        requestMessage.getHeaders().set(HttpHeaders.IS_BATCH_REQUEST, Boolean.TRUE);
+        requestMessage.getHeaders().set(HttpHeaders.SHOULD_BATCH_CONTINUE_ON_ERROR, Boolean.TRUE);
     }
 
     private CompletableFuture<PartitionKeyRangeBatchExecutionResult> ExecuteAsync(
@@ -260,33 +262,49 @@ public class BatchAsyncContainerExecutor implements AutoCloseable {
 
         checkNotNull(operation, "expected non-null operation");
 
-        PartitionKeyDefinition partitionKeyDefinition = /*await*/ this.container.GetPartitionKeyDefinitionAsync();
-        CollectionRoutingMap collectionRoutingMap = /*await*/ this.container.GetRoutingMapAsync();
+        final AsyncDocumentClient client = CosmosBridgeInternal.getAsyncDocumentClient(this.clientContext.getClient());
+        final PartitionKeyDefinition definition = this.container.getProperties().getPartitionKeyDefinition();
+
+        final CompletableFuture<String> future = new CompletableFuture<>();
         final RequestOptions options = operation.getRequestOptions();
-        byte[] effectivePartitionKey = null;
+        final byte[] effectivePartitionKey;
 
-        if (options != null) {
-
+        if (options == null) {
+            effectivePartitionKey = null;
+        } else {
             final Map<String, Object> properties = options.getProperties();
-
-            if (properties != null) {
-                effectivePartitionKey = (byte[]) properties.computeIfPresent(
+            effectivePartitionKey = properties != null
+                ? (byte[]) properties.computeIfPresent(
                     BackendHeaders.EFFECTIVE_PARTITION_KEY_STRING,
-                    (k, v) -> v instanceof byte[] ? v : null);
-            }
+                    (k, v) -> v instanceof byte[] ? v : null)
+                : null;
         }
 
-        checkState(effectivePartitionKey != null, "EPK is not supported");
+        if (effectivePartitionKey == null) {
+            future.completeExceptionally(new IllegalStateException("expected non-null effectivePartitionKey"));
+            return future;
+        }
 
-        return this.getPartitionKeyInternalAsync(operation).thenApplyAsync(partitionKeyInternal -> {
+        final String resourceId = this.container.getProperties().getResourceId();
 
-            operation.setPartitionKeyJson(partitionKeyInternal.toJson());
+        client.getPartitionKeyRangeCache().getRoutingMapForCollectionAsync(resourceId, null, null)
+            .subscribe(routingMap ->
+                this.getPartitionKeyAsync(operation)
+                    .thenApplyAsync(partitionKey -> {
+                        operation.setPartitionKeyJson(partitionKey.toJsonString());
+                        return routingMap.getRangeByEffectivePartitionKey(getEffectivePartitionKeyString(
+                            BridgeInternal.getPartitionKeyInternal(partitionKey),
+                            definition)
+                        ).getId();
+                    })
+                    .whenCompleteAsync((String id, Throwable error) -> {
+                        if (error != null) {
+                            future.completeExceptionally(error);
+                        }
+                        future.complete(id);
+                    }));
 
-            return collectionRoutingMap.getRangeByEffectivePartitionKey(getEffectivePartitionKeyString(
-                partitionKeyInternal,
-                partitionKeyDefinition)
-            ).getId();
-        });
+        return future;
     }
 
     private static boolean validateOperationEpk(
@@ -342,7 +360,7 @@ public class BatchAsyncContainerExecutor implements AutoCloseable {
             this::ReBatchAsync));
     }
 
-    private CompletableFuture<PartitionKeyInternal> getPartitionKeyInternalAsync(
+    private CompletableFuture<PartitionKey> getPartitionKeyAsync(
         @Nonnull final ItemBatchOperation<?> operation) {
 
         checkNotNull(operation, "expected non-null operation");
@@ -352,20 +370,20 @@ public class BatchAsyncContainerExecutor implements AutoCloseable {
             "expected non-null operation partition key"));
 
         if (partitionKeyInternal != null) {
-            return CompletableFuture.completedFuture(partitionKeyInternal);
+            return CompletableFuture.completedFuture(new PartitionKey(partitionKeyInternal));
         }
 
-        // TODO (DANOBLE) QUESTION: In the .NET code we obtain the NoneValue from ContainerProperties. How can I obtain
-        //  this value from CosmosAsyncContainer?
-        //  The C# code looks like this:
-        //    ContainerProperties containerProperties = await this.GetCachedContainerPropertiesAsync(cancellationToken);
-        //    return containerProperties.GetNoneValue();
-        //  In the absence of a getNonePartitionKeyValueAsync method I thought that I would be access
-        //  CosmosContainerProperties from a CosmosAsyncContainer like this:
-        //    container.getCachedContainerProperties();
-        //  I found no such accessor.
+        // TODO (DANOBLE) Gain access to the None partition key value.
+        //  My reading of the code indicates that we might:
+        //  * replace BatchAsyncContainerExecutor.container with BatchAsyncContainerExecutor.containerResponse or
+        //  * update CosmosAsyncContainerResponse such that it creates its CosmosAsyncContainer with the
+        //    CosmosContainerProperties that it holds.
+        //  I'm assuming other options might exist and might be better. For now I have updated
+        //  CosmosAsyncContainerResponse such that it creates its CosmosAsyncContainer with the
+        //  CosmosContainerProperties that it holds.
 
-        return /*await*/ this.container.GetNonePartitionKeyValueAsync();
+        PartitionKeyDefinition definition = this.container.getProperties().getPartitionKeyDefinition();
+        return CompletableFuture.completedFuture(definition.getNoneValue());
     }
 
     // endregion

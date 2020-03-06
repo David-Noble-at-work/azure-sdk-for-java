@@ -4,7 +4,7 @@
 package com.azure.cosmos.batch.implementation;
 
 import com.azure.cosmos.CosmosClientException;
-import com.azure.cosmos.batch.unimplemented.ResponseMessage;
+import com.azure.cosmos.batch.BatchResponseMessage;
 import com.azure.cosmos.implementation.DocumentClientRetryPolicy;
 import com.azure.cosmos.implementation.HttpConstants.StatusCodes;
 import com.azure.cosmos.implementation.HttpConstants.SubStatusCodes;
@@ -50,7 +50,7 @@ public final class BulkPartitionKeyRangeGoneRetryPolicy extends DocumentClientRe
     }
 
     @Override
-    public Mono<ShouldRetryResult> shouldRetry(@Nullable final ResponseMessage message) {
+    public Mono<ShouldRetryResult> shouldRetry(@Nullable final BatchResponseMessage message) {
 
         if (message != null) {
 

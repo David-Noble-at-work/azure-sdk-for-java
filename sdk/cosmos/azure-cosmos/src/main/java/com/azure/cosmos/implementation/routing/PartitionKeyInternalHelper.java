@@ -4,6 +4,7 @@
 package com.azure.cosmos.implementation.routing;
 
 import com.azure.cosmos.CommonsBridgeInternal;
+import com.azure.cosmos.PartitionKey;
 import com.azure.cosmos.PartitionKeyDefinition;
 import com.azure.cosmos.PartitionKind;
 import com.azure.cosmos.implementation.ByteBufferOutputStream;

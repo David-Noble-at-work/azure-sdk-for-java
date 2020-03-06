@@ -12,6 +12,10 @@ import com.azure.cosmos.implementation.routing.PartitionKeyInternal;
  */
 public class PartitionKey {
 
+    public static final PartitionKey EMPTY = new PartitionKey(PartitionKeyInternal.Empty);
+    public static final PartitionKey NONE = new PartitionKey(PartitionKeyInternal.None);
+    public static final PartitionKey UNDEFINED = new PartitionKey(PartitionKeyInternal.UndefinedPartitionKey);
+
     private final PartitionKeyInternal internalPartitionKey;
     private Object keyObject;
 
@@ -34,10 +38,10 @@ public class PartitionKey {
      * Gets the object used to create partition key
      * @return the partition key object
      */
-    Object getKeyObject(){
+    Object getKeyObject() {
         return keyObject;
     }
-    
+
     /**
      * Create a new instance of the PartitionKey object from a serialized JSON
      * partition key.
@@ -49,7 +53,14 @@ public class PartitionKey {
         return new PartitionKey(PartitionKeyInternal.fromJsonString(jsonString));
     }
 
-    public static final PartitionKey NONE = new PartitionKey(PartitionKeyInternal.None);
+    /**
+     * Serialize the current {@link PartitionKey partition key} to a JSON string.
+     *
+     * @return a JSON string representation of the current {@link PartitionKey partition key}.
+     */
+    public String toJsonString() {
+        return internalPartitionKey.toJson();
+    }
 
     /**
      * Serialize the PartitionKey object to a JSON string.
@@ -60,7 +71,6 @@ public class PartitionKey {
         return this.internalPartitionKey.toJson();
     }
 
-    // TODO: make private
     PartitionKeyInternal getInternalPartitionKey() {
         return internalPartitionKey;
     }

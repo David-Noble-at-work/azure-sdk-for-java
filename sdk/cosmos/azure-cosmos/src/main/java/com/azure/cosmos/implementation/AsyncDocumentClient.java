@@ -5,6 +5,7 @@ package com.azure.cosmos.implementation;
 import com.azure.cosmos.ChangeFeedOptions;
 import com.azure.cosmos.ConnectionPolicy;
 import com.azure.cosmos.ConsistencyLevel;
+import com.azure.cosmos.CosmosAuthorizationTokenResolver;
 import com.azure.cosmos.CosmosKeyCredential;
 import com.azure.cosmos.DatabaseAccount;
 import com.azure.cosmos.FeedOptions;
@@ -12,7 +13,8 @@ import com.azure.cosmos.FeedResponse;
 import com.azure.cosmos.PartitionKey;
 import com.azure.cosmos.Permission;
 import com.azure.cosmos.SqlQuerySpec;
-import com.azure.cosmos.CosmosAuthorizationTokenResolver;
+import com.azure.cosmos.implementation.caches.RxClientCollectionCache;
+import com.azure.cosmos.implementation.caches.RxPartitionKeyRangeCache;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import reactor.core.publisher.Flux;
@@ -264,6 +266,22 @@ public interface AsyncDocumentClient {
             return cosmosKeyCredential;
         }
     }
+
+    /**
+     * Gets the {@link RxClientCollectionCache collection cache} in use by this {@link AsyncDocumentClient client}.
+     *
+     * @return the {@link RxClientCollectionCache collection cache} in use by this {@link AsyncDocumentClient client}.
+     */
+    RxClientCollectionCache getCollectionCache();
+
+    /**
+     * Gets the {@link RxPartitionKeyRangeCache partition key range cache} in use by this {@link AsyncDocumentClient
+     * client}.
+     *
+     * @return the {@link RxPartitionKeyRangeCache partition key range cache} in use by this {@link AsyncDocumentClient
+     * client}.
+     */
+    RxPartitionKeyRangeCache getPartitionKeyRangeCache();
 
     /**
      * Gets the default service endpoint as passed in by the user during construction.

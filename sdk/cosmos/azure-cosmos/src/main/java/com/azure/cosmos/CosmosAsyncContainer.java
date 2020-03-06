@@ -25,12 +25,14 @@ public class CosmosAsyncContainer {
     private final CosmosAsyncDatabase database;
     private final String id;
     private final String link;
+    private final CosmosContainerProperties properties;
     private CosmosAsyncScripts scripts;
 
-    CosmosAsyncContainer(String id, CosmosAsyncDatabase database) {
+    CosmosAsyncContainer(String id, CosmosAsyncDatabase database, CosmosContainerProperties properties) {
         this.id = id;
         this.database = database;
         this.link = getParentLink() + "/" + getURIPathSegment() + "/" + getId();
+        this.properties = properties;
     }
 
     /**
@@ -40,6 +42,15 @@ public class CosmosAsyncContainer {
      */
     public String getId() {
         return id;
+    }
+
+    /**
+     * Get the properties of the {@link CosmosAsyncContainer}
+     *
+     * @return the properties of the {@link CosmosAsyncContainer}
+     */
+    public CosmosContainerProperties getProperties() {
+        return properties;
     }
 
     /**

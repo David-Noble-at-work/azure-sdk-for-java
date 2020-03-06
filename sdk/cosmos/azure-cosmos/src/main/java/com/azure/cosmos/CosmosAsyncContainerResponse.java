@@ -20,7 +20,7 @@ public class CosmosAsyncContainerResponse extends CosmosResponse<CosmosContainer
         } else {
             CosmosContainerProperties props = new CosmosContainerProperties(bodyAsString);
             super.setProperties(props);
-            container = new CosmosAsyncContainer(this.getProperties().getId(), database);
+            container = new CosmosAsyncContainer(this.getProperties().getId(), database, props);
         }
     }
 

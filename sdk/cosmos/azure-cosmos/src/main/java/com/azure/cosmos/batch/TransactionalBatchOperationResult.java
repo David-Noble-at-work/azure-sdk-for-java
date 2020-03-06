@@ -4,7 +4,6 @@
 package com.azure.cosmos.batch;
 
 import com.azure.cosmos.batch.unimplemented.CosmosDiagnosticsContext;
-import com.azure.cosmos.batch.unimplemented.ResponseMessage;
 import com.azure.cosmos.core.Out;
 import com.azure.cosmos.serialization.hybridrow.HybridRowVersion;
 import com.azure.cosmos.serialization.hybridrow.Result;
@@ -218,16 +217,16 @@ public class TransactionalBatchOperationResult<TResource> {
         return Result.SUCCESS;
     }
 
-    public final ResponseMessage toResponseMessage() {
+    public final BatchResponseMessage toResponseMessage() {
 
-        ResponseMessage.Headers headers = ResponseMessage.Headers.builder()
+        BatchResponseMessage.Headers headers = BatchResponseMessage.Headers.builder()
             .subStatusCode(this.getSubStatusCode())
             .etag(this.getETag())
             .retryAfter(this.getRetryAfter())
             .requestCharge(this.requestCharge)
             .build();
 
-        return new ResponseMessage(
+        return new BatchResponseMessage(
             this.getResponseStatus(),
             null,
             null,

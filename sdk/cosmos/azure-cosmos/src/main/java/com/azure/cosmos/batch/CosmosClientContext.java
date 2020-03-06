@@ -8,8 +8,6 @@ import com.azure.cosmos.CosmosAsyncClient;
 import com.azure.cosmos.CosmosAsyncContainer;
 import com.azure.cosmos.PartitionKey;
 import com.azure.cosmos.batch.unimplemented.CosmosDiagnosticsContext;
-import com.azure.cosmos.batch.unimplemented.RequestMessage;
-import com.azure.cosmos.batch.unimplemented.ResponseMessage;
 import com.azure.cosmos.implementation.OperationType;
 import com.azure.cosmos.implementation.RequestOptions;
 import com.azure.cosmos.implementation.ResourceType;
@@ -58,8 +56,8 @@ abstract class CosmosClientContext {
         @Nonnull CosmosAsyncContainer container,
         PartitionKey partitionKey,
         InputStream streamPayload,
-        @Nonnull Consumer<RequestMessage> requestEnricher,
-        @Nonnull Function<ResponseMessage, T> responseCreator,
+        @Nonnull Consumer<BatchRequestMessage> requestEnricher,
+        @Nonnull Function<BatchResponseMessage, T> responseCreator,
         CosmosDiagnosticsContext diagnosticsScope);
 
     /**
@@ -68,7 +66,7 @@ abstract class CosmosClientContext {
      * This allows the calls to be mocked so logic done in a resource can be unit tested.
      */
     @Nonnull
-    abstract CompletableFuture<ResponseMessage> processResourceOperationStreamAsync(
+    abstract CompletableFuture<BatchResponseMessage> processResourceOperationStreamAsync(
         @Nonnull String resourceUri,
         @Nonnull ResourceType resourceType,
         @Nonnull OperationType operationType,
@@ -76,6 +74,6 @@ abstract class CosmosClientContext {
         CosmosAsyncContainer container,
         @Nullable PartitionKey partitionKey,
         @Nonnull InputStream streamPayload,
-        @Nonnull Consumer<RequestMessage> requestEnricher,
+        @Nonnull Consumer<BatchRequestMessage> requestEnricher,
         CosmosDiagnosticsContext diagnosticsScope);
 }

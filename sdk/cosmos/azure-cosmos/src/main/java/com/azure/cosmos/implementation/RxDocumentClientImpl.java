@@ -383,6 +383,15 @@ public class RxDocumentClientImpl implements AsyncDocumentClient, IAuthorization
         this.storeModel = new ServerStoreModel(storeClient);
     }
 
+    @Override
+    public RxClientCollectionCache getCollectionCache() {
+        return this.collectionCache;
+    }
+
+    @Override
+    public RxPartitionKeyRangeCache getPartitionKeyRangeCache() {
+        return this.partitionKeyRangeCache;
+    }
 
     @Override
     public URI getServiceEndpoint() {
@@ -1348,6 +1357,9 @@ public class RxDocumentClientImpl implements AsyncDocumentClient, IAuthorization
             ResourceType.Document,
             collectionLink, null
         ); // This should not got to backend
+
+        // TODO (DANOBLE) expose collectionCache and--maybe--routing map through BridgeInternal
+
         Mono<Utils.ValueHolder<DocumentCollection>> collectionObs = collectionCache.resolveCollectionAsync(request);
 
         return collectionObs
@@ -2927,10 +2939,6 @@ public class RxDocumentClientImpl implements AsyncDocumentClient, IAuthorization
 
     public void setSession(Object sessionContainer) {
         this.sessionContainer = (SessionContainer) sessionContainer;
-    }
-
-    public RxPartitionKeyRangeCache getPartitionKeyRangeCache() {
-        return partitionKeyRangeCache;
     }
 
     public Flux<DatabaseAccount> getDatabaseAccountFromEndpoint(URI endpoint) {

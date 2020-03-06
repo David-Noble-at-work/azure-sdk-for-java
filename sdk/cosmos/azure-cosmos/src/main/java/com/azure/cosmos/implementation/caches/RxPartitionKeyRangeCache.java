@@ -153,7 +153,7 @@ public class RxPartitionKeyRangeCache implements IPartitionKeyRangeCache {
                 });
     }
 
-    private Mono<CollectionRoutingMap> getRoutingMapForCollectionAsync(
+    public Mono<CollectionRoutingMap> getRoutingMapForCollectionAsync(
             String collectionRid,
             CollectionRoutingMap previousRoutingMap,
             Map<String, Object> properties) {

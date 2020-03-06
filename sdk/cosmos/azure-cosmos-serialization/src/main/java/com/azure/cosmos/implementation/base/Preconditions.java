@@ -2023,6 +2023,13 @@ public final class Preconditions {
     }
 
     /**
+     * Threw a new {@link UnsupportedOperationException}
+     */
+    public static void throwUnsupportedOperationException() {
+        throw new UnsupportedOperationException();
+    }
+
+    /**
      * Throws a new {@link UnsupportedOperationException} with the specified formatted error message.
      *
      * @param template a string containing one {@code "%s"} placeholder sequences. {@code null} is treated as the
