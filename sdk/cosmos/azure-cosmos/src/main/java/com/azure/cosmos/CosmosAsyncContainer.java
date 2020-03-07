@@ -148,8 +148,9 @@ public class CosmosAsyncContainer {
      * @return an {@link Mono} containing the single cosmos container response with
      * the replaced document container or an error.
      */
-    public Mono<CosmosAsyncContainerResponse> replace(CosmosContainerProperties containerProperties,
-                                                      CosmosContainerRequestOptions options) {
+    public Mono<CosmosAsyncContainerResponse> replace(
+        CosmosContainerProperties containerProperties,
+        CosmosContainerRequestOptions options) {
         validateResource(containerProperties);
         if (options == null) {
             options = new CosmosContainerRequestOptions();
@@ -190,9 +191,10 @@ public class CosmosAsyncContainer {
      * @param options the request options.
      * @return an {@link Mono} containing the single resource response with the created cosmos item or an error.
      */
-    public <T> Mono<CosmosAsyncItemResponse<T>> createItem(T item,
-                                                           PartitionKey partitionKey,
-                                                           CosmosItemRequestOptions options) {
+    public <T> Mono<CosmosAsyncItemResponse<T>> createItem(
+        T item,
+        PartitionKey partitionKey,
+        CosmosItemRequestOptions options) {
         if (options == null) {
             options = new CosmosItemRequestOptions();
         }
@@ -200,6 +202,15 @@ public class CosmosAsyncContainer {
         return createItem(item, options);
     }
 
+
+    /**
+     * Create an item.
+     *
+     * @param <T> the type parameter
+     * @param item the item
+     * @param options the item request options
+     * @return an {@link Mono} containing the single resource response with the created cosmos item or an error.
+     */
     public <T> Mono<CosmosAsyncItemResponse<T>> createItem(T item, CosmosItemRequestOptions options) {
         if (options == null) {
             options = new CosmosItemRequestOptions();
@@ -264,7 +275,8 @@ public class CosmosAsyncContainer {
      *
      * @param <T> the type parameter
      * @param classType the class type
-     * @return a {@link CosmosPagedFlux} containing one or several feed response pages of the read cosmos items or an error.
+     * @return a {@link CosmosPagedFlux} containing one or several feed response pages of the read cosmos items or an
+     * error.
      */
     public <T> CosmosPagedFlux<T> readAllItems(Class<T> classType) {
         return readAllItems(new FeedOptions(), classType);
@@ -280,7 +292,8 @@ public class CosmosAsyncContainer {
      * @param <T> the type parameter
      * @param options the feed options.
      * @param classType the class type
-     * @return a {@link CosmosPagedFlux} containing one or several feed response pages of the read cosmos items or an error.
+     * @return a {@link CosmosPagedFlux} containing one or several feed response pages of the read cosmos items or an
+     * error.
      */
     public <T> CosmosPagedFlux<T> readAllItems(FeedOptions options, Class<T> classType) {
         return new CosmosPagedFlux<>(pagedFluxOptions -> {
@@ -300,7 +313,8 @@ public class CosmosAsyncContainer {
      * @param <T> the type parameter
      * @param query the query.
      * @param classType the class type
-     * @return a {@link CosmosPagedFlux} containing one or several feed response pages of the obtained items or an error.
+     * @return a {@link CosmosPagedFlux} containing one or several feed response pages of the obtained items or an 
+     * error.
      */
     public <T> CosmosPagedFlux<T> queryItems(String query, Class<T> classType) {
         return queryItems(new SqlQuerySpec(query), classType);
@@ -317,7 +331,8 @@ public class CosmosAsyncContainer {
      * @param query the query.
      * @param options the feed options.
      * @param classType the class type
-     * @return a {@link CosmosPagedFlux} containing one or several feed response pages of the obtained items or an error.
+     * @return a {@link CosmosPagedFlux} containing one or several feed response pages of the obtained items or an 
+     * error.
      */
     public <T> CosmosPagedFlux<T> queryItems(String query, FeedOptions options, Class<T> classType) {
         return queryItems(new SqlQuerySpec(query), options, classType);
@@ -333,7 +348,8 @@ public class CosmosAsyncContainer {
      * @param <T> the type parameter
      * @param querySpec the SQL query specification.
      * @param classType the class type
-     * @return a {@link CosmosPagedFlux} containing one or several feed response pages of the obtained items or an error.
+     * @return a {@link CosmosPagedFlux} containing one or several feed response pages of the obtained items or an 
+     * error.
      */
     public <T> CosmosPagedFlux<T> queryItems(SqlQuerySpec querySpec, Class<T> classType) {
         return queryItems(querySpec, new FeedOptions(), classType);
@@ -350,22 +366,25 @@ public class CosmosAsyncContainer {
      * @param querySpec the SQL query specification.
      * @param options the feed options.
      * @param classType the class type
-     * @return a {@link CosmosPagedFlux} containing one or several feed response pages of the obtained items or an error.
+     * @return a {@link CosmosPagedFlux} containing one or several feed response pages of the obtained items or an 
+     * error.
      */
     public <T> CosmosPagedFlux<T> queryItems(SqlQuerySpec querySpec, FeedOptions options, Class<T> classType) {
         return queryItemsInternal(querySpec, options, classType);
     }
 
-    private <T> CosmosPagedFlux<T> queryItemsInternal(SqlQuerySpec sqlQuerySpec, FeedOptions feedOptions, Class<T> classType) {
+    private <T> CosmosPagedFlux<T> queryItemsInternal(
+        SqlQuerySpec sqlQuerySpec, FeedOptions feedOptions, Class<T> classType) {
         return new CosmosPagedFlux<>(pagedFluxOptions -> {
             setContinuationTokenAndMaxItemCount(pagedFluxOptions, feedOptions);
-            return getDatabase().getDocClientWrapper().queryDocuments(CosmosAsyncContainer.this.getLink(), sqlQuerySpec, feedOptions)
-                                            .map(response ->
-                                                     prepareFeedResponse(response, classType));
+            return getDatabase().getDocClientWrapper()
+                       .queryDocuments(CosmosAsyncContainer.this.getLink(), sqlQuerySpec, feedOptions)
+                       .map(response ->
+                                prepareFeedResponse(response, classType));
         });
     }
 
-    private <T> FeedResponse<T> prepareFeedResponse(FeedResponse<Document> response, Class<T> classType){
+    private <T> FeedResponse<T> prepareFeedResponse(FeedResponse<Document> response, Class<T> classType) {
         return BridgeInternal.createFeedResponseWithQueryMetrics(
             (response.getResults().stream().map(document -> document.toObject(classType))
                  .collect(Collectors.toList())), response.getResponseHeaders(),
@@ -386,7 +405,7 @@ public class CosmosAsyncContainer {
      * @param itemType the item type
      * @return an {@link Mono} containing the cosmos item response with the read item or an error
      */
-    public <T> Mono<CosmosAsyncItemResponse<T>>  readItem(String itemId, PartitionKey partitionKey, Class<T> itemType) {
+    public <T> Mono<CosmosAsyncItemResponse<T>> readItem(String itemId, PartitionKey partitionKey, Class<T> itemType) {
         return readItem(itemId, partitionKey, new CosmosItemRequestOptions(partitionKey), itemType);
     }
 
@@ -404,8 +423,9 @@ public class CosmosAsyncContainer {
      * @param itemType the item type
      * @return an {@link Mono} containing the cosmos item response with the read item or an error
      */
-    public <T> Mono<CosmosAsyncItemResponse<T>>  readItem(String itemId, PartitionKey partitionKey,
-                                                  CosmosItemRequestOptions options, Class<T> itemType) {
+    public <T> Mono<CosmosAsyncItemResponse<T>> readItem(
+        String itemId, PartitionKey partitionKey,
+        CosmosItemRequestOptions options, Class<T> itemType) {
         if (options == null) {
             options = new CosmosItemRequestOptions();
         }
@@ -430,7 +450,7 @@ public class CosmosAsyncContainer {
      * @param partitionKey the partition key
      * @return an {@link Mono} containing the  cosmos item resource response with the replaced item or an error.
      */
-    public <T> Mono<CosmosAsyncItemResponse<T>> replaceItem(T item, String itemId, PartitionKey partitionKey){
+    public <T> Mono<CosmosAsyncItemResponse<T>> replaceItem(T item, String itemId, PartitionKey partitionKey) {
         return replaceItem(item, itemId, partitionKey, new CosmosItemRequestOptions());
     }
 
@@ -448,8 +468,9 @@ public class CosmosAsyncContainer {
      * @param options the request comosItemRequestOptions
      * @return an {@link Mono} containing the  cosmos item resource response with the replaced item or an error.
      */
-    public <T> Mono<CosmosAsyncItemResponse<T>> replaceItem(T item, String itemId, PartitionKey partitionKey,
-                                                     CosmosItemRequestOptions options){
+    public <T> Mono<CosmosAsyncItemResponse<T>> replaceItem(
+        T item, String itemId, PartitionKey partitionKey,
+        CosmosItemRequestOptions options) {
         Document doc = CosmosItemProperties.fromObject(item);
         if (options == null) {
             options = new CosmosItemRequestOptions();
@@ -490,8 +511,9 @@ public class CosmosAsyncContainer {
      * @param options the request options
      * @return an {@link Mono} containing the  cosmos item resource response.
      */
-    public Mono<CosmosAsyncItemResponse> deleteItem(String itemId, PartitionKey partitionKey,
-                                                    CosmosItemRequestOptions options){
+    public Mono<CosmosAsyncItemResponse> deleteItem(
+        String itemId, PartitionKey partitionKey,
+        CosmosItemRequestOptions options) {
         if (options == null) {
             options = new CosmosItemRequestOptions();
         }
@@ -514,6 +536,11 @@ public class CosmosAsyncContainer {
         return builder.toString();
     }
 
+    /**
+     * Gets scripts. This can be used to perform various operations on cosmos scripts
+     *
+     * @return the {@link CosmosAsyncScripts}
+     */
     public CosmosAsyncScripts getScripts() {
         if (this.scripts == null) {
             this.scripts = new CosmosAsyncScripts(this);
@@ -532,9 +559,9 @@ public class CosmosAsyncContainer {
         return new CosmosPagedFlux<>(pagedFluxOptions -> {
             setContinuationTokenAndMaxItemCount(pagedFluxOptions, options);
             return database.getDocClientWrapper().readConflicts(getLink(), options)
-                           .map(response -> BridgeInternal.createFeedResponse(
-                               CosmosConflictProperties.getFromV2Results(response.getResults()),
-                               response.getResponseHeaders()));
+                       .map(response -> BridgeInternal.createFeedResponse(
+                           CosmosConflictProperties.getFromV2Results(response.getResults()),
+                           response.getResponseHeaders()));
         });
     }
 
@@ -561,9 +588,9 @@ public class CosmosAsyncContainer {
         return new CosmosPagedFlux<>(pagedFluxOptions -> {
             setContinuationTokenAndMaxItemCount(pagedFluxOptions, options);
             return database.getDocClientWrapper().queryConflicts(getLink(), query, options)
-                           .map(response -> BridgeInternal.createFeedResponse(
-                               CosmosConflictProperties.getFromV2Results(response.getResults()),
-                               response.getResponseHeaders()));
+                       .map(response -> BridgeInternal.createFeedResponse(
+                           CosmosConflictProperties.getFromV2Results(response.getResults()),
+                           response.getResponseHeaders()));
         });
     }
 
@@ -594,7 +621,7 @@ public class CosmosAsyncContainer {
                        if (offerFeedResponse.getResults().isEmpty()) {
                            return Mono.error(
                                BridgeInternal.createCosmosClientException(HttpConstants.StatusCodes.BADREQUEST,
-                               "No offers found for the resource"));
+                                                                          "No offers found for the resource"));
                        }
                        return database.getDocClientWrapper()
                                   .readOffer(offerFeedResponse.getResults().get(0).getSelfLink())
@@ -622,7 +649,7 @@ public class CosmosAsyncContainer {
                        if (offerFeedResponse.getResults().isEmpty()) {
                            return Mono.error(
                                BridgeInternal.createCosmosClientException(HttpConstants.StatusCodes.BADREQUEST,
-                               "No offers found for the resource"));
+                                                                          "No offers found for the resource"));
                        }
                        Offer offer = offerFeedResponse.getResults().get(0);
                        offer.setThroughput(requestUnitsPerSecond);

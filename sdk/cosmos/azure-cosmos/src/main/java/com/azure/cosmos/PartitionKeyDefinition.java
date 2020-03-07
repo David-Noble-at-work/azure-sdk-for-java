@@ -65,15 +65,10 @@ public final class PartitionKeyDefinition extends JsonSerializable {
     }
 
     /**
-     * Gets the none value for partition keys described by this {@link PartitionKeyDefinition}.
+     * Gets version.
      *
-     * @return a {@link PartitionKey} representing the none value for partition keys described by this
-     * {@link PartitionKeyDefinition}.
+     * @return the {@link PartitionKeyDefinitionVersion}
      */
-    public PartitionKey getNoneValue() {
-        return getNonePartitionKeyValue() == PartitionKeyInternal.None ? PartitionKey.NONE : PartitionKey.UNDEFINED;
-    }
-
     public PartitionKeyDefinitionVersion getVersion() {
         if (this.versionOptional == null) {
             Object versionObject = super.getObject(Constants.Properties.PARTITION_KEY_DEFINITION_VERSION, Object.class);
@@ -97,6 +92,12 @@ public final class PartitionKeyDefinition extends JsonSerializable {
         return this.versionOptional.isPresent() ? this.versionOptional.get() : null;
     }
 
+    /**
+     * Sets version.
+     *
+     * @param version the version
+     * @return the version
+     */
     public PartitionKeyDefinition setVersion(PartitionKeyDefinitionVersion version) {
         this.versionOptional = Optional.of(version);
         return this;
