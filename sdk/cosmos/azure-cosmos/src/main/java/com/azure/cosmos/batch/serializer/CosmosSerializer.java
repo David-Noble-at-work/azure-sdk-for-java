@@ -24,6 +24,8 @@ public interface CosmosSerializer {
      * @param type a class representing the object to deserialize from the {@link InputStream input stream}.
      *
      * @return an object deserialized from the {@code inputStream}.
+     *
+     * @throws IOException if an object of type {@code T} cannot be read from the {@code inputStream}.
      */
     @Nonnull
     <T> T fromStream(InputStream inputStream, Class<T> type) throws IOException;
@@ -36,7 +38,9 @@ public interface CosmosSerializer {
      * @param <T> type of object to instantiate from {@code stream}.
      * @param input any type passed to a {@link CosmosContainer}.
      *
-     * @return an {@link InputStream input stream} containing a JSON representation of the {@code input} object.
+     * @return a new {@link InputStream input stream} containing a JSON representation of the {@code input} object.
+     *
+     * @throws IOException if an {@link InputStream input stream} cannot be created from the {@code input}.
      */
     @Nonnull
     <T> InputStream toStream(T input) throws IOException;

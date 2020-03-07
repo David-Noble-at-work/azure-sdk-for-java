@@ -20,7 +20,7 @@ import static com.azure.cosmos.implementation.base.Preconditions.checkNotNull;
 
 public class BatchCore implements TransactionalBatch {
 
-    private final CosmosClientContext clientContext;
+    private final CosmosAsyncClientContext clientContext;
     private final CosmosAsyncContainer container;
     private final ArrayList<ItemBatchOperation<?>> operations;
     private final PartitionKey partitionKey;
@@ -33,7 +33,7 @@ public class BatchCore implements TransactionalBatch {
      * @param partitionKey The partition key for all items on which batch operations are to be performed.
      */
     public BatchCore(
-        @Nonnull final CosmosClientContext clientContext,
+        @Nonnull final CosmosAsyncClientContext clientContext,
         @Nonnull final CosmosAsyncContainer container,
         @Nonnull final PartitionKey partitionKey) {
 

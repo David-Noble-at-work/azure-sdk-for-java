@@ -60,7 +60,7 @@ public class BatchAsyncContainerExecutor implements AutoCloseable {
     private final ConcurrentHashMap<String, Semaphore> limiters = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<String, BatchAsyncStreamer> streamers = new ConcurrentHashMap<>();
 
-    private final CosmosClientContext clientContext;
+    private final CosmosAsyncClientContext clientContext;
     private final CosmosAsyncContainer container;
     private final int dispatchTimerInSeconds;
     private final int maxOperationCount;
@@ -68,7 +68,7 @@ public class BatchAsyncContainerExecutor implements AutoCloseable {
     private final ThrottlingRetryOptions throttlingRetryOptions;
 
     public BatchAsyncContainerExecutor(
-        @Nonnull final CosmosClientContext clientContext,
+        @Nonnull final CosmosAsyncClientContext clientContext,
         @Nonnull final CosmosAsyncContainer container,
         final int maxOperationCount,
         final int maxPayloadLength) {
@@ -81,7 +81,7 @@ public class BatchAsyncContainerExecutor implements AutoCloseable {
     }
 
     public BatchAsyncContainerExecutor(
-        @Nonnull final CosmosClientContext clientContext,
+        @Nonnull final CosmosAsyncClientContext clientContext,
         @Nonnull final CosmosAsyncContainer container,
         final int maxOperationCount,
         final int maxPayloadLength,

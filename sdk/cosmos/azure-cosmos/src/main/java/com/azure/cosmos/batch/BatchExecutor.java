@@ -29,7 +29,7 @@ public final class BatchExecutor {
 
     private static final Logger logger = LoggerFactory.getLogger(BatchExecutor.class);
 
-    private final CosmosClientContext clientContext;
+    private final CosmosAsyncClientContext clientContext;
     private final CosmosAsyncContainer container;
     private final CosmosDiagnosticsContext diagnosticsContext;
     private final List<ItemBatchOperation<?>> operations;
@@ -37,7 +37,7 @@ public final class BatchExecutor {
     private final PartitionKey partitionKey;
 
     public BatchExecutor(
-        final CosmosClientContext clientContext,
+        final CosmosAsyncClientContext clientContext,
         final CosmosAsyncContainer container,
         final PartitionKey partitionKey,
         final List<ItemBatchOperation<?>> operations,

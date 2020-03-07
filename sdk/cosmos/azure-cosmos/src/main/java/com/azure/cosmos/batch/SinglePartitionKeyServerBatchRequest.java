@@ -31,7 +31,11 @@ public final class SinglePartitionKeyServerBatchRequest extends ServerBatchReque
     }
 
     /**
-     * PartitionKey that applies to all operations in this request.
+     * Returns the {@link PartitionKey partition key} that applies to all operations in this {@link
+     * SinglePartitionKeyServerBatchRequest batch request}.
+     *
+     * @return the {@link PartitionKey partition key} that applies to all operations in this {@link
+     * SinglePartitionKeyServerBatchRequest batch request}.
      */
     public PartitionKey getPartitionKey() {
         return this.partitionKey;

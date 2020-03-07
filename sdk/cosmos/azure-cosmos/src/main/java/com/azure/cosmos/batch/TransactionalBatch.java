@@ -5,9 +5,10 @@ package com.azure.cosmos.batch;
 
 import com.azure.cosmos.CosmosContainer;
 import com.azure.cosmos.PartitionKey;
-import com.azure.cosmos.implementation.RequestOptions;
 import com.azure.cosmos.batch.serializer.CosmosSerializer;
+import com.azure.cosmos.implementation.RequestOptions;
 import io.netty.handler.codec.http.HttpResponseStatus;
+import io.netty.handler.codec.http.HttpStatusClass;
 
 import javax.annotation.Nonnull;
 import java.io.InputStream;
@@ -83,8 +84,9 @@ import static com.azure.cosmos.implementation.base.Preconditions.checkNotNull;
  *     }
  * }
  * }</pre>
- *
- * @see <a href="https://docs.microsoft.com/azure/cosmos-db/concepts-limits">Limits on TransactionalBatch requests</a>.
+ * <p>
+ * <b>See:</b>
+ * <a href="https://docs.microsoft.com/azure/cosmos-db/concepts-limits">Limits on TransactionalBatch requests</a>.
  */
 public interface TransactionalBatch {
     /**
@@ -164,26 +166,28 @@ public interface TransactionalBatch {
      *
      * @return An awaitable response which contains details of execution of the transactional batch.
      * <p>
-     * If the transactional batch executes successfully, the {@link TransactionalBatchResponse#getResponseStatus} on the
-     * response returned will be set to {@link HttpResponseStatus#OK}.
+     * If the transactional batch executes successfully, the value returned by {@link
+     * TransactionalBatchResponse#getResponseStatus} on the response returned will be set to {@link
+     * HttpResponseStatus#OK}.
      * <p>
      * If an operation within the transactional batch fails during execution, no changes from the batch will be
-     * committed and the status of the failing operation is made available in the <see
-     * cref="TransactionalBatchResponse.StatusCode"/>. To get more details about the operation that failed, the response
-     * can be enumerated - this returns {@link TransactionalBatchOperationResult} instances corresponding to each
-     * operation in the transactional batch in the order they were added into the transactional batch. For a result
-     * corresponding to an operation within the transactional batch, the <see cref="TransactionalBatchOperationResult
-     * .StatusCode"/> indicates the status of the operation - if the operation was not executed or it was aborted due to
-     * the failure of another operation within the transactional batch, the value of this field will be HTTP 424 (Failed
-     * Dependency); for the operation that caused the batch to abort, the value of this field will indicate the cause of
-     * failure as a HTTP status code.
+     * committed and the status of the failing operation is made available by {@link
+     * TransactionalBatchResponse#getResponseStatus}. To obtain information about the operations that failed, the
+     * response can be enumerated. This returns {@link TransactionalBatchOperationResult} instances corresponding to
+     * each operation in the transactional batch in the order they were added to the transactional batch. For a result
+     * corresponding to an operation within the transactional batch, use
+     * {@link TransactionalBatchOperationResult#getResponseStatus}
+     * to access the status of the operation. If the operation was not executed or it was aborted due to the failure of
+     * another operation within the transactional batch, the value of this field will be {@link
+     * HttpResponseStatus#FAILED_DEPENDENCY}; for the operation that caused the batch to abort, the value of this field
+     * will indicate the cause of failure as an {@link HttpResponseStatus}.
      * <p>
-     * The {@link TransactionalBatchResponse#getResponseStatus} on the response returned may also have values such as
-     * HTTP 5xx in case of server errors and HTTP 429 (Too Many Requests).
+     * The value returned by {@link TransactionalBatchResponse#getResponseStatus} on the response returned may also have
+     * values such as {@link HttpStatusClass#SERVER_ERROR} in case of server errors and {@link
+     * HttpResponseStatus#TOO_MANY_REQUESTS}.
      * <p>
-     * This API only throws on client side exceptions. This is to increase performance and prevent the overhead of
-     * throwing exceptions. Use {@link TransactionalBatchResponse#isSuccessStatusCode} on the response returned to
-     * ensure that the transactional batch succeeded.
+     * Use {@link TransactionalBatchResponse#isSuccessStatusCode} on the response returned to ensure that the
+     * transactional batch succeeded.
      */
     CompletableFuture<TransactionalBatchResponse> executeAsync();
 

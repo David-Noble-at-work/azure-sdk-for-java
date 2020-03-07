@@ -20,6 +20,7 @@ import io.netty.handler.codec.http.HttpResponseStatus;
 import org.apache.commons.collections4.list.UnmodifiableList;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.io.IOException;
 import java.io.InputStream;
 import java.time.Duration;
@@ -91,20 +92,33 @@ public class TransactionalBatchResponse implements AutoCloseable, List<Transacti
 
     /**
      * Initializes a new instance of the {@link TransactionalBatchResponse} class.
+     *
+     * @param responseStatus the {@link HttpResponseStatus response status}.
+     * @param subStatusCode the response sub-status code.
+     * @param errorMessage an error message or {@code null}.
+     * @param requestCharge the request charge or {@link Double#NaN}
+     * @param retryAfter the retry {@link Duration duration} or {@code null}.
+     * @param activityId the activity ID.
+     * @param diagnosticsContext a {@link CosmosDiagnosticsContext diagnostics context}.
+     * @param operations a {@link List list} of {@link ItemBatchOperation batch operations}.
+     * @param serializer a {@link CosmosSerializerCore serializer}.
      */
     protected TransactionalBatchResponse(
         @Nonnull final HttpResponseStatus responseStatus,
         final int subStatusCode,
-        final String errorMessage,
+        @Nullable final String errorMessage,
         final double requestCharge,
-        final Duration retryAfter,
+        @Nullable final Duration retryAfter,
         @Nonnull final String activityId,
         @Nonnull final CosmosDiagnosticsContext diagnosticsContext,
-        List<ItemBatchOperation<?>> operations,
-        final CosmosSerializerCore serializer) {
+        @Nonnull List<ItemBatchOperation<?>> operations,
+        @Nonnull final CosmosSerializerCore serializer) {
 
         checkNotNull(responseStatus, "expected non-null responseStatus");
+        checkNotNull(activityId, "expected non-null activityId");
         checkNotNull(diagnosticsContext, "expected non-null diagnosticsContext");
+        checkNotNull(operations, "expected non-null operations");
+        checkNotNull(serializer, "expected non-null serializer");
 
         this.responseStatus = responseStatus;
         this.subStatusCode = subStatusCode;
@@ -218,7 +232,9 @@ public class TransactionalBatchResponse implements AutoCloseable, List<Transacti
     // region Methods
 
     /**
-     * Gets a value indicating whether the batch was processed.
+     * Returns a value indicating whether the batch was successfully processed.
+     *
+     * @return a value indicating whether the batch was successfully processed.
      */
     public boolean isSuccessStatusCode() {
         int statusCode = this.responseStatus.code();
@@ -441,15 +457,18 @@ public class TransactionalBatchResponse implements AutoCloseable, List<Transacti
     }
 
     /**
-     * Gets the result of the operation at the provided index in the batch
+     * Gets the result of the operation at the provided index in the current {@link TransactionalBatchResponse batch}.
      * <p>
      * The returned result has a {@link Resource} of the provided type.
      *
-     * @param <T> Type to which the Resource in the operation result needs to be deserialized, when present.
-     *
+     * @param <T> type to which the {@link Resource} in the operation result needs to be de-serialized, when present.
      * @param index 0-based index of the operation in the batch whose result needs to be returned.
+     * @param type the class representing the type to which the {@link Resource} in the operation result needs to be
+     * de-serialized, when present.
      *
-     * @return Result of batch operation that contains a Resource deserialized to specified type.
+     * @return the result of the batch operation that contains a  {@link Resource}  de-serialized to the specified type.
+     *
+     * @throws IOException if the body of the resource stream cannot be read.
      */
     @SuppressWarnings("unchecked")
     public <T> TransactionalBatchOperationResult<T> getOperationResultAtIndex(

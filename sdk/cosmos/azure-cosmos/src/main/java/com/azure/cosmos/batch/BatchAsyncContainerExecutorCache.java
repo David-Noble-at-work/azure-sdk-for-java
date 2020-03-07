@@ -24,7 +24,7 @@ public final class BatchAsyncContainerExecutorCache implements AutoCloseable {
     private final AtomicBoolean closed = new AtomicBoolean();
 
     public BatchAsyncContainerExecutor getExecutorForContainer(
-        @Nonnull final CosmosClientContext clientContext, @Nonnull final CosmosAsyncContainer container) {
+        @Nonnull final CosmosAsyncClientContext clientContext, @Nonnull final CosmosAsyncContainer container) {
 
         checkState(!this.closed.get(), "cache closed");
 

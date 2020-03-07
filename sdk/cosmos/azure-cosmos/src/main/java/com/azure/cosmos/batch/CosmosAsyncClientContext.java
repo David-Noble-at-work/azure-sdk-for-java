@@ -20,27 +20,27 @@ import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
-abstract class CosmosClientContext {
+interface CosmosAsyncClientContext {
     /**
      * Gets the {@link CosmosAsyncClient Cosmos client} that is used for a request.
      *
      * @return the {@link CosmosAsyncClient Cosmos client} that is used for a request.
      */
-    abstract CosmosAsyncClient getClient();
+    CosmosAsyncClient getClient();
 
     /**
      * Gets the {@link ConnectionPolicy Cosmos connection policy} that is used for a request.
      *
      * @return the {@link ConnectionPolicy Cosmos connection policy}  that is used for a request.
      */
-    abstract ConnectionPolicy getConnectionPolicy();
+    ConnectionPolicy getConnectionPolicy();
 
     /**
      * Gets the {@link CosmosSerializerCore Cosmos serializer} that is used for a request.
      *
      * @return the  {@link CosmosSerializerCore Cosmos serializer}  that is used for a request.
      */
-    abstract CosmosSerializerCore getSerializerCore();
+    CosmosSerializerCore getSerializerCore();
 
     /**
      * This is a wrapper around the request invoker method.
@@ -48,7 +48,7 @@ abstract class CosmosClientContext {
      * This allows the calls to be mocked so logic done in a resource can be unit tested.
      */
     @Nonnull
-    abstract <T> CompletableFuture<T> processResourceOperationAsync(
+    <T> CompletableFuture<T> processResourceOperationAsync(
         @Nonnull String resourceUri,
         @Nonnull ResourceType resourceType,
         @Nonnull OperationType operationType,
@@ -66,7 +66,7 @@ abstract class CosmosClientContext {
      * This allows the calls to be mocked so logic done in a resource can be unit tested.
      */
     @Nonnull
-    abstract CompletableFuture<BatchResponseMessage> processResourceOperationStreamAsync(
+    CompletableFuture<BatchResponseMessage> processResourceOperationStreamAsync(
         @Nonnull String resourceUri,
         @Nonnull ResourceType resourceType,
         @Nonnull OperationType operationType,
