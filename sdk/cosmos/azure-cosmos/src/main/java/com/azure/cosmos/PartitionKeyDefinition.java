@@ -65,6 +65,16 @@ public final class PartitionKeyDefinition extends JsonSerializable {
     }
 
     /**
+     * Gets the none value for partition keys described by this {@link PartitionKeyDefinition}.
+     *
+     * @return a {@link PartitionKey partition key} representing the none value for partition keys described by this
+     * {@link PartitionKeyDefinition partition key definition}.
+     */
+    public PartitionKey getNoneValue() {
+        return getNonePartitionKeyValue() == PartitionKeyInternal.None ? PartitionKey.NONE : PartitionKey.UNDEFINED;
+    }
+
+    /**
      * Gets version.
      *
      * @return the {@link PartitionKeyDefinitionVersion}
