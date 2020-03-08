@@ -3,8 +3,11 @@
 
 package com.azure.cosmos;
 
+import com.azure.cosmos.batch.TransactionalBatch;
 import reactor.core.Exceptions;
 import reactor.core.publisher.Mono;
+
+import static com.azure.cosmos.implementation.base.Preconditions.throwUnsupportedOperationException;
 
 /**
  * Provides synchronous methods for reading, deleting, and replacing existing Containers
@@ -37,6 +40,21 @@ public class CosmosContainer {
      */
     public String getId() {
         return id;
+    }
+
+    /**
+     * Creates a new {@link TransactionalBatch transactional batch} for execution a set of operations on this {@link
+     * CosmosContainer document container}.
+     * <p>
+     * All operations in the batch execute against the given {@link PartitionKey partition key}.
+     *
+     * @param partitionKey the {@link PartitionKey partition key}.
+     *
+     * @return new {@link TransactionalBatch transactional batch} for execution a set of operations on this {@link
+     * CosmosContainer document container}.
+     */
+    public TransactionalBatch createTransactionalBatch(PartitionKey partitionKey) {
+        return this.asyncContainer.createTransactionalBatch(partitionKey);
     }
 
     /**

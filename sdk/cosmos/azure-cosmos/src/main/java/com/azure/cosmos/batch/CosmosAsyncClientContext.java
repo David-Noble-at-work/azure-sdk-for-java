@@ -26,6 +26,7 @@ interface CosmosAsyncClientContext {
      *
      * @return the {@link CosmosAsyncClient Cosmos client} that is used for a request.
      */
+    @Nonnull
     CosmosAsyncClient getClient();
 
     /**
@@ -33,6 +34,7 @@ interface CosmosAsyncClientContext {
      *
      * @return the {@link ConnectionPolicy Cosmos connection policy}  that is used for a request.
      */
+    @Nonnull
     ConnectionPolicy getConnectionPolicy();
 
     /**

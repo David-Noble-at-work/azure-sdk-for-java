@@ -10,7 +10,7 @@ import static com.azure.cosmos.implementation.base.Preconditions.checkNotNull;
  */
 public final class CosmosSerializationOptions {
 
-    private static final CosmosSerializationOptions DEFAULT = new CosmosSerializationOptions();
+    public static final CosmosSerializationOptions DEFAULT = new CosmosSerializationOptions();
 
     private final boolean ignoreNullValues;
     private final boolean indented;

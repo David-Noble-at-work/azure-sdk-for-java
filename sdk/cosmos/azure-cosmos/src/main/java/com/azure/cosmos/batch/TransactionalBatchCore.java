@@ -3,22 +3,28 @@
 
 package com.azure.cosmos.batch;
 
+import com.azure.cosmos.ConnectionPolicy;
+import com.azure.cosmos.CosmosAsyncClient;
 import com.azure.cosmos.CosmosAsyncContainer;
 import com.azure.cosmos.PartitionKey;
+import com.azure.cosmos.batch.serializer.CosmosSerializerCore;
 import com.azure.cosmos.batch.unimplemented.CosmosDiagnosticsContext;
 import com.azure.cosmos.implementation.OperationType;
 import com.azure.cosmos.implementation.RequestOptions;
+import com.azure.cosmos.implementation.ResourceType;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.concurrent.CompletableFuture;
+import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.stream.Stream;
 
 import static com.azure.cosmos.implementation.base.Preconditions.checkNotNull;
 
-public class BatchCore implements TransactionalBatch {
+public class TransactionalBatchCore implements TransactionalBatch {
 
     private final CosmosAsyncClientContext clientContext;
     private final CosmosAsyncContainer container;
@@ -26,25 +32,82 @@ public class BatchCore implements TransactionalBatch {
     private final PartitionKey partitionKey;
 
     /**
-     * Initializes a new instance of the {@link BatchCore} class.
+     * Initializes a new instance of the {@link TransactionalBatchCore} class.
      *
-     * @param clientContext Cosmos client context for batch operations to be performed.
-     * @param container Container of items on which the batch operations are to be performed.
-     * @param partitionKey The partition key for all items on which batch operations are to be performed.
+     * @param client the {@link CosmosAsyncClient client} for communicating with the Cosmos service. 
+     * @param container a container of items on which the batch operations are to be performed.
+     * @param partitionKey the partition key for all items on which batch operations are to be performed.
+     * @param connectionPolicy the {@link ConnectionPolicy policy} for connections to the {@code container}.
+     * @param serializerCore a {@link CosmosSerializerCore serializer} instance.
      */
-    public BatchCore(
-        @Nonnull final CosmosAsyncClientContext clientContext,
+    public TransactionalBatchCore(
+        @Nonnull final CosmosAsyncClient client,
         @Nonnull final CosmosAsyncContainer container,
-        @Nonnull final PartitionKey partitionKey) {
+        @Nonnull final PartitionKey partitionKey,
+        @Nonnull final ConnectionPolicy connectionPolicy,
+        @Nonnull final CosmosSerializerCore serializerCore) {
 
-        checkNotNull(clientContext, "expected non-null clientContext");
         checkNotNull(container, "expected non-null container");
         checkNotNull(partitionKey, "expected non-null partitionKey");
+        checkNotNull(client, "expected non-null client");
+        checkNotNull(connectionPolicy, "expected non-null connectionPolicy");
+        checkNotNull(serializerCore, "expected non-null serializerCore");
 
-        this.clientContext = clientContext;
+        this.clientContext = new CosmosAsyncClientContext() {
+
+            @Override
+            @Nonnull
+            public CosmosAsyncClient getClient() {
+                return client;
+            }
+
+            @Override
+            @Nonnull
+            public ConnectionPolicy getConnectionPolicy() {
+                return connectionPolicy;
+            }
+
+            @Override
+            @Nonnull
+            public CosmosSerializerCore getSerializerCore() {
+                return serializerCore;
+            }
+
+            @Override
+            @Nonnull
+            public <T> CompletableFuture<T> processResourceOperationAsync(
+                @Nonnull String resourceUri,
+                @Nonnull ResourceType resourceType,
+                @Nonnull OperationType operationType,
+                @Nullable RequestOptions requestOptions,
+                @Nonnull CosmosAsyncContainer container,
+                PartitionKey partitionKey,
+                InputStream streamPayload,
+                @Nonnull Consumer<BatchRequestMessage> requestEnricher,
+                @Nonnull Function<BatchResponseMessage, T> responseCreator,
+                CosmosDiagnosticsContext diagnosticsScope) {
+                return null;
+            }
+
+            @Override
+            @Nonnull
+            public CompletableFuture<BatchResponseMessage> processResourceOperationStreamAsync(
+                @Nonnull String resourceUri,
+                @Nonnull ResourceType resourceType,
+                @Nonnull OperationType operationType,
+                @Nullable RequestOptions requestOptions,
+                CosmosAsyncContainer container,
+                @Nullable PartitionKey partitionKey,
+                @Nonnull InputStream streamPayload,
+                @Nonnull Consumer<BatchRequestMessage> requestEnricher,
+                CosmosDiagnosticsContext diagnosticsScope) {
+                return null;
+            }
+        };
+
         this.container = container;
-        this.partitionKey = partitionKey;
         this.operations = new ArrayList<>();
+        this.partitionKey = partitionKey;
     }
 
 

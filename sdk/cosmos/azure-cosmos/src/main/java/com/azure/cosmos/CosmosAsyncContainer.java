@@ -2,6 +2,10 @@
 // Licensed under the MIT License.
 package com.azure.cosmos;
 
+import com.azure.cosmos.batch.TransactionalBatchCore;
+import com.azure.cosmos.batch.TransactionalBatch;
+import com.azure.cosmos.batch.serializer.CosmosSerializationOptions;
+import com.azure.cosmos.batch.serializer.CosmosSerializerCore;
 import com.azure.cosmos.implementation.CosmosItemProperties;
 import com.azure.cosmos.implementation.Document;
 import com.azure.cosmos.implementation.HttpConstants;
@@ -11,6 +15,7 @@ import com.azure.cosmos.implementation.RequestOptions;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import javax.annotation.Nonnull;
 import java.util.stream.Collectors;
 
 import static com.azure.cosmos.Resource.validateResource;
@@ -51,6 +56,27 @@ public class CosmosAsyncContainer {
      */
     public CosmosContainerProperties getProperties() {
         return properties;
+    }
+
+    /**
+     * Creates a new {@link TransactionalBatch transactional batch} for execution a set of operations on this {@link
+     * CosmosAsyncContainer document container}.
+     * <p>
+     * All operations in the batch execute against the given {@link PartitionKey partition key}.
+     *
+     * @param partitionKey the {@link PartitionKey partition key}.
+     *
+     * @return new {@link TransactionalBatch transactional batch} for execution a set of operations on this {@link
+     * CosmosAsyncContainer document container}.
+     */
+    @Nonnull
+    public TransactionalBatch createTransactionalBatch(@Nonnull final PartitionKey partitionKey) {
+
+        CosmosAsyncClient client = this.database.getClient();
+        ConnectionPolicy connectionPolicy = client.getConnectionPolicy();
+        CosmosSerializerCore serializerCore = CosmosSerializerCore.create(CosmosSerializationOptions.DEFAULT);
+
+        return new TransactionalBatchCore(client, this, partitionKey, connectionPolicy, serializerCore);
     }
 
     /**
@@ -313,7 +339,7 @@ public class CosmosAsyncContainer {
      * @param <T> the type parameter
      * @param query the query.
      * @param classType the class type
-     * @return a {@link CosmosPagedFlux} containing one or several feed response pages of the obtained items or an 
+     * @return a {@link CosmosPagedFlux} containing one or several feed response pages of the obtained items or an
      * error.
      */
     public <T> CosmosPagedFlux<T> queryItems(String query, Class<T> classType) {
@@ -331,7 +357,7 @@ public class CosmosAsyncContainer {
      * @param query the query.
      * @param options the feed options.
      * @param classType the class type
-     * @return a {@link CosmosPagedFlux} containing one or several feed response pages of the obtained items or an 
+     * @return a {@link CosmosPagedFlux} containing one or several feed response pages of the obtained items or an
      * error.
      */
     public <T> CosmosPagedFlux<T> queryItems(String query, FeedOptions options, Class<T> classType) {
@@ -348,7 +374,7 @@ public class CosmosAsyncContainer {
      * @param <T> the type parameter
      * @param querySpec the SQL query specification.
      * @param classType the class type
-     * @return a {@link CosmosPagedFlux} containing one or several feed response pages of the obtained items or an 
+     * @return a {@link CosmosPagedFlux} containing one or several feed response pages of the obtained items or an
      * error.
      */
     public <T> CosmosPagedFlux<T> queryItems(SqlQuerySpec querySpec, Class<T> classType) {
@@ -366,7 +392,7 @@ public class CosmosAsyncContainer {
      * @param querySpec the SQL query specification.
      * @param options the feed options.
      * @param classType the class type
-     * @return a {@link CosmosPagedFlux} containing one or several feed response pages of the obtained items or an 
+     * @return a {@link CosmosPagedFlux} containing one or several feed response pages of the obtained items or an
      * error.
      */
     public <T> CosmosPagedFlux<T> queryItems(SqlQuerySpec querySpec, FeedOptions options, Class<T> classType) {
