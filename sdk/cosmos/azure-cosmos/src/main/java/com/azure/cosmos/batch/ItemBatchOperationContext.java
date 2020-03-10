@@ -3,8 +3,6 @@
 
 package com.azure.cosmos.batch;
 
-import com.azure.cosmos.batch.implementation.BatchPartitionKeyRangeGoneRetryPolicy;
-import com.azure.cosmos.implementation.DocumentClientRetryPolicy;
 import com.azure.cosmos.implementation.IRetryPolicy.ShouldRetryResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

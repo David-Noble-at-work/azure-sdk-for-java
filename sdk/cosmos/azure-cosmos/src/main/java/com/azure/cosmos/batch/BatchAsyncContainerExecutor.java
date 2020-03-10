@@ -9,7 +9,6 @@ import com.azure.cosmos.CosmosBridgeInternal;
 import com.azure.cosmos.PartitionKey;
 import com.azure.cosmos.PartitionKeyDefinition;
 import com.azure.cosmos.ThrottlingRetryOptions;
-import com.azure.cosmos.batch.implementation.BatchPartitionKeyRangeGoneRetryPolicy;
 import com.azure.cosmos.batch.unimplemented.CosmosDiagnosticScope;
 import com.azure.cosmos.batch.unimplemented.CosmosDiagnosticsContext;
 import com.azure.cosmos.core.Out;
