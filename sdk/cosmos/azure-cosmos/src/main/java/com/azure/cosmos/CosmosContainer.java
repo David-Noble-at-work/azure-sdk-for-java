@@ -4,6 +4,16 @@
 package com.azure.cosmos;
 
 import com.azure.cosmos.batch.TransactionalBatch;
+import com.azure.cosmos.models.CosmosAsyncItemResponse;
+import com.azure.cosmos.models.CosmosContainerProperties;
+import com.azure.cosmos.models.CosmosContainerRequestOptions;
+import com.azure.cosmos.models.CosmosContainerResponse;
+import com.azure.cosmos.models.CosmosItemRequestOptions;
+import com.azure.cosmos.models.CosmosItemResponse;
+import com.azure.cosmos.models.FeedOptions;
+import com.azure.cosmos.models.ModelBridgeInternal;
+import com.azure.cosmos.models.PartitionKey;
+import com.azure.cosmos.models.SqlQuerySpec;
 import reactor.core.Exceptions;
 import reactor.core.publisher.Mono;
 
@@ -211,6 +221,8 @@ public class CosmosContainer {
      * @return the cosmos sync item response
      * @throws CosmosClientException the cosmos client exception
      */
+    @SuppressWarnings("unchecked")
+    // Note: @kushagraThapar and @moderakh to ensure this casting is valid
     public <T> CosmosItemResponse<T> upsertItem(Object item, CosmosItemRequestOptions options) throws
         CosmosClientException {
         return (CosmosItemResponse<T>) this.mapItemResponseAndBlock(this.asyncContainer.upsertItem(item, options));
@@ -226,7 +238,7 @@ public class CosmosContainer {
     <T> CosmosItemResponse<T> mapItemResponseAndBlock(Mono<CosmosAsyncItemResponse<T>> itemMono) throws
         CosmosClientException {
         try {
-            return (CosmosItemResponse<T>) itemMono
+            return itemMono
                                                .map(this::convertResponse)
                                                .block();
         } catch (Exception ex) {
@@ -239,8 +251,8 @@ public class CosmosContainer {
         }
     }
 
-    private CosmosItemResponse mapDeleteItemResponseAndBlock(Mono<CosmosAsyncItemResponse> deleteItemMono) throws
-        CosmosClientException {
+    private CosmosItemResponse<Object> mapDeleteItemResponseAndBlock(Mono<CosmosAsyncItemResponse<Object>> deleteItemMono)
+        throws CosmosClientException {
         try {
             return deleteItemMono
                        .map(this::convertResponse)
@@ -355,7 +367,7 @@ public class CosmosContainer {
      * @return the cosmos sync item response
      * @throws CosmosClientException the cosmos client exception
      */
-    public CosmosItemResponse deleteItem(String itemId, PartitionKey partitionKey,
+    public CosmosItemResponse<Object> deleteItem(String itemId, PartitionKey partitionKey,
                                             CosmosItemRequestOptions options) throws CosmosClientException {
         return  this.mapDeleteItemResponseAndBlock(asyncContainer.deleteItem(itemId, partitionKey, options));
     }
@@ -380,8 +392,8 @@ public class CosmosContainer {
      * @param response the cosmos item response
      * @return the cosmos sync item response
      */
-    private <T> CosmosItemResponse<T> convertResponse(CosmosAsyncItemResponse response) {
-        return new CosmosItemResponse<T>(response);
+    private <T> CosmosItemResponse<T> convertResponse(CosmosAsyncItemResponse<T> response) {
+        return ModelBridgeInternal.<T>createCosmosItemResponse(response);
     }
 
     private <T> CosmosPagedIterable<T> getCosmosPagedIterable(CosmosPagedFlux<T> cosmosPagedFlux) {

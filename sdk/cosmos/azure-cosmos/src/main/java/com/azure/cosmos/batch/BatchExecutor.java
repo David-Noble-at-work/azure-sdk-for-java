@@ -4,14 +4,14 @@
 package com.azure.cosmos.batch;
 
 import com.azure.cosmos.CosmosAsyncContainer;
-import com.azure.cosmos.PartitionKey;
+import com.azure.cosmos.batch.serializer.CosmosSerializerCore;
 import com.azure.cosmos.batch.unimplemented.CosmosDiagnosticScope;
 import com.azure.cosmos.batch.unimplemented.CosmosDiagnosticsContext;
 import com.azure.cosmos.core.Out;
 import com.azure.cosmos.implementation.OperationType;
 import com.azure.cosmos.implementation.RequestOptions;
 import com.azure.cosmos.implementation.ResourceType;
-import com.azure.cosmos.batch.serializer.CosmosSerializerCore;
+import com.azure.cosmos.models.PartitionKey;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -22,7 +22,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
-import static com.azure.cosmos.implementation.base.Preconditions.checkState;
 import static com.azure.cosmos.batch.TransactionalBatchResponse.fromResponseMessageAsync;
 
 public final class BatchExecutor {

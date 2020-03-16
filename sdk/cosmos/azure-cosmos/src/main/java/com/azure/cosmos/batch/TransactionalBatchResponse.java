@@ -3,13 +3,13 @@
 
 package com.azure.cosmos.batch;
 
-import com.azure.cosmos.Resource;
 import com.azure.cosmos.batch.serializer.CosmosSerializerCore;
 import com.azure.cosmos.batch.unimplemented.CosmosDiagnostics;
 import com.azure.cosmos.batch.unimplemented.CosmosDiagnosticsContext;
 import com.azure.cosmos.core.Out;
 import com.azure.cosmos.implementation.HttpConstants.HttpHeaders;
 import com.azure.cosmos.implementation.HttpConstants.SubStatusCodes;
+import com.azure.cosmos.models.Resource;
 import com.azure.cosmos.serialization.hybridrow.HybridRowVersion;
 import com.azure.cosmos.serialization.hybridrow.Result;
 import com.azure.cosmos.serialization.hybridrow.recordio.RecordIOStream;
@@ -41,12 +41,14 @@ import static com.azure.cosmos.implementation.base.Preconditions.checkNotNull;
 /**
  * Response of a {@link TransactionalBatch} request.
  */
+@SuppressWarnings("try")
 public class TransactionalBatchResponse implements AutoCloseable, List<TransactionalBatchOperationResult<?>> {
 
     // region Fields
 
     private static final String EMPTY_UUID = "00000000-0000-0000-0000-000000000000";
 
+    @SuppressWarnings("rawtypes")
     private static final AtomicReferenceFieldUpdater<TransactionalBatchResponse, UnmodifiableList> operationsUpdater =
         AtomicReferenceFieldUpdater.newUpdater(
             TransactionalBatchResponse.class,
@@ -273,6 +275,7 @@ public class TransactionalBatchResponse implements AutoCloseable, List<Transacti
      */
     public void close() throws Exception {
 
+        @SuppressWarnings("unchecked")
         UnmodifiableList<ItemBatchOperation<?>> operations = operationsUpdater.getAndSet(this, null);
 
         // TODO (DANOBLE) Aggregate exceptions to ensure that all operations that be closed are closed.
@@ -452,7 +455,7 @@ public class TransactionalBatchResponse implements AutoCloseable, List<Transacti
      * @return Result of operation at the provided index in the batch.
      */
     @Override
-    public TransactionalBatchOperationResult get(int index) {
+    public TransactionalBatchOperationResult<?> get(int index) {
         return this.results.get(index);
     }
 
@@ -485,7 +488,7 @@ public class TransactionalBatchResponse implements AutoCloseable, List<Transacti
             resource = this.getSerializer().fromStream(result.getResourceStream(), type);
         }
 
-        return new TransactionalBatchOperationResult<T>(result, resource);
+        return new TransactionalBatchOperationResult<>(result, resource);
     }
 
     @Override
@@ -534,7 +537,7 @@ public class TransactionalBatchResponse implements AutoCloseable, List<Transacti
     }
 
     @Override
-    public TransactionalBatchOperationResult<?> set(int index, TransactionalBatchOperationResult result) {
+    public TransactionalBatchOperationResult<?> set(int index, TransactionalBatchOperationResult<?> result) {
         return this.results.set(index, result);
     }
 

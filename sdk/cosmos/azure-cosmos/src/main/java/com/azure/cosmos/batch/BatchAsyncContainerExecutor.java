@@ -6,8 +6,6 @@ package com.azure.cosmos.batch;
 import com.azure.cosmos.BridgeInternal;
 import com.azure.cosmos.CosmosAsyncContainer;
 import com.azure.cosmos.CosmosBridgeInternal;
-import com.azure.cosmos.PartitionKey;
-import com.azure.cosmos.PartitionKeyDefinition;
 import com.azure.cosmos.ThrottlingRetryOptions;
 import com.azure.cosmos.batch.unimplemented.CosmosDiagnosticScope;
 import com.azure.cosmos.batch.unimplemented.CosmosDiagnosticsContext;
@@ -20,6 +18,8 @@ import com.azure.cosmos.implementation.ResourceThrottleRetryPolicy;
 import com.azure.cosmos.implementation.ResourceType;
 import com.azure.cosmos.implementation.directconnectivity.WFConstants.BackendHeaders;
 import com.azure.cosmos.implementation.routing.PartitionKeyInternal;
+import com.azure.cosmos.models.PartitionKey;
+import com.azure.cosmos.models.PartitionKeyDefinition;
 import io.netty.util.HashedWheelTimer;
 
 import javax.annotation.Nonnull;
@@ -51,6 +51,7 @@ import static com.azure.cosmos.implementation.routing.PartitionKeyInternalHelper
  * <p>
  * {@link BatchAsyncStreamer}
  */
+@SuppressWarnings("try")  // the resources this class closes may throw an InterruptedException and we cannot prevent it
 public class BatchAsyncContainerExecutor implements AutoCloseable {
 
     private static final int DEFAULT_DISPATCH_TIMER_IN_SECONDS = 1;
@@ -239,7 +240,7 @@ public class BatchAsyncContainerExecutor implements AutoCloseable {
         return new BatchPartitionKeyRangeGoneRetryPolicy(
             new ResourceThrottleRetryPolicy(
                 throttlingRetryOptions.getMaxRetryAttemptsOnThrottledRequests(),
-                throttlingRetryOptions.getMaxRetryWaitTimeInSeconds()));
+                throttlingRetryOptions.getMaxRetryWaitTime()));
     }
 
     private CompletableFuture<Void> ReBatchAsync(ItemBatchOperation<?> operation) {

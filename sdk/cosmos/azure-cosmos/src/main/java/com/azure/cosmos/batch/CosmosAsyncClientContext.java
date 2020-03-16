@@ -6,12 +6,12 @@ package com.azure.cosmos.batch;
 import com.azure.cosmos.ConnectionPolicy;
 import com.azure.cosmos.CosmosAsyncClient;
 import com.azure.cosmos.CosmosAsyncContainer;
-import com.azure.cosmos.PartitionKey;
+import com.azure.cosmos.batch.serializer.CosmosSerializerCore;
 import com.azure.cosmos.batch.unimplemented.CosmosDiagnosticsContext;
 import com.azure.cosmos.implementation.OperationType;
 import com.azure.cosmos.implementation.RequestOptions;
 import com.azure.cosmos.implementation.ResourceType;
-import com.azure.cosmos.batch.serializer.CosmosSerializerCore;
+import com.azure.cosmos.models.PartitionKey;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;

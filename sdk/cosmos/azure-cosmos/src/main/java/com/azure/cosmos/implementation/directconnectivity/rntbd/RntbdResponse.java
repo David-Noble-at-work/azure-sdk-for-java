@@ -29,14 +29,13 @@ import static com.azure.cosmos.implementation.base.Preconditions.checkArgument;
 import static com.azure.cosmos.implementation.base.Preconditions.checkNotNull;
 import static com.azure.cosmos.implementation.base.Preconditions.checkState;
 import static com.azure.cosmos.implementation.directconnectivity.rntbd.RntbdConstants.RntbdResponseHeader;
-import static java.lang.Integer.min;
 
 @JsonPropertyOrder({ "messageLength", "referenceCount", "frame", "headers", "content" })
 public final class RntbdResponse implements ReferenceCounted {
 
     // region Fields
 
-    private static final AtomicIntegerFieldUpdater REFERENCE_COUNT =
+    private static final AtomicIntegerFieldUpdater<RntbdResponse> REFERENCE_COUNT =
         AtomicIntegerFieldUpdater.newUpdater(RntbdResponse.class, "referenceCount");
 
     @JsonSerialize(using = PayloadSerializer.class)

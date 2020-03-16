@@ -3,8 +3,6 @@
 
 package com.azure.cosmos.batch;
 
-import com.azure.cosmos.AccessCondition;
-import com.azure.cosmos.PartitionKey;
 import com.azure.cosmos.batch.serializer.CosmosSerializerCore;
 import com.azure.cosmos.batch.unimplemented.CosmosDiagnosticsContext;
 import com.azure.cosmos.core.UtfAnyString;
@@ -15,6 +13,8 @@ import com.azure.cosmos.implementation.ResourceType;
 import com.azure.cosmos.implementation.directconnectivity.WFConstants.BackendHeaders;
 import com.azure.cosmos.implementation.directconnectivity.rntbd.RntbdConstants.RntbdOperationType;
 import com.azure.cosmos.implementation.directconnectivity.rntbd.RntbdConstants.RntbdResourceType;
+import com.azure.cosmos.models.AccessCondition;
+import com.azure.cosmos.models.PartitionKey;
 import com.azure.cosmos.serialization.hybridrow.Result;
 import com.azure.cosmos.serialization.hybridrow.io.RowWriter;
 import com.azure.cosmos.serialization.hybridrow.layouts.TypeArgument;
@@ -32,6 +32,7 @@ import static com.azure.cosmos.implementation.base.Preconditions.checkNotNull;
 /**
  * Represents an operation on an item which will be executed as part of a batch request on a container.
  */
+@SuppressWarnings("try")
 public final class ItemBatchOperation<TResource> implements AutoCloseable {
 
     // region Fields

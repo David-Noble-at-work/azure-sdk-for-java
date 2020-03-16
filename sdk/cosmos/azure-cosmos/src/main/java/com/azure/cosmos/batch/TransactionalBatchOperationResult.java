@@ -360,7 +360,7 @@ public class TransactionalBatchOperationResult<TResource> {
         @Nonnull final RowReader reader,
         @Nonnull final Out<TransactionalBatchOperationResult<?>> batchOperationResult) {
 
-        batchOperationResult.set(new TransactionalBatchOperationResult());
+        batchOperationResult.set(new TransactionalBatchOperationResult<Object>());
         @SuppressWarnings("rawtypes") Out out = new Out();
 
         while (reader.read()) {

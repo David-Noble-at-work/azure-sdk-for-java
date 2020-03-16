@@ -4,9 +4,9 @@
 package com.azure.cosmos.batch;
 
 import com.azure.cosmos.CosmosContainer;
-import com.azure.cosmos.PartitionKey;
 import com.azure.cosmos.batch.serializer.CosmosSerializer;
 import com.azure.cosmos.implementation.RequestOptions;
+import com.azure.cosmos.models.PartitionKey;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.netty.handler.codec.http.HttpStatusClass;
 

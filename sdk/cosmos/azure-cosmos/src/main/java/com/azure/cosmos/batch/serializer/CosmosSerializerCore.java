@@ -3,19 +3,19 @@
 
 package com.azure.cosmos.batch.serializer;
 
-import com.azure.cosmos.CosmosConflictProperties;
-import com.azure.cosmos.CosmosContainerProperties;
-import com.azure.cosmos.CosmosDatabaseProperties;
-import com.azure.cosmos.CosmosPermissionProperties;
-import com.azure.cosmos.CosmosStoredProcedureProperties;
-import com.azure.cosmos.CosmosTriggerProperties;
-import com.azure.cosmos.CosmosUserDefinedFunctionProperties;
-import com.azure.cosmos.CosmosUserProperties;
-import com.azure.cosmos.DatabaseAccount;
-import com.azure.cosmos.SqlQuerySpec;
 import com.azure.cosmos.implementation.Offer;
 import com.azure.cosmos.implementation.ResourceType;
 import com.azure.cosmos.implementation.query.PartitionedQueryExecutionInfo;
+import com.azure.cosmos.models.CosmosConflictProperties;
+import com.azure.cosmos.models.CosmosContainerProperties;
+import com.azure.cosmos.models.CosmosDatabaseProperties;
+import com.azure.cosmos.models.CosmosPermissionProperties;
+import com.azure.cosmos.models.CosmosStoredProcedureProperties;
+import com.azure.cosmos.models.CosmosTriggerProperties;
+import com.azure.cosmos.models.CosmosUserDefinedFunctionProperties;
+import com.azure.cosmos.models.CosmosUserProperties;
+import com.azure.cosmos.models.DatabaseAccount;
+import com.azure.cosmos.models.SqlQuerySpec;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;

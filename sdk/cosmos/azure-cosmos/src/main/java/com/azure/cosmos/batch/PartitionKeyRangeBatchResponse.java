@@ -3,10 +3,10 @@
 
 package com.azure.cosmos.batch;
 
-import com.azure.cosmos.Resource;
+import com.azure.cosmos.batch.serializer.CosmosSerializerCore;
 import com.azure.cosmos.batch.unimplemented.CosmosDiagnostics;
 import com.azure.cosmos.batch.unimplemented.CosmosDiagnosticsContext;
-import com.azure.cosmos.batch.serializer.CosmosSerializerCore;
+import com.azure.cosmos.models.Resource;
 import io.netty.handler.codec.http.HttpResponseStatus;
 
 import javax.annotation.Nonnull;
@@ -21,6 +21,7 @@ import static com.azure.cosmos.implementation.base.Preconditions.checkNotNull;
 /**
  * Response of a cross partition key batch request.
  */
+@SuppressWarnings("try")
 public class PartitionKeyRangeBatchResponse extends TransactionalBatchResponse {
 
     // region Fields
@@ -61,7 +62,7 @@ public class PartitionKeyRangeBatchResponse extends TransactionalBatchResponse {
 
         // We expect number of results == number of operations here
 
-        this.resultsByOperationIndex = new TransactionalBatchOperationResult[originalOperationsCount];
+        this.resultsByOperationIndex = new TransactionalBatchOperationResult<?>[originalOperationsCount];
 
         for (int index = 0; index < serverResponse.getBatchOperations().size(); index++) {
 

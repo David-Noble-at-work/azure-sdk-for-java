@@ -3,8 +3,8 @@
 
 package com.azure.cosmos.batch;
 
-import com.azure.cosmos.PartitionKey;
 import com.azure.cosmos.batch.serializer.CosmosSerializerCore;
+import com.azure.cosmos.models.PartitionKey;
 
 import javax.annotation.Nonnull;
 import java.util.List;

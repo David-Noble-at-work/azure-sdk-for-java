@@ -17,6 +17,7 @@ import io.netty.buffer.Unpooled;
 
 import javax.annotation.Nonnull;
 import java.io.InputStream;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
@@ -25,6 +26,9 @@ import static com.azure.cosmos.implementation.base.Preconditions.checkNotNull;
 import static com.azure.cosmos.implementation.base.Preconditions.checkState;
 import static java.lang.Math.max;
 
+/**
+ * This class represents a server batch request.
+ */
 public abstract class ServerBatchRequest {
 
     private static final int SERIALIZATION_OVERHEAD_ESTIMATE_IN_BYTES = 200;  // an over estimate
@@ -32,6 +36,7 @@ public abstract class ServerBatchRequest {
     private final int maxBodyLength;
     private final int maxOperationCount;
     private final CosmosSerializerCore serializerCore;
+
     private ByteBufOutputStream bodyStream;
     private long bodyStreamPositionBeforeWritingCurrentRecord;
     private int lastWrittenOperationIndex;
@@ -39,7 +44,7 @@ public abstract class ServerBatchRequest {
     private boolean shouldDeleteLastWrittenRecord;
 
     /**
-     * Initializes a new instance of the {@link ServerBatchRequest} class.
+     * Initializes a new {@link ServerBatchRequest request} instance.
      *
      * @param maxBodyLength Maximum length allowed for the request body.
      * @param maxOperationCount Maximum number of operations allowed in the request.
@@ -51,14 +56,27 @@ public abstract class ServerBatchRequest {
         this.serializerCore = serializerCore;
     }
 
+    /**
+     * Gets the list of {@link ItemBatchOperation operations} in this {@link ServerBatchRequest batch request}.
+     *
+     * The list returned by this method is unmodifiable.
+     *
+     * @return the list of {@link ItemBatchOperation operations} in this {@link ServerBatchRequest batch request}.
+     */
+    @Nonnull
     public final List<ItemBatchOperation<?>> getOperations() {
-        return this.operations;
+        return Collections.unmodifiableList(this.operations);
     }
 
     /**
-     * Returns the body Stream. Caller is responsible for disposing it after use.
+     * Returns a new {@link InputStream input stream} over the contents of the {@link ServerBatchRequest request} body.
+     * <p>
+     * The caller is responsible for closing the {@link InputStream input stream} returned. Subsequent calls to this
+     * method will throw an {@link IllegalStateException}.
      *
-     * @return Body stream.
+     * @return a new {@link InputStream input stream} over the contents of the {@link ServerBatchRequest request} body.
+     *
+     * @throws IllegalStateException if this method was already called on this {@link ServerBatchRequest request}.
      */
     @Nonnull
     public final InputStream transferBodyStream() {
@@ -72,8 +90,9 @@ public abstract class ServerBatchRequest {
     }
 
     /**
-     * Adds as many operations as possible from the provided list of operations in the list order while having the body
-     * stream not exceed maxBodySize.
+     * Adds as many operations as possible from the given list of operations.
+     * <p>
+     * Operations are added in order while ensuring the request stream never exceeds {@link #maxBodyLength}.
      *
      * @param operations Operations to be added; read-only.
      *
@@ -85,8 +104,9 @@ public abstract class ServerBatchRequest {
     }
 
     /**
-     * Adds as many operations as possible from the provided list of operations in the list order while having the body
-     * stream not exceed maxBodySize.
+     * Adds as many operations as possible from the given list of operations.
+     * <p>
+     * Operations are added in order while ensuring the request body never exceeds {@link #maxBodyLength}.
      *
      * @param operations operations to be added; read-only.
      * @param ensureContinuousOperationIndexes specifies whether to stop adding operations to the request once there is
@@ -158,6 +178,7 @@ public abstract class ServerBatchRequest {
         });
     }
 
+    @Nonnull
     private ResultValue<ByteBuf> writeOperation(final long index) {
 
         checkArgument(0 <= index && index < Integer.MAX_VALUE, "expected 0 <= index && index <= %s, not %s",
@@ -197,6 +218,8 @@ public abstract class ServerBatchRequest {
         return new ResultValue<>(Result.SUCCESS, rowBuffer.buffer());
     }
 
+    // region Types
+
     private static final class BatchOverflowException extends RuntimeException {
 
         static BatchOverflowException INSTANCE = new BatchOverflowException();
@@ -211,4 +234,6 @@ public abstract class ServerBatchRequest {
         int estimatedMaxOperationLength = 0;
         int materializedCount = 0;
     }
+
+    // endregion
 }

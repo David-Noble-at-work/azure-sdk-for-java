@@ -2,19 +2,18 @@
 // Licensed under the MIT License.
 package com.azure.cosmos.implementation;
 
-import com.azure.cosmos.ChangeFeedOptions;
 import com.azure.cosmos.ConnectionPolicy;
 import com.azure.cosmos.ConsistencyLevel;
 import com.azure.cosmos.CosmosAuthorizationTokenResolver;
 import com.azure.cosmos.CosmosKeyCredential;
-import com.azure.cosmos.DatabaseAccount;
-import com.azure.cosmos.FeedOptions;
-import com.azure.cosmos.FeedResponse;
-import com.azure.cosmos.PartitionKey;
-import com.azure.cosmos.Permission;
-import com.azure.cosmos.SqlQuerySpec;
 import com.azure.cosmos.implementation.caches.RxClientCollectionCache;
 import com.azure.cosmos.implementation.caches.RxPartitionKeyRangeCache;
+import com.azure.cosmos.models.DatabaseAccount;
+import com.azure.cosmos.models.FeedOptions;
+import com.azure.cosmos.models.FeedResponse;
+import com.azure.cosmos.models.PartitionKey;
+import com.azure.cosmos.models.Permission;
+import com.azure.cosmos.models.SqlQuerySpec;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import reactor.core.publisher.Flux;
@@ -23,6 +22,7 @@ import reactor.core.publisher.Mono;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.List;
+
 /**
  * Provides a client-side logical representation of the Azure Cosmos DB
  * database service. This async client is used to configure and execute requests
@@ -1368,5 +1368,4 @@ public interface AsyncDocumentClient {
      * Close this {@link AsyncDocumentClient} instance and cleans up the resources.
      */
     void close();
-
 }

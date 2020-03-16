@@ -112,7 +112,7 @@ public class BatchAsyncBatcher {
             }
 
             final List<ItemBatchOperation<?>> batchOperations = batchRequest.getBatchOperations();
-            final CompletableFuture<?>[] futures = new CompletableFuture[batchOperations.size()];
+            final CompletableFuture<?>[] futures = new CompletableFuture<?>[batchOperations.size()];
             int i = -1;
 
             final AtomicReference<RuntimeException> aggregateExceptionReference = new AtomicReference<>();

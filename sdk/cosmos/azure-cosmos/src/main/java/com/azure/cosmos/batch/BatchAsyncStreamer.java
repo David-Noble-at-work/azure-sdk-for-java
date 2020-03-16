@@ -76,7 +76,7 @@ public class BatchAsyncStreamer implements AutoCloseable {
         this.resetTimer();
     }
 
-    public final void add(ItemBatchOperation operation) {
+    public final void add(ItemBatchOperation<?> operation) {
 
         BatchAsyncBatcher toDispatch = null;
 

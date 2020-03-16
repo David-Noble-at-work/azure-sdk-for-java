@@ -3,12 +3,12 @@
 
 package com.azure.cosmos.batch;
 
-import com.azure.cosmos.CosmosError;
-import com.azure.cosmos.Resource;
 import com.azure.cosmos.batch.unimplemented.CosmosDiagnosticsContext;
 import com.azure.cosmos.implementation.HttpConstants.HttpHeaders;
 import com.azure.cosmos.implementation.RxDocumentServiceResponse;
 import com.azure.cosmos.implementation.directconnectivity.StoreResponse;
+import com.azure.cosmos.models.CosmosError;
+import com.azure.cosmos.models.Resource;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.netty.handler.codec.http.HttpStatusClass;
 
