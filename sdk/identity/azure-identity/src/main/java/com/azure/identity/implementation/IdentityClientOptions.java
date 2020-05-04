@@ -6,6 +6,8 @@ package com.azure.identity.implementation;
 import com.azure.core.http.HttpClient;
 import com.azure.core.http.HttpPipeline;
 import com.azure.core.http.ProxyOptions;
+import com.azure.core.util.Configuration;
+import com.azure.identity.KnownAuthorityHosts;
 
 import java.time.Duration;
 import java.util.Objects;
@@ -17,7 +19,6 @@ import java.util.function.Function;
  * Options to configure the IdentityClient.
  */
 public final class IdentityClientOptions {
-    private static final String DEFAULT_AUTHORITY_HOST = "https://login.microsoftonline.com/";
     private static final int MAX_RETRY_DEFAULT_LIMIT = 3;
 
     private String authorityHost;
@@ -28,12 +29,14 @@ public final class IdentityClientOptions {
     private ExecutorService executorService;
     private Duration tokenRefreshOffset = Duration.ofMinutes(2);
     private HttpClient httpClient;
+    private String keePassDatabasePath;
 
     /**
      * Creates an instance of IdentityClientOptions with default settings.
      */
     public IdentityClientOptions() {
-        authorityHost = DEFAULT_AUTHORITY_HOST;
+        Configuration configuration = Configuration.getGlobalConfiguration();
+        authorityHost = configuration.get(Configuration.PROPERTY_AZURE_AUTHORITY_HOST, KnownAuthorityHosts.AZURE_CLOUD);
         maxRetry = MAX_RETRY_DEFAULT_LIMIT;
         retryTimeout = i -> Duration.ofSeconds((long) Math.pow(2, i.getSeconds() - 1));
     }
@@ -191,5 +194,23 @@ public final class IdentityClientOptions {
     public IdentityClientOptions setHttpClient(HttpClient httpClient) {
         this.httpClient = httpClient;
         return this;
+    }
+
+    /**
+     * Specifies the database to extract IntelliJ cached credentials from.
+     * @param keePassDatabasePath the database to extract intellij credentials from.
+     * @return IdentityClientOptions
+     */
+    public IdentityClientOptions setIntelliJKeePassDatabasePath(String keePassDatabasePath) {
+        this.keePassDatabasePath = keePassDatabasePath;
+        return this;
+    }
+
+    /**
+     * Get the KeePass database path.
+     * @return the KeePass database path to extract inellij credentials from.
+     */
+    public String getIntelliJKeePassDatabasePath() {
+        return keePassDatabasePath;
     }
 }

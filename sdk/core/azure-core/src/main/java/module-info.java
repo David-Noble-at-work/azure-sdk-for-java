@@ -10,8 +10,8 @@ module com.azure.core {
     requires transitive com.fasterxml.jackson.core;
     requires transitive com.fasterxml.jackson.databind;
 
-    requires com.fasterxml.jackson.dataformat.xml;
-    requires com.fasterxml.jackson.datatype.jsr310;
+    requires transitive com.fasterxml.jackson.dataformat.xml;
+    requires transitive com.fasterxml.jackson.datatype.jsr310;
 
     // public API surface area
     exports com.azure.core.annotation;
@@ -38,7 +38,14 @@ module com.azure.core {
     opens com.azure.core.implementation.serializer to com.fasterxml.jackson.databind;
     opens com.azure.core.implementation.serializer.jsonwrapper to com.fasterxml.jackson.databind;
 
-    // service provider interfaces
+    // Exports HttpProviders#getAllHttpClients API to azure-core-test module
+    exports com.azure.core.implementation.http to com.azure.core.test;
+
+    // Exports JsonSerializer to azure-core-serializer-json-gson and azure-core-serializer-json-jackson
+    exports com.azure.core.implementation.serializer to com.azure.core.serializer.json.gson,
+        com.azure.core.serializer.json.jackson;
+
+    // Service Provider Interfaces
     uses com.azure.core.util.tracing.Tracer;
     uses com.azure.core.http.HttpClientProvider;
     uses com.azure.core.http.policy.BeforeRetryPolicyProvider;

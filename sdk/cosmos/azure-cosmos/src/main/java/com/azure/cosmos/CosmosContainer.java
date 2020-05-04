@@ -14,6 +14,9 @@ import com.azure.cosmos.models.FeedOptions;
 import com.azure.cosmos.models.ModelBridgeInternal;
 import com.azure.cosmos.models.PartitionKey;
 import com.azure.cosmos.models.SqlQuerySpec;
+import com.azure.cosmos.util.CosmosPagedFlux;
+import com.azure.cosmos.util.CosmosPagedIterable;
+import com.azure.cosmos.util.UtilBridgeInternal;
 import reactor.core.Exceptions;
 import reactor.core.publisher.Mono;
 
@@ -239,8 +242,8 @@ public class CosmosContainer {
         CosmosClientException {
         try {
             return itemMono
-                                               .map(this::convertResponse)
-                                               .block();
+                .map(this::convertResponse)
+                .block();
         } catch (Exception ex) {
             final Throwable throwable = Exceptions.unwrap(ex);
             if (throwable instanceof CosmosClientException) {
@@ -397,7 +400,7 @@ public class CosmosContainer {
     }
 
     private <T> CosmosPagedIterable<T> getCosmosPagedIterable(CosmosPagedFlux<T> cosmosPagedFlux) {
-        return new CosmosPagedIterable<>(cosmosPagedFlux);
+        return UtilBridgeInternal.createCosmosPagedIterable(cosmosPagedFlux);
     }
 
 }

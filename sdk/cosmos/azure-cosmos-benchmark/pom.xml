@@ -9,12 +9,12 @@ Licensed under the MIT License.
     <groupId>com.azure</groupId>
     <artifactId>azure-client-sdk-parent</artifactId>
     <version>1.7.0</version> <!-- {x-version-update;com.azure:azure-client-sdk-parent;current} -->
-    <relativePath>../../../pom.client.xml</relativePath>
+    <relativePath>../../parents/azure-client-sdk-parent</relativePath>
   </parent>
 
   <groupId>com.azure</groupId>
   <artifactId>azure-cosmos-benchmark</artifactId>
-  <version>4.0.1-beta.3</version> <!-- {x-version-update;com.azure:azure-cosmos-benchmark;current} -->
+  <version>4.0.1-beta.1</version> <!-- {x-version-update;com.azure:azure-cosmos-benchmark;current} -->
   <name>Microsoft Azure SDK for SQL API of Azure Cosmos DB Service - Benchmarking tool</name>
   <description>This package contains Benchmarking tool for Microsoft Azure SDK for SQL API of Azure Cosmos DB Service</description>
   <url>https://github.com/Azure/azure-sdk-for-java</url>
@@ -34,6 +34,7 @@ Licensed under the MIT License.
   <properties>
     <jacoco.min.linecoverage>0.01</jacoco.min.linecoverage>
     <jacoco.min.branchcoverage>0.01</jacoco.min.branchcoverage>
+    <jacoco.skip.coverage.check>true</jacoco.skip.coverage.check>
   </properties>
 
   <dependencies>
@@ -90,7 +91,7 @@ Licensed under the MIT License.
     <dependency>
       <groupId>io.netty</groupId>
       <artifactId>netty-tcnative</artifactId>
-      <version>2.0.26.Final</version> {x-version-update;io.netty:netty-tcnative;external_dependency}
+      <version>2.0.29.Final</version> {x-version-update;io.netty:netty-tcnative;external_dependency}
       <classifier>linux-x86_64</classifier>
     </dependency>
     -->
@@ -117,6 +118,12 @@ Licensed under the MIT License.
       <groupId>org.apache.logging.log4j</groupId>
       <artifactId>log4j-slf4j-impl</artifactId>
       <version>2.13.0</version> <!-- {x-version-update;org.apache.logging.log4j:log4j-slf4j-impl;external_dependency} -->
+    </dependency>
+
+    <dependency>
+      <groupId>org.apache.commons</groupId>
+      <artifactId>commons-lang3</artifactId>
+      <version>3.8.1</version> <!-- {x-version-update;org.apache.commons:commons-lang3;external_dependency} -->
     </dependency>
 
     <dependency>
@@ -206,8 +213,38 @@ Licensed under the MIT License.
           <skip>true</skip>
         </configuration>
       </plugin>
+
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-enforcer-plugin</artifactId>
+        <version>3.0.0-M3</version> <!-- {x-version-update;org.apache.maven.plugins:maven-enforcer-plugin;external_dependency} -->
+        <configuration>
+          <rules>
+            <bannedDependencies>
+              <includes>
+                <include>com.azure:*</include>
+                <include>com.beust:jcommander:[1.58]</include> <!-- {x-include-update;com.beust:jcommander;external_dependency} -->
+                <include>io.dropwizard.metrics:metrics-core:[4.1.0]</include> <!-- {x-include-update;cosmos_io.dropwizard.metrics:metrics-core;external_dependency} -->
+                <include>org.slf4j:slf4j-api:[1.7.28]</include> <!-- {x-include-update;org.slf4j:slf4j-api;external_dependency} -->
+
+                <!-- The benchmarking tool is allowed additional dependencies as it is not a library -->
+                <include>com.google.guava:guava:[25.0-jre]</include> <!-- {x-include-update;cosmos_com.google.guava:guava;external_dependency} -->
+                <include>io.dropwizard.metrics:metrics-graphite:[4.1.0]</include> <!-- {x-include-update;cosmos_io.dropwizard.metrics:metrics-graphite;external_dependency} -->
+                <include>io.dropwizard.metrics:metrics-jvm:[4.1.0]</include> <!-- {x-include-update;cosmos_io.dropwizard.metrics:metrics-jvm;external_dependency} -->
+                <include>io.micrometer:micrometer-registry-azure-monitor:[1.2.0]</include> <!-- {x-include-update;io.micrometer:micrometer-registry-azure-monitor;external_dependency} -->
+                <include>io.micrometer:micrometer-registry-graphite:[1.2.0]</include> <!-- {x-include-update;io.micrometer:micrometer-registry-graphite;external_dependency} -->
+                <include>org.apache.commons:commons-lang3:[3.8.1]</include> <!-- {x-include-update;org.apache.commons:commons-lang3;external_dependency} -->
+                <include>org.apache.logging.log4j:log4j-api:[2.11.1]</include> <!-- {x-include-update;org.apache.logging.log4j:log4j-api;external_dependency} -->
+                <include>org.apache.logging.log4j:log4j-core:[2.11.1]</include> <!-- {x-include-update;org.apache.logging.log4j:log4j-core;external_dependency} -->
+                <include>org.apache.logging.log4j:log4j-slf4j-impl:[2.13.0]</include> <!-- {x-include-update;org.apache.logging.log4j:log4j-slf4j-impl;external_dependency} -->
+              </includes>
+            </bannedDependencies>
+          </rules>
+        </configuration>
+      </plugin>
     </plugins>
   </build>
+
   <profiles>
     <profile>
       <!-- unit test -->
@@ -420,7 +457,7 @@ Licensed under the MIT License.
           <plugin>
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-assembly-plugin</artifactId>
-            <version>3.2.0</version> <!-- {x-version-update;org.apache.maven.plugins:maven-assembly-plugin;external_dependency} -->
+            <version>2.2</version> <!-- {x-version-update;org.apache.maven.plugins:maven-assembly-plugin;external_dependency} -->
             <executions>
               <execution>
                 <id>make-assembly</id>

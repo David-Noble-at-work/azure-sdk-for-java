@@ -13,11 +13,11 @@ import com.fasterxml.jackson.databind.ser.impl.SimpleBeanPropertyFilter;
 import io.netty.buffer.ByteBuf;
 import io.netty.handler.codec.CorruptedFrameException;
 
-import static com.azure.cosmos.implementation.base.Preconditions.checkArgument;
-import static com.azure.cosmos.implementation.base.Preconditions.checkNotNull;
-import static com.azure.cosmos.implementation.base.Preconditions.checkState;
-import static com.azure.cosmos.implementation.base.Strings.lenientFormat;
 import static com.azure.cosmos.implementation.directconnectivity.rntbd.RntbdConstants.RntbdHeader;
+import static com.azure.cosmos.implementation.guava25.base.Preconditions.checkArgument;
+import static com.azure.cosmos.implementation.guava25.base.Preconditions.checkNotNull;
+import static com.azure.cosmos.implementation.guava25.base.Preconditions.checkState;
+import static com.azure.cosmos.implementation.guava27.Strings.lenientFormat;
 
 @JsonPropertyOrder({ "id", "name", "type", "present", "required", "value" })
 final class RntbdToken {

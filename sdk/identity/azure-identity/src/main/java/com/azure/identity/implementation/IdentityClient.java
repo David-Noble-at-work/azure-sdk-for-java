@@ -6,28 +6,31 @@ package com.azure.identity.implementation;
 import com.azure.core.credential.AccessToken;
 import com.azure.core.credential.TokenRequestContext;
 import com.azure.core.exception.ClientAuthenticationException;
-import com.azure.core.http.ProxyOptions;
-import com.azure.core.util.CoreUtils;
 import com.azure.core.http.HttpClient;
 import com.azure.core.http.HttpPipeline;
 import com.azure.core.http.HttpPipelineBuilder;
+import com.azure.core.http.ProxyOptions;
 import com.azure.core.http.policy.HttpLogOptions;
 import com.azure.core.http.policy.HttpLoggingPolicy;
 import com.azure.core.http.policy.HttpPipelinePolicy;
 import com.azure.core.http.policy.HttpPolicyProviders;
 import com.azure.core.http.policy.RetryPolicy;
+import com.azure.core.util.CoreUtils;
 import com.azure.core.util.logging.ClientLogger;
 import com.azure.core.util.serializer.JacksonAdapter;
 import com.azure.core.util.serializer.SerializerAdapter;
 import com.azure.core.util.serializer.SerializerEncoding;
+import com.azure.identity.CredentialUnavailableException;
 import com.azure.identity.DeviceCodeInfo;
 import com.azure.identity.implementation.util.CertificateUtil;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.microsoft.aad.msal4j.AuthorizationCodeParameters;
 import com.microsoft.aad.msal4j.ClientCredentialFactory;
 import com.microsoft.aad.msal4j.ClientCredentialParameters;
 import com.microsoft.aad.msal4j.ConfidentialClientApplication;
 import com.microsoft.aad.msal4j.DeviceCodeFlowParameters;
 import com.microsoft.aad.msal4j.PublicClientApplication;
+import com.microsoft.aad.msal4j.RefreshTokenParameters;
 import com.microsoft.aad.msal4j.SilentParameters;
 import com.microsoft.aad.msal4j.UserNamePasswordParameters;
 import reactor.core.publisher.Mono;
@@ -38,10 +41,12 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.net.ConnectException;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.Proxy;
 import java.net.Proxy.Type;
+import java.net.SocketTimeoutException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
@@ -57,12 +62,13 @@ import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.Map;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Random;
 import java.util.Scanner;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
 /**
@@ -97,7 +103,7 @@ public class IdentityClient {
      */
     IdentityClient(String tenantId, String clientId, IdentityClientOptions options) {
         if (tenantId == null) {
-            tenantId = "common";
+            tenantId = "organizations";
         }
         if (options == null) {
             options = new IdentityClientOptions();
@@ -108,7 +114,7 @@ public class IdentityClient {
         if (clientId == null) {
             this.publicClientApplication = null;
         } else {
-            String authorityUrl = options.getAuthorityHost().replaceAll("/+$", "") + "/organizations/" + tenantId;
+            String authorityUrl = options.getAuthorityHost().replaceAll("/+$", "") + "/" + tenantId;
             PublicClientApplication.Builder publicClientApplicationBuilder = PublicClientApplication.builder(clientId);
             try {
                 publicClientApplicationBuilder = publicClientApplicationBuilder.authority(authorityUrl);
@@ -141,6 +147,63 @@ public class IdentityClient {
                 publicClientApplicationBuilder.executorService(options.getExecutorService());
             }
             this.publicClientApplication = publicClientApplicationBuilder.build();
+        }
+    }
+
+
+    public Mono<MsalToken> authenticateWithIntelliJ(TokenRequestContext request) {
+        try {
+            IntelliJCacheAccessor cacheAccessor = new IntelliJCacheAccessor(options.getIntelliJKeePassDatabasePath());
+            IntelliJAuthMethodDetails authDetails = cacheAccessor.getAuthDetailsIfAvailable();
+            String authType = authDetails.getAuthMethod();
+            if (authType.equalsIgnoreCase("SP")) {
+                Map<String, String> spDetails = cacheAccessor
+                    .getIntellijServicePrincipalDetails(authDetails.getCredFilePath());
+                String authorityUrl = spDetails.get("authURL") + spDetails.get("tenant");
+                try {
+                    ConfidentialClientApplication.Builder applicationBuilder =
+                        ConfidentialClientApplication.builder(spDetails.get("client"),
+                            ClientCredentialFactory.createFromSecret(spDetails.get("key")))
+                            .authority(authorityUrl);
+
+                    // If http pipeline is available, then it should override the proxy options if any configured.
+                    if (httpPipelineAdapter != null) {
+                        applicationBuilder.httpClient(httpPipelineAdapter);
+                    } else if (options.getProxyOptions() != null) {
+                        applicationBuilder.proxy(proxyOptionsToJavaNetProxy(options.getProxyOptions()));
+                    }
+
+                    if (options.getExecutorService() != null) {
+                        applicationBuilder.executorService(options.getExecutorService());
+                    }
+
+                    ConfidentialClientApplication application = applicationBuilder.build();
+                    return Mono.fromFuture(application.acquireToken(
+                        ClientCredentialParameters.builder(new HashSet<>(request.getScopes()))
+                            .build()))
+                               .map(ar -> new MsalToken(ar, options));
+                } catch (MalformedURLException e) {
+                    return Mono.error(e);
+                }
+            } else if (authType.equalsIgnoreCase("DC")) {
+
+                JsonNode intelliJCredentials = cacheAccessor.getDeviceCodeCredentials();
+                String refreshToken = intelliJCredentials.get("refreshToken").textValue();
+
+                RefreshTokenParameters parameters = RefreshTokenParameters
+                                                        .builder(new HashSet<>(request.getScopes()), refreshToken)
+                                                        .build();
+
+                return Mono.defer(() -> Mono.fromFuture(publicClientApplication.acquireToken(parameters))
+                                    .map(ar -> new MsalToken(ar, options)));
+
+            } else {
+                throw logger.logExceptionAsError(new CredentialUnavailableException(
+                    "IntelliJ Authentication not available."
+                    + " Please login with Azure Tools for IntelliJ plugin in the IDE."));
+            }
+        } catch (IOException e) {
+            return Mono.error(e);
         }
     }
 
@@ -200,15 +263,21 @@ public class IdentityClient {
                 }
                 if (line.startsWith(WINDOWS_PROCESS_ERROR_MESSAGE) || line.matches(LINUX_MAC_PROCESS_ERROR_MESSAGE)) {
                     throw logger.logExceptionAsError(
-                        new ClientAuthenticationException("Azure CLI not installed", null));
+                        new CredentialUnavailableException("Azure CLI not installed"));
                 }
                 output.append(line);
             }
             String processOutput = output.toString();
 
+            process.waitFor(10, TimeUnit.SECONDS);
+
             if (process.exitValue() != 0) {
                 if (processOutput.length() > 0) {
                     String redactedOutput = redactInfo("\"accessToken\": \"(.*?)(\"|$)", processOutput);
+                    if (redactedOutput.contains("az login") || redactedOutput.contains("az account set")) {
+                        throw logger.logExceptionAsError(
+                            new CredentialUnavailableException("Please run 'az login' to set up account"));
+                    }
                     throw logger.logExceptionAsError(new ClientAuthenticationException(redactedOutput, null));
                 } else {
                     throw logger.logExceptionAsError(
@@ -225,7 +294,7 @@ public class IdentityClient {
                                            .atZone(ZoneId.systemDefault())
                                            .toOffsetDateTime().withOffsetSameInstant(ZoneOffset.UTC);
             token = new IdentityToken(accessToken, expiresOn, options);
-        } catch (IOException e) {
+        } catch (IOException | InterruptedException e) {
             throw logger.logExceptionAsError(new IllegalStateException(e));
         } catch (RuntimeException e) {
             return Mono.error(logger.logExceptionAsError(e));
@@ -388,6 +457,7 @@ public class IdentityClient {
             parameters = SilentParameters.builder(new HashSet<>(request.getScopes()), msalToken.getAccount()).build();
         } else {
             parameters = SilentParameters.builder(new HashSet<>(request.getScopes())).build();
+
         }
         return Mono.defer(() -> {
             try {
@@ -417,6 +487,26 @@ public class IdentityClient {
                     dc.verificationUri(), OffsetDateTime.now().plusSeconds(dc.expiresIn()), dc.message()))).build();
             return publicClientApplication.acquireToken(parameters);
         }).map(ar -> new MsalToken(ar, options));
+    }
+
+    /**
+     * Asynchronously acquire a token from Active Directory with Visual Sutdio cached refresh token.
+     *
+     * @param request the details of the token request
+     * @return a Publisher that emits an AccessToken.
+     */
+    public Mono<MsalToken> authenticateWithVsCodeCredential(TokenRequestContext request, String cloud) {
+
+        VisualStudioCacheAccessor accessor = new VisualStudioCacheAccessor();
+
+        String credential = accessor.getCredentials("VS Code Azure", cloud);
+
+        RefreshTokenParameters parameters = RefreshTokenParameters
+                                                .builder(new HashSet<>(request.getScopes()), credential)
+                                                .build();
+
+        return Mono.defer(() -> Mono.fromFuture(publicClientApplication.acquireToken(parameters))
+                                    .map(ar -> new MsalToken(ar, options)));
     }
 
     /**
@@ -634,6 +724,10 @@ public class IdentityClient {
                 connection.setRequestMethod("GET");
                 connection.setConnectTimeout(500);
                 connection.connect();
+            } catch (ConnectException | SecurityException | SocketTimeoutException e) {
+                throw logger.logExceptionAsError(
+                    new CredentialUnavailableException("Connection to IMDS endpoint cannot be established. "
+                                                             + e.getMessage(), e));
             } finally {
                 if (connection != null) {
                     connection.disconnect();

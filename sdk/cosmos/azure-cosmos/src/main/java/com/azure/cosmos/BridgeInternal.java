@@ -7,15 +7,18 @@ import com.azure.cosmos.implementation.ChangeFeedOptions;
 import com.azure.cosmos.implementation.Configs;
 import com.azure.cosmos.implementation.Constants;
 import com.azure.cosmos.implementation.CosmosItemProperties;
-import com.azure.cosmos.implementation.CosmosPagedFluxOptions;
+import com.azure.cosmos.implementation.DatabaseAccount;
 import com.azure.cosmos.implementation.Document;
+import com.azure.cosmos.implementation.DocumentCollection;
 import com.azure.cosmos.implementation.HttpConstants;
+import com.azure.cosmos.implementation.MetadataDiagnosticsContext;
 import com.azure.cosmos.implementation.QueryMetrics;
 import com.azure.cosmos.implementation.ReplicationPolicy;
 import com.azure.cosmos.implementation.RequestTimeline;
 import com.azure.cosmos.implementation.ResourceResponse;
 import com.azure.cosmos.implementation.RxDocumentServiceRequest;
 import com.azure.cosmos.implementation.RxDocumentServiceResponse;
+import com.azure.cosmos.implementation.SerializationDiagnosticsContext;
 import com.azure.cosmos.implementation.StoredProcedureResponse;
 import com.azure.cosmos.implementation.Strings;
 import com.azure.cosmos.implementation.directconnectivity.StoreResponse;
@@ -27,7 +30,6 @@ import com.azure.cosmos.models.CosmosAsyncItemResponse;
 import com.azure.cosmos.models.CosmosError;
 import com.azure.cosmos.models.CosmosItemResponse;
 import com.azure.cosmos.models.CosmosStoredProcedureProperties;
-import com.azure.cosmos.models.DatabaseAccount;
 import com.azure.cosmos.models.FeedOptions;
 import com.azure.cosmos.models.FeedResponse;
 import com.azure.cosmos.models.JsonSerializable;
@@ -38,7 +40,6 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.micrometer.core.instrument.MeterRegistry;
-import reactor.core.publisher.Flux;
 
 import java.net.URI;
 import java.nio.ByteBuffer;
@@ -49,20 +50,16 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentMap;
-import java.util.function.Function;
 
 /**
+ * DO NOT USE.
  * This is meant to be used only internally as a bridge access to classes in
  * com.azure.cosmos
  **/
 public final class BridgeInternal {
 
     public static Document documentFromObject(Object document, ObjectMapper mapper) {
-        return Document.FromObject(document, mapper);
-    }
-
-    public static ByteBuffer serializeJsonToByteBuffer(Document document, ObjectMapper mapper) {
-        return document.serializeJsonToByteBuffer();
+        return Document.fromObject(document, mapper);
     }
 
     public static ByteBuffer serializeJsonToByteBuffer(Object document, ObjectMapper mapper) {
@@ -141,7 +138,6 @@ public final class BridgeInternal {
             headers.put(HttpConstants.HttpHeaders.CONTINUATION, options.getRequestContinuation());
         }
 
-        if (options != null) {
             if (options.getSessionToken() != null) {
                 headers.put(HttpConstants.HttpHeaders.SESSION_TOKEN, options.getSessionToken());
             }
@@ -168,7 +164,6 @@ public final class BridgeInternal {
                 headers.put(HttpConstants.HttpHeaders.POPULATE_QUERY_METRICS,
                     String.valueOf(options.isPopulateQueryMetrics()));
             }
-        }
 
         return headers;
     }
@@ -227,11 +222,11 @@ public final class BridgeInternal {
     }
 
     public static boolean getUseMultipleWriteLocations(ConnectionPolicy policy) {
-        return policy.isUsingMultipleWriteLocations();
+        return policy.isUsingMultipleWriteRegions();
     }
 
     public static void setUseMultipleWriteLocations(ConnectionPolicy policy, boolean value) {
-        policy.setUsingMultipleWriteLocations(value);
+        policy.setUsingMultipleWriteRegions(value);
     }
 
     public static <E extends CosmosClientException> Uri getRequestUri(CosmosClientException cosmosClientException) {
@@ -295,11 +290,11 @@ public final class BridgeInternal {
     }
 
     public static ObjectNode getObject(JsonSerializable jsonSerializable, String propertyName) {
-        return ModelBridgeInternal.getObject(jsonSerializable, propertyName);
+        return ModelBridgeInternal.getObjectNodeFromJsonSerializable(jsonSerializable, propertyName);
     }
 
     public static void remove(JsonSerializable jsonSerializable, String propertyName) {
-        ModelBridgeInternal.remove(jsonSerializable, propertyName);
+        ModelBridgeInternal.removeFromJsonSerializable(jsonSerializable, propertyName);
     }
 
     public static CosmosStoredProcedureProperties createCosmosStoredProcedureProperties(String jsonString) {
@@ -313,7 +308,7 @@ public final class BridgeInternal {
     public static CosmosClientException setCosmosResponseDiagnostics(
                                             CosmosClientException cosmosClientException,
                                             CosmosResponseDiagnostics cosmosResponseDiagnostics) {
-        return cosmosClientException.setCosmosResponseDiagnostics(cosmosResponseDiagnostics);
+        return cosmosClientException.setResponseDiagnostics(cosmosResponseDiagnostics);
     }
 
     public static CosmosClientException createCosmosClientException(int statusCode) {
@@ -401,6 +396,22 @@ public final class BridgeInternal {
         cosmosResponseDiagnostics.clientSideRequestStatistics().recordRetryContext(request);
     }
 
+    public static MetadataDiagnosticsContext getMetaDataDiagnosticContext(CosmosResponseDiagnostics cosmosResponseDiagnostics){
+        if(cosmosResponseDiagnostics == null) {
+            return null;
+        }
+
+        return cosmosResponseDiagnostics.clientSideRequestStatistics().getMetadataDiagnosticsContext();
+    }
+
+    public static SerializationDiagnosticsContext getSerializationDiagnosticsContext(CosmosResponseDiagnostics cosmosResponseDiagnostics){
+        if(cosmosResponseDiagnostics == null) {
+            return null;
+        }
+
+        return cosmosResponseDiagnostics.clientSideRequestStatistics().getSerializationDiagnosticsContext();
+    }
+
     public static void recordGatewayResponse(CosmosResponseDiagnostics cosmosResponseDiagnostics,
                                              RxDocumentServiceRequest rxDocumentServiceRequest,
                                              StoreResponse storeResponse,
@@ -437,19 +448,6 @@ public final class BridgeInternal {
 
     public static PartitionKeyInternal getPartitionKeyInternal(PartitionKey partitionKey) {
         return ModelBridgeInternal.getPartitionKeyInternal(partitionKey);
-    }
-
-    public static void setFeedOptionsContinuationTokenAndMaxItemCount(FeedOptions feedOptions, String continuationToken, Integer maxItemCount) {
-        feedOptions.setRequestContinuation(continuationToken);
-        feedOptions.setMaxItemCount(maxItemCount);
-    }
-
-    public static void setFeedOptionsContinuationToken(FeedOptions feedOptions, String continuationToken) {
-        feedOptions.setRequestContinuation(continuationToken);
-    }
-
-    public static void setFeedOptionsMaxItemCount(FeedOptions feedOptions, Integer maxItemCount) {
-        feedOptions.setMaxItemCount(maxItemCount);
     }
 
     public static <T> CosmosItemProperties getProperties(CosmosAsyncItemResponse<T> cosmosItemResponse) {
@@ -507,13 +505,13 @@ public final class BridgeInternal {
 
     public static CosmosDatabase createCosmosDatabase(String id, CosmosClient client, CosmosAsyncDatabase database) {
         return new CosmosDatabase(id, client, database);
-    }
+            }
 
     public static CosmosUser createCosmosUser(CosmosAsyncUser asyncUser, CosmosDatabase database, String id) {
         return new CosmosUser(asyncUser, database, id);
-    }
+        }
 
-    public static <T> CosmosPagedFlux<T> createCosmosPagedFlux(Function<CosmosPagedFluxOptions, Flux<FeedResponse<T>>> pagedFluxOptionsFluxFunction) {
-        return new CosmosPagedFlux<>(pagedFluxOptionsFluxFunction);
+    public static ConsistencyLevel fromServiceSerializedFormat(String consistencyLevel) {
+        return ConsistencyLevel.fromServiceSerializedFormat(consistencyLevel);
     }
 }

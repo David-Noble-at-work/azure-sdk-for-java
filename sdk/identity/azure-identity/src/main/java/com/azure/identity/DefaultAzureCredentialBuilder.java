@@ -3,6 +3,11 @@
 
 package com.azure.identity;
 
+import com.azure.core.credential.TokenCredential;
+import com.azure.core.util.CoreUtils;
+import com.azure.core.util.logging.ClientLogger;
+
+import java.util.ArrayDeque;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ForkJoinPool;
 
@@ -12,6 +17,28 @@ import java.util.concurrent.ForkJoinPool;
  * @see DefaultAzureCredential
  */
 public class DefaultAzureCredentialBuilder extends CredentialBuilderBase<DefaultAzureCredentialBuilder> {
+    private boolean excludeEnvironmentCredential;
+    private boolean excludeManagedIdentityCredential;
+    private boolean excludeSharedTokenCacheCredential;
+    private boolean excludeAzureCliCredential;
+    private boolean excludeIntelliJCredential;
+    private boolean excludeVsCodeCredential;
+    private String tenantId;
+    private final ClientLogger logger = new ClientLogger(DefaultAzureCredentialBuilder.class);
+
+
+    /**
+     * Sets the tenant id of the user to authenticate through the {@link DefaultAzureCredential}. The default is null
+     * and will authenticate users to their default tenant.
+     *
+     * @param tenantId the tenant ID to set.
+     * @return An updated instance of this builder with the tenant id set as specified.
+     */
+    public DefaultAzureCredentialBuilder tenantId(String tenantId) {
+        this.tenantId = tenantId;
+        return this;
+    }
+
 
     /**
      * Specifies the Azure Active Directory endpoint to acquire tokens.
@@ -20,6 +47,95 @@ public class DefaultAzureCredentialBuilder extends CredentialBuilderBase<Default
      */
     public DefaultAzureCredentialBuilder authorityHost(String authorityHost) {
         this.identityClientOptions.setAuthorityHost(authorityHost);
+        return this;
+    }
+
+
+    /**
+     * Specifies the KeePass database path to read the cached credentials of Azure toolkit for IntelliJ plugin.
+     * The {@code databasePath} is required on Windows platform. For macOS and Linux platform native key chain /
+     * key ring will be accessed respectively to retrieve the cached credentials.
+     *
+     * <p>This path can be located in the IntelliJ IDE.
+     * Windows: File -&gt; Settings -&gt; Appearance &amp; Behavior -&gt; System Settings -&gt; Passwords. </p>
+     *
+     * @param databasePath the path to the KeePass database.
+     * @throws IllegalArgumentException if {@code databasePath is either not specified or is empty}
+     * @return An updated instance of this builder with the KeePass database path set as specified.
+     */
+    public DefaultAzureCredentialBuilder intelliJKeePassDatabasePath(String databasePath) {
+        if (CoreUtils.isNullOrEmpty(databasePath)) {
+            throw logger.logExceptionAsError(
+                new IllegalArgumentException("The KeePass database path is either empty or not configured."
+                                                   + " Please configure it on the builder."));
+        }
+        this.identityClientOptions.setIntelliJKeePassDatabasePath(databasePath);
+        return this;
+    }
+
+
+    /**
+     * Excludes the {@link EnvironmentCredential} from the {@link DefaultAzureCredential}
+     * authentication flow and disables reading authentication details from the process' environment
+     * variables.
+     *
+     * @return An updated instance of this builder with the Environment credential exclusion set as specified.
+     */
+    public DefaultAzureCredentialBuilder excludeEnvironmentCredential() {
+        excludeEnvironmentCredential = true;
+        return this;
+    }
+
+    /**
+     * Excludes the {@link ManagedIdentityCredential} from the {@link DefaultAzureCredential}
+     * authentication flow and disables authenticating with managed identity endpoints.
+     *
+     * @return An updated instance of this builder with the Managed Identity credential exclusion set as specified.
+     */
+    public DefaultAzureCredentialBuilder excludeManagedIdentityCredential() {
+        excludeManagedIdentityCredential = true;
+        return this;
+    }
+
+    /**
+     * Excludes the {@link SharedTokenCacheCredential} from the {@link DefaultAzureCredential}
+     * authentication flow and disables single sign on authentication with development tools which write
+     * to the shared token cache.
+     *
+     * @return An updated instance of this builder with the Shared Token Cache credential exclusion set as specified.
+     */
+    public DefaultAzureCredentialBuilder excludeSharedTokenCacheCredential() {
+        excludeSharedTokenCacheCredential = true;
+        return this;
+    }
+
+    /**
+     * Excludes the {@link AzureCliCredential} from the {@link DefaultAzureCredential} authentication flow.
+     *
+     * @return An updated instance of this builder with the Azure Cli credential exclusion set as specified.
+     */
+    public DefaultAzureCredentialBuilder excludeAzureCliCredential() {
+        excludeAzureCliCredential = true;
+        return this;
+    }
+
+    /**
+     * Excludes the {@link IntelliJCredential} from the {@link DefaultAzureCredential} authentication flow.
+     *
+     * @return An updated instance of this builder with the IntelliJ credential exclusion set as specified.
+     */
+    public DefaultAzureCredentialBuilder excludeIntelliJCredential() {
+        excludeIntelliJCredential = true;
+        return this;
+    }
+
+    /**
+     * Excludes the {@link VisualStudioCodeCredential} from the {@link DefaultAzureCredential} authentication flow.
+     *
+     * @return An updated instance of this builder with the Visual Studio Code credential exclusion set as specified.
+     */
+    public DefaultAzureCredentialBuilder excludeVSCodeCredential() {
+        excludeVsCodeCredential = true;
         return this;
     }
 
@@ -50,6 +166,40 @@ public class DefaultAzureCredentialBuilder extends CredentialBuilderBase<Default
      * @return a {@link DefaultAzureCredential} with the current configurations.
      */
     public DefaultAzureCredential build() {
-        return new DefaultAzureCredential(identityClientOptions);
+        return new DefaultAzureCredential(getCredentialsChain());
+    }
+
+    private ArrayDeque<TokenCredential> getCredentialsChain() {
+        ArrayDeque<TokenCredential> output = new ArrayDeque<>(6);
+        if (!excludeEnvironmentCredential) {
+            output.add(new EnvironmentCredential(identityClientOptions));
+        }
+
+        if (!excludeManagedIdentityCredential) {
+            output.add(new ManagedIdentityCredential(null, identityClientOptions));
+        }
+
+        if (!excludeSharedTokenCacheCredential) {
+            output.add(new SharedTokenCacheCredential(null, "04b07795-8ddb-461a-bbee-02f9e1bf7b46",
+                null, identityClientOptions));
+        }
+
+        if (!excludeIntelliJCredential) {
+            output.add(new IntelliJCredential(tenantId, identityClientOptions));
+        }
+
+        if (!excludeVsCodeCredential) {
+            output.add(new VisualStudioCodeCredential(tenantId, identityClientOptions));
+        }
+
+        if (!excludeAzureCliCredential) {
+            output.add(new AzureCliCredential(identityClientOptions));
+        }
+
+        if (output.size() == 0) {
+            throw logger.logExceptionAsError(new IllegalArgumentException("At least one credential type must be"
+                                                                         + " included in the authentication flow."));
+        }
+        return output;
     }
 }

@@ -12,7 +12,6 @@ import com.azure.cosmos.models.FeedOptions;
 import com.azure.cosmos.implementation.NotFoundException;
 import com.azure.cosmos.models.PartitionKey;
 import com.azure.cosmos.models.SqlParameter;
-import com.azure.cosmos.models.SqlParameterList;
 import com.azure.cosmos.models.SqlQuerySpec;
 import com.azure.cosmos.implementation.DocumentCollection;
 import com.azure.cosmos.implementation.RequestOptions;
@@ -395,7 +394,7 @@ class ReadMyWriteWorkflow extends AsyncBenchmark<Document> {
 
             abstract String getWhereCondition(String rootName);
 
-            abstract SqlParameterList getSqlParameterCollection();
+            abstract List<SqlParameter> getSqlParameterCollection();
         }
 
         SqlQuerySpec toSqlQuerySpec() {

@@ -11,6 +11,7 @@ import com.azure.storage.blob.models.BlobErrorCode
 import com.azure.storage.blob.models.BlobStorageException
 import com.azure.storage.common.ParallelTransferOptions
 import com.azure.storage.common.ProgressReceiver
+import com.azure.storage.common.Utility
 import com.azure.storage.common.implementation.Constants
 import com.azure.storage.file.datalake.models.AccessTier
 import com.azure.storage.file.datalake.models.DataLakeRequestConditions
@@ -568,6 +569,7 @@ class FileAPITest extends APISpec {
         !properties.getMetadata() // new file does not have default metadata associated
         !properties.getAccessTierChangeTime()
         !properties.getEncryptionKeySha256()
+        !properties.isDirectory()
 
     }
 
@@ -1603,6 +1605,30 @@ class FileAPITest extends APISpec {
 
         then:
         response.getStatusCode() == 201
+    }
+
+    @Unroll
+    def "Rename url encoded"() {
+        when:
+        fc = fsc.getFileClient(generatePathName() + source)
+        fc.create()
+        def response = fc.renameWithResponse(null, generatePathName() + destination, null, null, null, null)
+
+        then:
+        response.getStatusCode() == 201
+
+        when:
+        response = response.getValue().getPropertiesWithResponse(null, null, null)
+
+        then:
+        response.getStatusCode() == 200
+
+        where:
+        source     | destination || _
+        ""         | ""          || _ /* Both non encoded. */
+        "%20%25"   | ""          || _ /* One encoded. */
+        ""         | "%20%25"    || _
+        "%20%25"   | "%20%25"    || _ /* Both encoded. */
     }
 
     @Unroll

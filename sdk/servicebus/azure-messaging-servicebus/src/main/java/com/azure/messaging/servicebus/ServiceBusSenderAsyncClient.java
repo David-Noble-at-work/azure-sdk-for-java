@@ -15,6 +15,7 @@ import com.azure.core.annotation.ServiceClient;
 import com.azure.core.util.Context;
 import com.azure.core.util.logging.ClientLogger;
 import com.azure.core.util.tracing.ProcessKind;
+import com.azure.messaging.servicebus.implementation.MessagingEntityType;
 import com.azure.messaging.servicebus.implementation.ServiceBusConnectionProcessor;
 import com.azure.messaging.servicebus.models.CreateBatchOptions;
 import org.apache.qpid.proton.amqp.messaging.MessageAnnotations;
@@ -22,7 +23,6 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.core.publisher.Signal;
 
-import java.io.Closeable;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -41,35 +41,54 @@ import java.util.stream.Collector;
 
 import static com.azure.core.amqp.implementation.RetryUtil.getRetryPolicy;
 import static com.azure.core.amqp.implementation.RetryUtil.withRetry;
+import static com.azure.core.util.FluxUtil.monoError;
 import static com.azure.core.util.tracing.Tracer.ENTITY_PATH_KEY;
 import static com.azure.core.util.tracing.Tracer.HOST_NAME_KEY;
 import static com.azure.core.util.tracing.Tracer.SPAN_CONTEXT_KEY;
 
 /**
- * The client to send messages to a Service Bus resource.
+ * An <b>asynchronous</b> client to send messages to a Service Bus resource.
+ *
+ * <p><strong>Create an instance of sender</strong></p>
+ * {@codesnippet com.azure.messaging.servicebus.servicebusasyncsenderclient.instantiation}
+ *
+ * <p><strong>Create an instance of sender using default credential</strong></p>
+ * {@codesnippet com.azure.messaging.servicebus.servicebusasyncsenderclient.instantiateWithDefaultCredential}
+ *
+ * <p><strong>Send messages to a Service Bus resource</strong></p>
+ * {@codesnippet com.azure.messaging.servicebus.servicebusasyncsenderclient.createBatch}
+ *
+ * <p><strong>Send messages using a size-limited {@link ServiceBusMessageBatch} to a Service Bus resource</strong></p>
+ * {@codesnippet com.azure.messaging.servicebus.servicebusasyncsenderclient.createBatch#CreateBatchOptionsLimitedSize}
+ *
  */
 @ServiceClient(builder = ServiceBusClientBuilder.class, isAsync = true)
-public final class ServiceBusSenderAsyncClient implements Closeable {
+public final class ServiceBusSenderAsyncClient implements AutoCloseable {
+    /**
+     * The default maximum allowable size, in bytes, for a batch to be sent.
+     */
+    static final int MAX_MESSAGE_LENGTH_BYTES = 256 * 1024;
+
+    private static final CreateBatchOptions DEFAULT_BATCH_OPTIONS =  new CreateBatchOptions();
 
     private final ClientLogger logger = new ClientLogger(ServiceBusSenderAsyncClient.class);
+    private final AtomicReference<String> linkName = new AtomicReference<>();
     private final AtomicBoolean isDisposed = new AtomicBoolean();
     private final TracerProvider tracerProvider;
     private final MessageSerializer messageSerializer;
     private final AmqpRetryOptions retryOptions;
     private final AmqpRetryPolicy retryPolicy;
+    private final MessagingEntityType entityType;
+    private final Runnable onClientClose;
     private final String entityName;
     private final ServiceBusConnectionProcessor connectionProcessor;
 
     /**
-     * The default maximum allowable size, in bytes, for a batch to be sent.
+     * Creates a new instance of this {@link ServiceBusSenderAsyncClient} that sends messages to a Service Bus entity.
      */
-    public static final int MAX_MESSAGE_LENGTH_BYTES = 256 * 1024;
-
-    /**
-     * Creates a new instance of this {@link ServiceBusSenderAsyncClient} that sends messages to
-     */
-    ServiceBusSenderAsyncClient(String entityName, ServiceBusConnectionProcessor connectionProcessor,
-        AmqpRetryOptions retryOptions, TracerProvider tracerProvider, MessageSerializer messageSerializer) {
+    ServiceBusSenderAsyncClient(String entityName, MessagingEntityType entityType,
+        ServiceBusConnectionProcessor connectionProcessor, AmqpRetryOptions retryOptions,
+        TracerProvider tracerProvider, MessageSerializer messageSerializer, Runnable onClientClose) {
         // Caching the created link so we don't invoke another link creation.
         this.messageSerializer = Objects.requireNonNull(messageSerializer,
             "'messageSerializer' cannot be null.");
@@ -79,6 +98,9 @@ public final class ServiceBusSenderAsyncClient implements Closeable {
             "'connectionProcessor' cannot be null.");
         this.tracerProvider = tracerProvider;
         this.retryPolicy = getRetryPolicy(retryOptions);
+        this.entityType = entityType;
+
+        this.onClientClose = onClientClose;
     }
 
     /**
@@ -95,7 +117,7 @@ public final class ServiceBusSenderAsyncClient implements Closeable {
      *
      * @return The name of the Service Bus resource.
      */
-    public String getEntityName() {
+    public String getEntityPath() {
         return entityName;
     }
 
@@ -109,27 +131,76 @@ public final class ServiceBusSenderAsyncClient implements Closeable {
      * @throws NullPointerException if {@code message} is {@code null}.
      */
     public Mono<Void> send(ServiceBusMessage message) {
-        Objects.requireNonNull(message, "'message' cannot be null.");
-
+        if (Objects.isNull(message)) {
+            return monoError(logger, new NullPointerException("'message' cannot be null."));
+        }
         return sendInternal(Flux.just(message));
     }
 
     /**
-     * Sends a message to a Service Bus queue or topic.
+     * Sends a set of messages to a Service Bus queue or topic using a batched approach. If the size of messages
+     * exceed the maximum size of a single batch, an exception will be triggered and the send will fail.
+     * By default, the message size is the max amount allowed on the link.
      *
-     * @param message Message to be sent to Service Bus queue or topic.
-     * @param sessionId the session id to associate with the message.
+     * @param messages Messages to be sent to Service Bus queue or topic.
      *
-     * @return A {@link Mono} the finishes this operation on service bus resource.
+     * @return A {@link Mono} that completes when all messages have been sent to the Service Bus resource.
      *
-     * @throws NullPointerException if {@code message} or {@code sessionId} is {@code null}.
+     * @throws NullPointerException if {@code messages} is {@code null}.
+     * @throws AmqpException if {@code messages} is larger than the maximum allowed size of a single batch.
      */
-    public Mono<Void> send(ServiceBusMessage message, String sessionId) {
-        Objects.requireNonNull(message, "'message' cannot be null.");
-        Objects.requireNonNull(sessionId, "'sessionId' cannot be null.");
+    public Mono<Void> send(Iterable<ServiceBusMessage> messages) {
+        if (Objects.isNull(messages)) {
+            return monoError(logger, new NullPointerException("'messages' cannot be null."));
+        }
 
-        //TODO (hemanttanwar): Implement session id feature.
-        return Mono.error(new IllegalStateException("Not implemented."));
+        return createBatch().flatMap(messageBatch -> {
+            messages.forEach(message -> messageBatch.tryAdd(message));
+            return send(messageBatch);
+        });
+    }
+
+    /**
+     * Creates a {@link ServiceBusMessageBatch} that can fit as many messages as the transport allows.
+     *
+     * @return A {@link ServiceBusMessageBatch} that can fit as many messages as the transport allows.
+     */
+    public Mono<ServiceBusMessageBatch> createBatch() {
+        return createBatch(DEFAULT_BATCH_OPTIONS);
+    }
+
+    /**
+     * Creates an {@link ServiceBusMessageBatch} configured with the options specified.
+     *
+     * @param options A set of options used to configure the {@link ServiceBusMessageBatch}.
+     * @return A new {@link ServiceBusMessageBatch} configured with the given options.
+     * @throws NullPointerException if {@code options} is null.
+     */
+    public Mono<ServiceBusMessageBatch> createBatch(CreateBatchOptions options) {
+        if (Objects.isNull(options)) {
+            return monoError(logger, new NullPointerException("'options' cannot be null."));
+        }
+
+        final int maxSize = options.getMaximumSizeInBytes();
+
+        return getSendLink().flatMap(link -> link.getLinkSize().flatMap(size -> {
+            final int maximumLinkSize = size > 0
+                ? size
+                : MAX_MESSAGE_LENGTH_BYTES;
+
+            if (maxSize > maximumLinkSize) {
+                return monoError(logger, new IllegalArgumentException(String.format(Locale.US,
+                        "CreateBatchOptions.getMaximumSizeInBytes (%s bytes) is larger than the link size"
+                            + " (%s bytes).", maxSize, maximumLinkSize)));
+            }
+
+            final int batchSize = maxSize > 0
+                ? maxSize
+                : maximumLinkSize;
+
+            return Mono.just(
+                new ServiceBusMessageBatch(batchSize, link::getErrorContext, tracerProvider, messageSerializer));
+        }));
     }
 
     /**
@@ -142,7 +213,9 @@ public final class ServiceBusSenderAsyncClient implements Closeable {
      * @throws NullPointerException if {@code batch} is {@code null}.
      */
     public Mono<Void> send(ServiceBusMessageBatch batch) {
-        Objects.requireNonNull(batch, "'batch' cannot be null.");
+        if (Objects.isNull(batch)) {
+            return monoError(logger, new NullPointerException("'batch' cannot be null."));
+        }
 
         final boolean isTracingEnabled = tracerProvider.isEnabled();
         final AtomicReference<Context> parentContext = isTracingEnabled
@@ -217,12 +290,26 @@ public final class ServiceBusSenderAsyncClient implements Closeable {
      *
      * @throws NullPointerException if {@code message} or {@code scheduledEnqueueTime} is {@code null}.
      */
-    public Mono<Long> schedule(ServiceBusMessage message, Instant scheduledEnqueueTime) {
-        Objects.requireNonNull(message, "'message' cannot be null.");
-        Objects.requireNonNull(scheduledEnqueueTime, "'scheduledEnqueueTime' cannot be null.");
+    public Mono<Long> scheduleMessage(ServiceBusMessage message, Instant scheduledEnqueueTime) {
+        if (Objects.isNull(message)) {
+            return monoError(logger, new NullPointerException("'message' cannot be null."));
+        }
 
-        //TODO (hemanttanwar): Implement session id feature.
-        return Mono.error(new IllegalStateException("Not implemented."));
+        if (Objects.isNull(scheduledEnqueueTime)) {
+            return monoError(logger, new NullPointerException("'scheduledEnqueueTime' cannot be null."));
+        }
+
+        return getSendLink()
+            .flatMap(link -> link.getLinkSize().flatMap(size -> {
+                int maxSize =  size > 0
+                    ? size
+                    : MAX_MESSAGE_LENGTH_BYTES;
+
+                return connectionProcessor
+                    .flatMap(connection -> connection.getManagementNode(entityName, entityType))
+                    .flatMap(managementNode -> managementNode.schedule(message, scheduledEnqueueTime, maxSize,
+                        link.getLinkName()));
+            }));
     }
 
     /**
@@ -231,10 +318,17 @@ public final class ServiceBusSenderAsyncClient implements Closeable {
      * @param sequenceNumber of the scheduled message to cancel.
      *
      * @return The {@link Mono} that finishes this operation on service bus resource.
+     *
+     * @throws IllegalArgumentException if {@code sequenceNumber} is negative.
      */
     public Mono<Void> cancelScheduledMessage(long sequenceNumber) {
-        //TODO (hemanttanwar): Implement session id feature.
-        return Mono.error(new IllegalStateException("Not implemented."));
+        if (sequenceNumber < 0) {
+            return monoError(logger, new IllegalArgumentException("'sequenceNumber' cannot be negative."));
+        }
+
+        return connectionProcessor
+            .flatMap(connection -> connection.getManagementNode(entityName, entityType))
+            .flatMap(managementNode -> managementNode.cancelScheduledMessage(sequenceNumber, linkName.get()));
     }
 
     /**
@@ -246,8 +340,8 @@ public final class ServiceBusSenderAsyncClient implements Closeable {
         if (isDisposed.getAndSet(true)) {
             return;
         }
-        connectionProcessor.dispose();
 
+        onClientClose.run();
     }
 
     private Mono<Void> sendInternal(Flux<ServiceBusMessage> messages) {
@@ -267,17 +361,13 @@ public final class ServiceBusSenderAsyncClient implements Closeable {
         return eventBatches
             .flatMap(this::send)
             .then()
-            .doOnError(error -> {
-                logger.error("Error sending batch.", error);
-            });
+            .doOnError(error -> logger.error("Error sending batch.", error));
     }
 
     private Mono<AmqpSendLink> getSendLink() {
-        final String entityPath = entityName;
-        final String linkName = entityName;
-
         return connectionProcessor
-            .flatMap(connection -> connection.createSendLink(linkName, entityPath, retryOptions));
+            .flatMap(connection -> connection.createSendLink(entityName, entityName, retryOptions))
+            .doOnNext(next -> linkName.compareAndSet(null, next.getLinkName()));
     }
 
     private static class AmqpMessageCollector implements Collector<ServiceBusMessage, List<ServiceBusMessageBatch>,

@@ -25,10 +25,11 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicIntegerFieldUpdater;
 
-import static com.azure.cosmos.implementation.base.Preconditions.checkArgument;
-import static com.azure.cosmos.implementation.base.Preconditions.checkNotNull;
-import static com.azure.cosmos.implementation.base.Preconditions.checkState;
 import static com.azure.cosmos.implementation.directconnectivity.rntbd.RntbdConstants.RntbdResponseHeader;
+import static com.azure.cosmos.implementation.guava25.base.Preconditions.checkArgument;
+import static com.azure.cosmos.implementation.guava25.base.Preconditions.checkNotNull;
+import static com.azure.cosmos.implementation.guava25.base.Preconditions.checkState;
+import static java.lang.Integer.min;
 
 @JsonPropertyOrder({ "messageLength", "referenceCount", "frame", "headers", "content" })
 public final class RntbdResponse implements ReferenceCounted {
@@ -345,6 +346,8 @@ public final class RntbdResponse implements ReferenceCounted {
     // region Types
 
     private static class PayloadSerializer extends StdSerializer<ByteBuf> {
+
+        private static final long serialVersionUID = 1717212953958644366L;
 
         PayloadSerializer() {
             super(ByteBuf.class, true);
