@@ -5,7 +5,7 @@ package com.azure.cosmos.batch.serializer;
 
 import com.azure.cosmos.CosmosContainer;
 
-import javax.annotation.Nonnull;
+import org.jetbrains.annotations.NotNull;
 import java.io.IOException;
 import java.io.InputStream;
 
@@ -27,7 +27,7 @@ public interface CosmosSerializer {
      *
      * @throws IOException if an object of type {@code T} cannot be read from the {@code inputStream}.
      */
-    @Nonnull
+    @NotNull
     <T> T fromStream(InputStream inputStream, Class<T> type) throws IOException;
 
     /**
@@ -42,6 +42,6 @@ public interface CosmosSerializer {
      *
      * @throws IOException if an {@link InputStream input stream} cannot be created from the {@code input}.
      */
-    @Nonnull
+    @NotNull
     <T> InputStream toStream(T input) throws IOException;
 }

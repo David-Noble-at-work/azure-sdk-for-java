@@ -15,8 +15,8 @@ import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufUtil;
 import io.netty.buffer.Unpooled;
 
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
@@ -39,7 +39,7 @@ public final class BatchExecUtils {
     private static final int MINIMUM_BUFFER_SIZE = 81920;
 
     public static void ensureValid(
-        @Nonnull final List<ItemBatchOperation<?>> operations,
+        @NotNull final List<ItemBatchOperation<?>> operations,
         @Nullable final RequestOptions options) {
 
         final String errorMessage = BatchExecUtils.isValid(operations, options);
@@ -47,9 +47,9 @@ public final class BatchExecUtils {
     }
 
     public static String getPartitionKeyRangeId(
-        @Nonnull final PartitionKey key,
-        @Nonnull final PartitionKeyDefinition keyDefinition,
-        @Nonnull final CollectionRoutingMap collectionRoutingMap) {
+        @NotNull final PartitionKey key,
+        @NotNull final PartitionKeyDefinition keyDefinition,
+        @NotNull final CollectionRoutingMap collectionRoutingMap) {
 
         checkNotNull(key, "expected non-null key");
         checkNotNull(keyDefinition, "expected non-null keyDefinition");
@@ -122,7 +122,7 @@ public final class BatchExecUtils {
      *
      * @return a {@link CompletableFuture completable future} representing the result of the operation.
      */
-    public static CompletableFuture<byte[]> readAll(@Nonnull final AsynchronousByteChannel channel) {
+    public static CompletableFuture<byte[]> readAll(@NotNull final AsynchronousByteChannel channel) {
 
         final CompletableFuture<byte[]> future = new CompletableFuture<>();
         final ByteBuffer buffer = ByteBuffer.allocate(MINIMUM_BUFFER_SIZE);
@@ -165,7 +165,7 @@ public final class BatchExecUtils {
      *
      * @throws IOException if the specified stream throws an exception.
      */
-    public static byte[] readAll(@Nonnull final InputStream inputStream) throws IOException {
+    public static byte[] readAll(@NotNull final InputStream inputStream) throws IOException {
 
         checkNotNull(inputStream, "expected non-null inputStream");
 

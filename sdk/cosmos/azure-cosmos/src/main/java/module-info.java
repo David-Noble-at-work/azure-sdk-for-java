@@ -5,23 +5,25 @@ module com.azure.cosmos {
 
     requires transitive com.azure.core;
 
-    requires com.fasterxml.jackson.datatype.jsr310;
-    requires io.netty.transport;
-    requires io.netty.handler;
-    requires io.netty.common;
-    requires io.netty.buffer;
-    requires io.netty.codec;
-    requires io.netty.resolver;
-    requires io.netty.codec.http;
-    requires io.netty.codec.http2;
-    requires io.netty.transport.epoll;
-    requires io.netty.handler.proxy;
-    requires reactor.netty;
+    requires annotations;
+    requires com.azure.cosmos.serialization;
     requires com.codahale.metrics;
+    requires com.fasterxml.jackson.datatype.jsr310;
     requires com.fasterxml.jackson.module.afterburner;
+    requires io.netty.buffer;
+    requires io.netty.codec.http2;
+    requires io.netty.codec.http;
+    requires io.netty.codec;
+    requires io.netty.common;
+    requires io.netty.handler.proxy;
+    requires io.netty.handler;
+    requires io.netty.resolver;
+    requires io.netty.transport.epoll;
+    requires io.netty.transport;
     requires java.management;
     requires jdk.management;
     requires micrometer.core;
+    requires reactor.netty;
     //  This is only required by guava shaded libraries
     requires java.logging;
 

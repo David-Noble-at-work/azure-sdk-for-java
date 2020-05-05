@@ -17,10 +17,10 @@ import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufInputStream;
 import io.netty.buffer.Unpooled;
 import io.netty.handler.codec.http.HttpResponseStatus;
+import org.jetbrains.annotations.NotNull;
 import org.apache.commons.collections4.list.UnmodifiableList;
+import org.jetbrains.annotations.Nullable;
 
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 import java.io.IOException;
 import java.io.InputStream;
 import java.time.Duration;
@@ -106,15 +106,15 @@ public class TransactionalBatchResponse implements AutoCloseable, List<Transacti
      * @param serializer a {@link CosmosSerializerCore serializer}.
      */
     protected TransactionalBatchResponse(
-        @Nonnull final HttpResponseStatus responseStatus,
+        @NotNull final HttpResponseStatus responseStatus,
         final int subStatusCode,
         @Nullable final String errorMessage,
         final double requestCharge,
         @Nullable final Duration retryAfter,
-        @Nonnull final String activityId,
-        @Nonnull final CosmosDiagnosticsContext diagnosticsContext,
-        @Nonnull List<ItemBatchOperation<?>> operations,
-        @Nonnull final CosmosSerializerCore serializer) {
+        @NotNull final String activityId,
+        @NotNull final CosmosDiagnosticsContext diagnosticsContext,
+        @NotNull List<ItemBatchOperation<?>> operations,
+        @NotNull final CosmosSerializerCore serializer) {
 
         checkNotNull(responseStatus, "expected non-null responseStatus");
         checkNotNull(activityId, "expected non-null activityId");
@@ -315,9 +315,9 @@ public class TransactionalBatchResponse implements AutoCloseable, List<Transacti
      * from {@link BatchResponseMessage message} when the asynchronous operation completes.
      */
     public static CompletableFuture<TransactionalBatchResponse> fromResponseMessageAsync(
-        @Nonnull final BatchResponseMessage message,
-        @Nonnull final ServerBatchRequest request,
-        @Nonnull final CosmosSerializerCore serializer,
+        @NotNull final BatchResponseMessage message,
+        @NotNull final ServerBatchRequest request,
+        @NotNull final CosmosSerializerCore serializer,
         final boolean shouldPromoteOperationStatus) {
 
         try {
@@ -476,7 +476,7 @@ public class TransactionalBatchResponse implements AutoCloseable, List<Transacti
     @SuppressWarnings("unchecked")
     public <T> TransactionalBatchOperationResult<T> getOperationResultAtIndex(
         final int index,
-        @Nonnull final Class<T> type) throws IOException {
+        @NotNull final Class<T> type) throws IOException {
 
         checkArgument(index >= 0, "expected non-negative index");
         checkNotNull(type, "expected non-null type");
@@ -580,12 +580,12 @@ public class TransactionalBatchResponse implements AutoCloseable, List<Transacti
         this.results = Collections.unmodifiableList(Arrays.asList(results));
     }
 
-    @Nonnull
+    @NotNull
     private static CompletableFuture<TransactionalBatchResponse> populateFromContentAsync(
-        @Nonnull final InputStream inputStream,
-        @Nonnull final BatchResponseMessage message,
-        @Nonnull final ServerBatchRequest request,
-        @Nonnull final CosmosSerializerCore serializer,
+        @NotNull final InputStream inputStream,
+        @NotNull final BatchResponseMessage message,
+        @NotNull final ServerBatchRequest request,
+        @NotNull final CosmosSerializerCore serializer,
         final boolean shouldPromoteOperationStatus) {
 
         ArrayList<TransactionalBatchOperationResult<?>> results = new ArrayList<>();

@@ -15,7 +15,7 @@ import io.netty.handler.codec.http.HttpResponseStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.annotation.Nonnull;
+import org.jetbrains.annotations.NotNull;
 import java.io.IOException;
 import java.io.InputStream;
 import java.time.Duration;
@@ -65,7 +65,7 @@ public class TransactionalBatchOperationResult<TResource> {
      *
      * @param other the other
      */
-    public TransactionalBatchOperationResult(@Nonnull final TransactionalBatchOperationResult<TResource> other) {
+    public TransactionalBatchOperationResult(@NotNull final TransactionalBatchOperationResult<TResource> other) {
 
         checkNotNull(other, "expected non-null other");
 
@@ -283,7 +283,7 @@ public class TransactionalBatchOperationResult<TResource> {
      * @return the result
      */
     public static Result readBatchOperationResult(
-        @Nonnull final ByteBuf in, @Nonnull final Out<TransactionalBatchOperationResult<?>> out) {
+        @NotNull final ByteBuf in, @NotNull final Out<TransactionalBatchOperationResult<?>> out) {
 
         checkNotNull(in, "expected non-null in");
         checkNotNull(out, "expected non-null out");
@@ -357,8 +357,8 @@ public class TransactionalBatchOperationResult<TResource> {
 
     @SuppressWarnings("unchecked")
     private static Result readBatchOperationResult(
-        @Nonnull final RowReader reader,
-        @Nonnull final Out<TransactionalBatchOperationResult<?>> batchOperationResult) {
+        @NotNull final RowReader reader,
+        @NotNull final Out<TransactionalBatchOperationResult<?>> batchOperationResult) {
 
         batchOperationResult.set(new TransactionalBatchOperationResult<Object>());
         @SuppressWarnings("rawtypes") Out out = new Out();

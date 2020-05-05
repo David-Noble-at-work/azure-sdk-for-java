@@ -3,15 +3,15 @@
 
 package com.azure.cosmos.batch.unimplemented;
 
-import javax.annotation.Nonnull;
+import org.jetbrains.annotations.NotNull;
 
 public final class CosmosDiagnosticsContext extends CosmosDiagnostics {
 
-    public CosmosDiagnosticScope createOverallScope(@Nonnull String name) {
+    public CosmosDiagnosticScope createOverallScope(@NotNull String name) {
         return new CosmosDiagnosticScope();
     }
 
-    public CosmosDiagnosticScope createScope(@Nonnull String name) {
+    public CosmosDiagnosticScope createScope(@NotNull String name) {
         return new CosmosDiagnosticScope();
     }
 }

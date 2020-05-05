@@ -3,7 +3,7 @@
 
 package com.azure.cosmos.batch;
 
-import javax.annotation.Nonnull;
+import org.jetbrains.annotations.NotNull;
 import java.io.Serializable;
 import java.util.List;
 
@@ -37,8 +37,8 @@ final class ServerOperationBatchRequest implements Serializable {
      * @param operations the {@link List list} of {@link ItemBatchOperation operations} for the batch request.
      */
     ServerOperationBatchRequest(
-        @Nonnull final PartitionKeyRangeServerBatchRequest batchRequest,
-        @Nonnull final List<ItemBatchOperation<?>> operations) {
+        @NotNull final PartitionKeyRangeServerBatchRequest batchRequest,
+        @NotNull final List<ItemBatchOperation<?>> operations) {
 
         checkNotNull(batchRequest, "expected non-null batchRequest");
         checkNotNull(operations, "expected non-null operations");

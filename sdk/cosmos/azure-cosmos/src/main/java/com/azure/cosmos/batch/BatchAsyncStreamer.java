@@ -7,7 +7,7 @@ import com.azure.cosmos.batch.serializer.CosmosSerializerCore;
 import io.netty.util.HashedWheelTimer;
 import io.netty.util.Timeout;
 
-import javax.annotation.Nonnull;
+import org.jetbrains.annotations.NotNull;
 import java.util.concurrent.TimeUnit;
 
 import static com.azure.cosmos.implementation.base.Preconditions.checkArgument;
@@ -42,10 +42,10 @@ public class BatchAsyncStreamer implements AutoCloseable {
         final int maxBatchOperationCount,
         final int maxBatchByteSize,
         final int dispatchTimerInSeconds,
-        @Nonnull final HashedWheelTimer timer,
-        @Nonnull final CosmosSerializerCore serializerCore,
-        @Nonnull final BatchAsyncBatcherExecutor executor,
-        @Nonnull final BatchAsyncBatcherRetrier retrier) {
+        @NotNull final HashedWheelTimer timer,
+        @NotNull final CosmosSerializerCore serializerCore,
+        @NotNull final BatchAsyncBatcherExecutor executor,
+        @NotNull final BatchAsyncBatcherRetrier retrier) {
 
         checkArgument(maxBatchOperationCount > 0,
             "expected maxBatchOperationCount > 0, not %s",

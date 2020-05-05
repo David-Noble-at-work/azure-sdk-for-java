@@ -3,7 +3,7 @@
 
 package com.azure.cosmos.core;
 
-import javax.annotation.Nullable;
+import org.jetbrains.annotations.Nullable;
 import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.function.Consumer;

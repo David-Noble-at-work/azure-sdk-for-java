@@ -22,8 +22,8 @@ import com.azure.cosmos.models.PartitionKey;
 import com.azure.cosmos.models.PartitionKeyDefinition;
 import io.netty.util.HashedWheelTimer;
 
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Map;
@@ -68,8 +68,8 @@ public class BatchAsyncContainerExecutor implements AutoCloseable {
     private final ThrottlingRetryOptions throttlingRetryOptions;
 
     public BatchAsyncContainerExecutor(
-        @Nonnull final CosmosAsyncClientContext clientContext,
-        @Nonnull final CosmosAsyncContainer container,
+        @NotNull final CosmosAsyncClientContext clientContext,
+        @NotNull final CosmosAsyncContainer container,
         final int maxOperationCount,
         final int maxPayloadLength) {
 
@@ -81,8 +81,8 @@ public class BatchAsyncContainerExecutor implements AutoCloseable {
     }
 
     public BatchAsyncContainerExecutor(
-        @Nonnull final CosmosAsyncClientContext clientContext,
-        @Nonnull final CosmosAsyncContainer container,
+        @NotNull final CosmosAsyncClientContext clientContext,
+        @NotNull final CosmosAsyncContainer container,
         final int maxOperationCount,
         final int maxPayloadLength,
         final int dispatchTimerInSeconds) {
@@ -116,7 +116,7 @@ public class BatchAsyncContainerExecutor implements AutoCloseable {
     }
 
     public CompletableFuture<TransactionalBatchOperationResult<?>> addAsync(
-        @Nonnull final ItemBatchOperation<?> operation,
+        @NotNull final ItemBatchOperation<?> operation,
         @Nullable final RequestOptions options) {
 
         checkNotNull(operation, "expected non-null operation");
@@ -157,7 +157,7 @@ public class BatchAsyncContainerExecutor implements AutoCloseable {
     }
 
     public CompletableFuture<Void> validateOperationAsync(
-        @Nonnull final ItemBatchOperation<?> operation,
+        @NotNull final ItemBatchOperation<?> operation,
         @Nullable final RequestOptions options) {
 
         if (options != null) {
@@ -251,7 +251,7 @@ public class BatchAsyncContainerExecutor implements AutoCloseable {
         });
     }
 
-    private CompletableFuture<String> resolvePartitionKeyRangeIdAsync(@Nonnull final ItemBatchOperation<?> operation) {
+    private CompletableFuture<String> resolvePartitionKeyRangeIdAsync(@NotNull final ItemBatchOperation<?> operation) {
 
         checkNotNull(operation, "expected non-null operation");
 
@@ -301,8 +301,8 @@ public class BatchAsyncContainerExecutor implements AutoCloseable {
     }
 
     private static boolean validateOperationEpk(
-        @Nonnull final ItemBatchOperation<?> operation,
-        @Nonnull final RequestOptions options) {
+        @NotNull final ItemBatchOperation<?> operation,
+        @NotNull final RequestOptions options) {
 
         checkNotNull(operation, "expected non-null operation");
         checkNotNull(options, "expected non-null options");
@@ -354,7 +354,7 @@ public class BatchAsyncContainerExecutor implements AutoCloseable {
     }
 
     private CompletableFuture<PartitionKey> getPartitionKeyAsync(
-        @Nonnull final ItemBatchOperation<?> operation) {
+        @NotNull final ItemBatchOperation<?> operation) {
 
         checkNotNull(operation, "expected non-null operation");
 

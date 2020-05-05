@@ -13,8 +13,8 @@ import com.azure.cosmos.implementation.RequestOptions;
 import com.azure.cosmos.implementation.ResourceType;
 import com.azure.cosmos.models.PartitionKey;
 
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.concurrent.CompletableFuture;
@@ -41,11 +41,11 @@ public class TransactionalBatchCore implements TransactionalBatch {
      * @param serializerCore a {@link CosmosSerializerCore serializer} instance.
      */
     public TransactionalBatchCore(
-        @Nonnull final CosmosAsyncClient client,
-        @Nonnull final CosmosAsyncContainer container,
-        @Nonnull final PartitionKey partitionKey,
-        @Nonnull final ConnectionPolicy connectionPolicy,
-        @Nonnull final CosmosSerializerCore serializerCore) {
+        @NotNull final CosmosAsyncClient client,
+        @NotNull final CosmosAsyncContainer container,
+        @NotNull final PartitionKey partitionKey,
+        @NotNull final ConnectionPolicy connectionPolicy,
+        @NotNull final CosmosSerializerCore serializerCore) {
 
         checkNotNull(container, "expected non-null container");
         checkNotNull(partitionKey, "expected non-null partitionKey");
@@ -56,50 +56,50 @@ public class TransactionalBatchCore implements TransactionalBatch {
         this.clientContext = new CosmosAsyncClientContext() {
 
             @Override
-            @Nonnull
+            @NotNull
             public CosmosAsyncClient getClient() {
                 return client;
             }
 
             @Override
-            @Nonnull
+            @NotNull
             public ConnectionPolicy getConnectionPolicy() {
                 return connectionPolicy;
             }
 
             @Override
-            @Nonnull
+            @NotNull
             public CosmosSerializerCore getSerializerCore() {
                 return serializerCore;
             }
 
             @Override
-            @Nonnull
+            @NotNull
             public <T> CompletableFuture<T> processResourceOperationAsync(
-                @Nonnull String resourceUri,
-                @Nonnull ResourceType resourceType,
-                @Nonnull OperationType operationType,
+                @NotNull String resourceUri,
+                @NotNull ResourceType resourceType,
+                @NotNull OperationType operationType,
                 @Nullable RequestOptions requestOptions,
-                @Nonnull CosmosAsyncContainer container,
+                @NotNull CosmosAsyncContainer container,
                 PartitionKey partitionKey,
                 InputStream streamPayload,
-                @Nonnull Consumer<BatchRequestMessage> requestEnricher,
-                @Nonnull Function<BatchResponseMessage, T> responseCreator,
+                @NotNull Consumer<BatchRequestMessage> requestEnricher,
+                @NotNull Function<BatchResponseMessage, T> responseCreator,
                 CosmosDiagnosticsContext diagnosticsScope) {
                 return null;
             }
 
             @Override
-            @Nonnull
+            @NotNull
             public CompletableFuture<BatchResponseMessage> processResourceOperationStreamAsync(
-                @Nonnull String resourceUri,
-                @Nonnull ResourceType resourceType,
-                @Nonnull OperationType operationType,
+                @NotNull String resourceUri,
+                @NotNull ResourceType resourceType,
+                @NotNull OperationType operationType,
                 @Nullable RequestOptions requestOptions,
                 CosmosAsyncContainer container,
                 @Nullable PartitionKey partitionKey,
-                @Nonnull InputStream streamPayload,
-                @Nonnull Consumer<BatchRequestMessage> requestEnricher,
+                @NotNull InputStream streamPayload,
+                @NotNull Consumer<BatchRequestMessage> requestEnricher,
                 CosmosDiagnosticsContext diagnosticsScope) {
                 return null;
             }
@@ -113,7 +113,7 @@ public class TransactionalBatchCore implements TransactionalBatch {
 
     @Override
     public <TItem> TransactionalBatch createItem(
-        @Nonnull final TItem item,
+        @NotNull final TItem item,
         @Nullable final RequestOptions requestOptions) {
 
         checkNotNull(item, "expected non-null item");
@@ -128,7 +128,7 @@ public class TransactionalBatchCore implements TransactionalBatch {
 
     @Override
     public TransactionalBatch createItemStream(
-        @Nonnull final InputStream inputStream,
+        @NotNull final InputStream inputStream,
         @Nullable final RequestOptions requestOptions) {
 
         checkNotNull(inputStream, "expected non-null inputStream");
@@ -142,7 +142,7 @@ public class TransactionalBatchCore implements TransactionalBatch {
     }
 
     @Override
-    public TransactionalBatch deleteItem(@Nonnull final String id, final RequestOptions requestOptions) {
+    public TransactionalBatch deleteItem(@NotNull final String id, final RequestOptions requestOptions) {
 
         checkNotNull(id, "expected non-null id");
 
@@ -190,8 +190,8 @@ public class TransactionalBatchCore implements TransactionalBatch {
      * @return The {@link TransactionalBatch} instance with the operation added.
      */
     public TransactionalBatch patchItemStream(
-        @Nonnull final String id,
-        @Nonnull final InputStream inputStream,
+        @NotNull final String id,
+        @NotNull final InputStream inputStream,
         final RequestOptions requestOptions) {
 
         checkNotNull(id, "expected non-null id");
@@ -207,7 +207,7 @@ public class TransactionalBatchCore implements TransactionalBatch {
     }
 
     @Override
-    public TransactionalBatch readItem(@Nonnull final String id, final RequestOptions requestOptions) {
+    public TransactionalBatch readItem(@NotNull final String id, final RequestOptions requestOptions) {
 
         checkNotNull(id, "expected non-null id");
 
@@ -221,8 +221,8 @@ public class TransactionalBatchCore implements TransactionalBatch {
 
     @Override
     public <TItem> TransactionalBatch replaceItem(
-        @Nonnull final String id,
-        @Nonnull final TItem item,
+        @NotNull final String id,
+        @NotNull final TItem item,
         RequestOptions requestOptions) {
 
         checkNotNull(id, "expected non-null id");
@@ -239,8 +239,8 @@ public class TransactionalBatchCore implements TransactionalBatch {
 
     @Override
     public TransactionalBatch replaceItemStream(
-        @Nonnull final String id,
-        @Nonnull final InputStream inputStream,
+        @NotNull final String id,
+        @NotNull final InputStream inputStream,
         final RequestOptions requestOptions) {
 
         checkNotNull(id, "expected non-null id");
@@ -257,7 +257,7 @@ public class TransactionalBatchCore implements TransactionalBatch {
 
     @Override
     public <TItem> TransactionalBatch upsertItem(
-        @Nonnull final TItem item,
+        @NotNull final TItem item,
         final RequestOptions requestOptions) {
 
         checkNotNull(item, "expected non-null item");
@@ -272,7 +272,7 @@ public class TransactionalBatchCore implements TransactionalBatch {
 
     @Override
     public TransactionalBatch upsertItemStream(
-        @Nonnull final InputStream inputStream,
+        @NotNull final InputStream inputStream,
         @Nullable final RequestOptions requestOptions) {
 
         checkNotNull(inputStream, "expected non-null inputStream");

@@ -7,7 +7,7 @@ import com.azure.cosmos.batch.serializer.CosmosSerializerCore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.annotation.Nonnull;
+import org.jetbrains.annotations.NotNull;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -52,9 +52,9 @@ public class BatchAsyncBatcher {
     public BatchAsyncBatcher(
         final int maxBatchOperationCount,
         final int maxBatchByteSize,
-        @Nonnull final CosmosSerializerCore serializerCore,
-        @Nonnull final BatchAsyncBatcherExecutor executor,
-        @Nonnull final BatchAsyncBatcherRetrier retrier) {
+        @NotNull final CosmosSerializerCore serializerCore,
+        @NotNull final BatchAsyncBatcherExecutor executor,
+        @NotNull final BatchAsyncBatcherRetrier retrier) {
 
         checkArgument(maxBatchOperationCount > 0,
             "expected maxBatchOperationCount > 0, not %s",

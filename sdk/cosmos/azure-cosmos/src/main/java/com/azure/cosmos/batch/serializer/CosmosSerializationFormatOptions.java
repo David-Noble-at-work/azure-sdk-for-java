@@ -7,7 +7,7 @@ import com.azure.cosmos.batch.json.JsonNavigator;
 import com.azure.cosmos.batch.json.JsonWriter;
 import io.netty.buffer.ByteBuf;
 
-import javax.annotation.Nonnull;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -21,9 +21,9 @@ public final class CosmosSerializationFormatOptions {
     private final Supplier<JsonWriter> createCustomWriter;
 
     public CosmosSerializationFormatOptions(
-        @Nonnull final String contentSerializationFormat,
-        @Nonnull final Function<ByteBuf, JsonNavigator> createCustomNavigator,
-        @Nonnull final Supplier<JsonWriter> createCustomWriter) {
+        @NotNull final String contentSerializationFormat,
+        @NotNull final Function<ByteBuf, JsonNavigator> createCustomNavigator,
+        @NotNull final Supplier<JsonWriter> createCustomWriter) {
 
         checkNotNull(contentSerializationFormat, "expected non-null contentSerializationFormat");
         checkNotNull(createCustomNavigator, "expected non-null createCustomNavigator");

@@ -387,8 +387,8 @@ class ReadMyWriteWorkflow extends AsyncBenchmark<Document> {
                 }
 
                 @Override
-                SqlParameterList getSqlParameterCollection() {
-                    return new SqlParameterList(this.parameters);
+                List<SqlParameter> getSqlParameterCollection() {
+                    return this.parameters;
                 }
             }
 

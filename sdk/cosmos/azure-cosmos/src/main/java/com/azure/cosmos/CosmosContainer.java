@@ -20,8 +20,6 @@ import com.azure.cosmos.util.UtilBridgeInternal;
 import reactor.core.Exceptions;
 import reactor.core.publisher.Mono;
 
-import static com.azure.cosmos.implementation.base.Preconditions.throwUnsupportedOperationException;
-
 /**
  * Provides synchronous methods for reading, deleting, and replacing existing Containers
  * Provides methods for interacting with child resources (Items, Scripts, Conflicts)

@@ -15,7 +15,7 @@ import com.azure.cosmos.models.PartitionKey;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.annotation.Nonnull;
+import org.jetbrains.annotations.NotNull;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -79,7 +79,7 @@ public final class BatchExecutor {
      * @return Response from the server.
      */
     private CompletableFuture<TransactionalBatchResponse> executeBatchRequestAsync(
-        @Nonnull final SinglePartitionKeyServerBatchRequest request) {
+        @NotNull final SinglePartitionKeyServerBatchRequest request) {
 
         final CosmosSerializerCore serializerCore = this.clientContext.getSerializerCore();
         final Out<CosmosDiagnosticScope> responseScope = new Out<>();

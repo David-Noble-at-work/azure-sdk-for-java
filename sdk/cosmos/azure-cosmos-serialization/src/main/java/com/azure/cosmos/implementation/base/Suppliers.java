@@ -164,7 +164,6 @@ public final class Suppliers {
      *
      * @param <T> the type parameter
      */
-    @TestOnly
     @SuppressWarnings("GoodTime") // lots of violations
     static class ExpiringMemoizingSupplier<T> implements Supplier<T> {
 
@@ -238,7 +237,6 @@ public final class Suppliers {
      *
      * @param <T> the type parameter
      */
-    @TestOnly
     @SuppressFBWarnings("IS2_INCONSISTENT_SYNC")
     static class MemoizingSupplier<T> implements Supplier<T> {
 
@@ -295,7 +293,6 @@ public final class Suppliers {
      *
      * @param <T> the type parameter
      */
-    @TestOnly
     @SuppressFBWarnings("IS2_INCONSISTENT_SYNC")
     static class NonSerializableMemoizingSupplier<T> implements Supplier<T> {
         /**

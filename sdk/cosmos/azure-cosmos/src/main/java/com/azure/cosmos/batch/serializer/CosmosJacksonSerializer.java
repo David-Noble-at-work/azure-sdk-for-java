@@ -14,8 +14,8 @@ import io.netty.buffer.ByteBufInputStream;
 import io.netty.buffer.ByteBufOutputStream;
 import io.netty.buffer.Unpooled;
 
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -75,7 +75,7 @@ final class CosmosJacksonSerializer implements CosmosSerializer {
      *
      * @see PropertyNamingStrategy
      */
-    CosmosJacksonSerializer(@Nonnull final ObjectMapper objectMapper) {
+    CosmosJacksonSerializer(@NotNull final ObjectMapper objectMapper) {
         checkNotNull(objectMapper, "expected non-null objectMapper");
         this.objectMapper = objectMapper;
         this.reader = this.objectMapper.reader();
@@ -94,7 +94,7 @@ final class CosmosJacksonSerializer implements CosmosSerializer {
      * @throws IOException if an input error occurs.
      */
     @Override
-    public <T> T fromStream(@Nonnull final InputStream inputStream, @Nonnull final  Class<T> type) throws IOException {
+    public <T> T fromStream(@NotNull final InputStream inputStream, @NotNull final  Class<T> type) throws IOException {
         checkNotNull(inputStream, "expected non-null inputStream");
         checkNotNull(type, "expected non-null type");
         return this.reader.forType(type).readValue(inputStream);
@@ -111,7 +111,7 @@ final class CosmosJacksonSerializer implements CosmosSerializer {
      * @throws IOException if an output error occurs.
      */
     @Override
-    public <T> InputStream toStream(@Nonnull T object) throws IOException {
+    public <T> InputStream toStream(@NotNull T object) throws IOException {
 
         checkNotNull(object, "expected non-null object");
 

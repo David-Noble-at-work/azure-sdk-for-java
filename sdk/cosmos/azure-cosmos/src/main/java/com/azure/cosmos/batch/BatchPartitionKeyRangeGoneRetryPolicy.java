@@ -11,7 +11,7 @@ import com.azure.cosmos.implementation.HttpConstants.SubStatusCodes;
 import com.azure.cosmos.implementation.RxDocumentServiceRequest;
 import reactor.core.publisher.Mono;
 
-import javax.annotation.Nullable;
+import org.jetbrains.annotations.Nullable;
 import java.time.Duration;
 
 public final class BatchPartitionKeyRangeGoneRetryPolicy extends DocumentClientRetryPolicy {

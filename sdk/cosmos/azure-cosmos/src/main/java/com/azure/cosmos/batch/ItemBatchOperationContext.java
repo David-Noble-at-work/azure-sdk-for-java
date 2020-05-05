@@ -8,8 +8,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import reactor.core.publisher.Mono;
 
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import java.io.IOException;
 import java.util.concurrent.CompletableFuture;
 
@@ -32,7 +32,7 @@ public class ItemBatchOperationContext implements AutoCloseable {
      *
      * @param partitionKeyRangeId the partition key range id
      */
-    public ItemBatchOperationContext(@Nonnull final String partitionKeyRangeId) {
+    public ItemBatchOperationContext(@NotNull final String partitionKeyRangeId) {
         this(partitionKeyRangeId, null);
     }
 
@@ -43,7 +43,7 @@ public class ItemBatchOperationContext implements AutoCloseable {
      * @param retryPolicy the retry policy
      */
     public ItemBatchOperationContext(
-        @Nonnull final String partitionKeyRangeId, @Nullable final BatchPartitionKeyRangeGoneRetryPolicy retryPolicy) {
+        @NotNull final String partitionKeyRangeId, @Nullable final BatchPartitionKeyRangeGoneRetryPolicy retryPolicy) {
 
         checkNotNull(partitionKeyRangeId, "expected non-null partitionKeyRangeId");
         this.operationResultFuture = new CompletableFuture<>();
@@ -121,7 +121,7 @@ public class ItemBatchOperationContext implements AutoCloseable {
      * @return indicates whether a retry should be attempted.
      */
     @SuppressWarnings("BlockingMethodInNonBlockingContext")
-    public final Mono<ShouldRetryResult> shouldRetry(@Nonnull final TransactionalBatchOperationResult<?> result) {
+    public final Mono<ShouldRetryResult> shouldRetry(@NotNull final TransactionalBatchOperationResult<?> result) {
 
         checkNotNull(result, "expected non-null result");
 

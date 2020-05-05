@@ -25,6 +25,7 @@ import com.azure.cosmos.models.PartitionKey;
 import com.azure.cosmos.models.SqlQuerySpec;
 import com.azure.cosmos.util.CosmosPagedFlux;
 import com.azure.cosmos.util.UtilBridgeInternal;
+import org.jetbrains.annotations.NotNull;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -80,8 +81,8 @@ public class CosmosAsyncContainer {
      * @return new {@link TransactionalBatch transactional batch} for execution a set of operations on this {@link
      * CosmosAsyncContainer document container}.
      */
-    @Nonnull
-    public TransactionalBatch createTransactionalBatch(@Nonnull final PartitionKey partitionKey) {
+    @NotNull
+    public TransactionalBatch createTransactionalBatch(@NotNull final PartitionKey partitionKey) {
 
         CosmosAsyncClient client = this.database.getClient();
         ConnectionPolicy connectionPolicy = client.getConnectionPolicy();

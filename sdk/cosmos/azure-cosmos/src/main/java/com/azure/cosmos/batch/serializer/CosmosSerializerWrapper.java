@@ -3,7 +3,7 @@
 
 package com.azure.cosmos.batch.serializer;
 
-import javax.annotation.Nonnull;
+import org.jetbrains.annotations.NotNull;
 import java.io.IOException;
 import java.io.InputStream;
 
@@ -24,8 +24,8 @@ class CosmosSerializerWrapper implements CosmosSerializer {
     }
 
     @Override
-    @Nonnull
-    public <T> T fromStream(@Nonnull final InputStream inputStream, @Nonnull final Class<T> type) throws IOException {
+    @NotNull
+    public <T> T fromStream(@NotNull final InputStream inputStream, @NotNull final Class<T> type) throws IOException {
 
         checkNotNull(inputStream, "expected non-null inputStream");
         checkNotNull(type, "expected non-null type");

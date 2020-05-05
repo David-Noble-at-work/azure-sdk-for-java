@@ -5,7 +5,7 @@ package com.azure.cosmos.batch;
 
 import com.azure.cosmos.CosmosAsyncContainer;
 
-import javax.annotation.Nonnull;
+import org.jetbrains.annotations.NotNull;
 import java.io.IOException;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -24,7 +24,7 @@ public final class BatchAsyncContainerExecutorCache implements AutoCloseable {
     private final AtomicBoolean closed = new AtomicBoolean();
 
     public BatchAsyncContainerExecutor getExecutorForContainer(
-        @Nonnull final CosmosAsyncClientContext clientContext, @Nonnull final CosmosAsyncContainer container) {
+        @NotNull final CosmosAsyncClientContext clientContext, @NotNull final CosmosAsyncContainer container) {
 
         checkState(!this.closed.get(), "cache closed");
 

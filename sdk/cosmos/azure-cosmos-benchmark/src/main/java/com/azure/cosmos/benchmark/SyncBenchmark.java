@@ -135,7 +135,6 @@ abstract class SyncBenchmark<T> {
             .getPaths().iterator().next().split("/")[1];
 
         concurrencyControlSemaphore = new Semaphore(cfg.getConcurrency());
-        configuration = cfg;
 
         ArrayList<CompletableFuture<PojoizedJson>> createDocumentFutureList = new ArrayList<>();
 

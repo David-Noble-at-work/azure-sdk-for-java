@@ -6,7 +6,7 @@ package com.azure.cosmos.batch;
 import com.azure.cosmos.implementation.RxDocumentServiceRequest;
 import com.azure.cosmos.implementation.routing.PartitionKeyRangeIdentity;
 
-import javax.annotation.Nonnull;
+import org.jetbrains.annotations.NotNull;
 
 import static com.azure.cosmos.implementation.base.Preconditions.checkNotNull;
 
@@ -18,7 +18,7 @@ public class BatchRequestMessage {
     final Headers headers;
     final RxDocumentServiceRequest request;
 
-    BatchRequestMessage(@Nonnull final RxDocumentServiceRequest request) {
+    BatchRequestMessage(@NotNull final RxDocumentServiceRequest request) {
         checkNotNull(request, "expected non-null request");
         this.request = request;
         this.headers = new Headers();

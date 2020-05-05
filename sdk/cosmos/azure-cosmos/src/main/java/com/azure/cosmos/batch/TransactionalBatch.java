@@ -9,8 +9,8 @@ import com.azure.cosmos.implementation.RequestOptions;
 import com.azure.cosmos.models.PartitionKey;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.netty.handler.codec.http.HttpStatusClass;
+import org.jetbrains.annotations.NotNull;
 
-import javax.annotation.Nonnull;
 import java.io.InputStream;
 import java.util.concurrent.CompletableFuture;
 
@@ -98,7 +98,7 @@ public interface TransactionalBatch {
      *
      * @return The transactional batch instance with the operation added.
      */
-    default <T> TransactionalBatch createItem(@Nonnull T item) {
+    default <T> TransactionalBatch createItem(@NotNull T item) {
         checkNotNull(item, "expected non-null item");
         return this.createItem(item, null);
     }
@@ -113,7 +113,7 @@ public interface TransactionalBatch {
      * @param requestOptions The options for the item request.
      * @return The transactional batch instance with the operation added.
      */
-    <T> TransactionalBatch createItem(@Nonnull T item, RequestOptions requestOptions);
+    <T> TransactionalBatch createItem(@NotNull T item, RequestOptions requestOptions);
 
     /**
      * Adds an operation to create an item into the batch.
@@ -123,7 +123,7 @@ public interface TransactionalBatch {
      *
      * @return The transactional batch instance with the operation added.
      */
-    default TransactionalBatch createItemStream(@Nonnull InputStream streamPayload) {
+    default TransactionalBatch createItemStream(@NotNull InputStream streamPayload) {
         return this.createItemStream(streamPayload, null);
     }
 
@@ -137,7 +137,7 @@ public interface TransactionalBatch {
      * @return The transactional batch instance with the operation added.
      */
     TransactionalBatch createItemStream(
-        @Nonnull InputStream streamPayload, RequestOptions requestOptions);
+        @NotNull InputStream streamPayload, RequestOptions requestOptions);
 
     /**
      * Adds an operation to delete an item into the batch.
@@ -146,7 +146,7 @@ public interface TransactionalBatch {
      *
      * @return The transactional batch instance with the operation added.
      */
-    default TransactionalBatch deleteItem(@Nonnull String id) {
+    default TransactionalBatch deleteItem(@NotNull String id) {
         checkNotNull(id, "expected non-null id");
         return this.deleteItem(id, null);
     }
@@ -159,7 +159,7 @@ public interface TransactionalBatch {
      *
      * @return The transactional batch instance with the operation added.
      */
-    TransactionalBatch deleteItem(@Nonnull String id, RequestOptions requestOptions);
+    TransactionalBatch deleteItem(@NotNull String id, RequestOptions requestOptions);
 
     /**
      * Executes the transactional batch at the Azure Cosmos service as an asynchronous operation.
@@ -198,7 +198,7 @@ public interface TransactionalBatch {
      *
      * @return The transactional batch instance with the operation added.
      */
-    default TransactionalBatch readItem(@Nonnull String id) {
+    default TransactionalBatch readItem(@NotNull String id) {
         checkNotNull(id, "expected non-null id");
         return this.readItem(id, null);
     }
@@ -211,7 +211,7 @@ public interface TransactionalBatch {
      *
      * @return The transactional batch instance with the operation added.
      */
-    TransactionalBatch readItem(@Nonnull String id, RequestOptions requestOptions);
+    TransactionalBatch readItem(@NotNull String id, RequestOptions requestOptions);
 
     /**
      * Adds an operation to replace an item into the batch.
@@ -223,7 +223,7 @@ public interface TransactionalBatch {
      *
      * @return The transactional batch instance with the operation added.
      */
-    default <TItem> TransactionalBatch replaceItem(@Nonnull String id, @Nonnull TItem item) {
+    default <TItem> TransactionalBatch replaceItem(@NotNull String id, @NotNull TItem item) {
         checkNotNull(id, "expected non-null id");
         checkNotNull(item, "expected non-null item");
         return this.replaceItem(id, item, null);
@@ -241,7 +241,7 @@ public interface TransactionalBatch {
      * @return The transactional batch instance with the operation added.
      */
     <TItem> TransactionalBatch replaceItem(
-        @Nonnull String id, @Nonnull TItem item, RequestOptions requestOptions);
+        @NotNull String id, @NotNull TItem item, RequestOptions requestOptions);
 
     /**
      * Adds an operation to replace an item into the batch.
@@ -252,7 +252,7 @@ public interface TransactionalBatch {
      *
      * @return The transactional batch instance with the operation added.
      */
-    default TransactionalBatch replaceItemStream(@Nonnull String id, @Nonnull InputStream streamPayload) {
+    default TransactionalBatch replaceItemStream(@NotNull String id, @NotNull InputStream streamPayload) {
         checkNotNull(id, "expected non-null id");
         checkNotNull(streamPayload, "expected non-null streamPayload");
         return this.replaceItemStream(id, streamPayload, null);
@@ -269,7 +269,7 @@ public interface TransactionalBatch {
      * @return The transactional batch instance with the operation added.
      */
     TransactionalBatch replaceItemStream(
-        @Nonnull String id, @Nonnull InputStream streamPayload, RequestOptions requestOptions);
+        @NotNull String id, @NotNull InputStream streamPayload, RequestOptions requestOptions);
 
     /**
      * Adds an operation to upsert an item into the batch.
@@ -280,7 +280,7 @@ public interface TransactionalBatch {
      *
      * @return The transactional batch instance with the operation added.
      */
-    default <TItem> TransactionalBatch upsertItem(@Nonnull TItem item) {
+    default <TItem> TransactionalBatch upsertItem(@NotNull TItem item) {
         checkNotNull(item, "expected non-null item");
         return this.upsertItem(item, null);
     }
@@ -295,7 +295,7 @@ public interface TransactionalBatch {
      * @param requestOptions The options for the item request.
      * @return The transactional batch instance with the operation added.
      */
-    <TItem> TransactionalBatch upsertItem(@Nonnull TItem item, RequestOptions requestOptions);
+    <TItem> TransactionalBatch upsertItem(@NotNull TItem item, RequestOptions requestOptions);
 
     /**
      * Adds an operation to upsert an item into the batch.
@@ -305,7 +305,7 @@ public interface TransactionalBatch {
      *
      * @return The transactional batch instance with the operation added.
      */
-    default TransactionalBatch upsertItemStream(@Nonnull InputStream streamPayload) {
+    default TransactionalBatch upsertItemStream(@NotNull InputStream streamPayload) {
         checkNotNull(streamPayload, "expected non-null streamPayload");
         return this.upsertItemStream(streamPayload, null);
     }
@@ -319,5 +319,5 @@ public interface TransactionalBatch {
      *
      * @return The transactional batch instance with the operation added.
      */
-    TransactionalBatch upsertItemStream(@Nonnull InputStream streamPayload, RequestOptions requestOptions);
+    TransactionalBatch upsertItemStream(@NotNull InputStream streamPayload, RequestOptions requestOptions);
 }

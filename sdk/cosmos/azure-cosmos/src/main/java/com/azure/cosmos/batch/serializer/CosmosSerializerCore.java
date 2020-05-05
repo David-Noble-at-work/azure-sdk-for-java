@@ -3,6 +3,7 @@
 
 package com.azure.cosmos.batch.serializer;
 
+import com.azure.cosmos.implementation.DatabaseAccount;
 import com.azure.cosmos.implementation.Offer;
 import com.azure.cosmos.implementation.ResourceType;
 import com.azure.cosmos.implementation.query.PartitionedQueryExecutionInfo;
@@ -14,11 +15,10 @@ import com.azure.cosmos.models.CosmosStoredProcedureProperties;
 import com.azure.cosmos.models.CosmosTriggerProperties;
 import com.azure.cosmos.models.CosmosUserDefinedFunctionProperties;
 import com.azure.cosmos.models.CosmosUserProperties;
-import com.azure.cosmos.models.DatabaseAccount;
 import com.azure.cosmos.models.SqlQuerySpec;
 
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import java.io.IOException;
 import java.io.InputStream;
 
@@ -78,7 +78,7 @@ public final class CosmosSerializerCore {
      *
      * @return a new {@link CosmosSerializerCore} instance.
      */
-    public static CosmosSerializerCore create(@Nonnull final CosmosSerializer serializer) {
+    public static CosmosSerializerCore create(@NotNull final CosmosSerializer serializer) {
         checkNotNull(serializer, "expected non-null serializer");
         return new CosmosSerializerCore(new CosmosSerializerWrapper(serializer));
     }
@@ -115,7 +115,7 @@ public final class CosmosSerializerCore {
      * @throws IOException the io exception
      */
     public <T> T fromStream(
-        @Nonnull final InputStream inputStream, @Nonnull final Class<T> type) throws IOException {
+        @NotNull final InputStream inputStream, @NotNull final Class<T> type) throws IOException {
 
         checkNotNull(inputStream, "expected non-null inputStream");
         checkNotNull(type, "expected non-null type");
@@ -133,7 +133,7 @@ public final class CosmosSerializerCore {
      *
      * @throws IOException the io exception
      */
-    public <T> InputStream toStream(@Nonnull final T object) throws IOException {
+    public <T> InputStream toStream(@NotNull final T object) throws IOException {
         checkNotNull(object, "expected non-null object");
         return this.getSerializer(object.getClass()).toStream(object);
     }
@@ -149,7 +149,7 @@ public final class CosmosSerializerCore {
      *
      * @throws IOException if a new stream cannot be created from the input.
      */
-    @Nonnull
+    @NotNull
     public InputStream toStream(SqlQuerySpec input, ResourceType resourceType) throws IOException {
 
         // Public resource types that support query use the current serializer while internal resource types such as
@@ -170,7 +170,7 @@ public final class CosmosSerializerCore {
         return serializer.toStream(input);
     }
 
-    private <T> CosmosSerializer getSerializer(@Nonnull final Class<T> type) {
+    private <T> CosmosSerializer getSerializer(@NotNull final Class<T> type) {
 
         checkNotNull(type, "expected non-null type");
 

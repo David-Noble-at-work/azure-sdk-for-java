@@ -13,8 +13,8 @@ import com.azure.cosmos.implementation.RequestOptions;
 import com.azure.cosmos.implementation.ResourceType;
 import com.azure.cosmos.models.PartitionKey;
 
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import java.io.InputStream;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
@@ -26,7 +26,7 @@ interface CosmosAsyncClientContext {
      *
      * @return the {@link CosmosAsyncClient Cosmos client} that is used for a request.
      */
-    @Nonnull
+    @NotNull
     CosmosAsyncClient getClient();
 
     /**
@@ -34,7 +34,7 @@ interface CosmosAsyncClientContext {
      *
      * @return the {@link ConnectionPolicy Cosmos connection policy}  that is used for a request.
      */
-    @Nonnull
+    @NotNull
     ConnectionPolicy getConnectionPolicy();
 
     /**
@@ -49,17 +49,17 @@ interface CosmosAsyncClientContext {
      * <p>
      * This allows the calls to be mocked so logic done in a resource can be unit tested.
      */
-    @Nonnull
+    @NotNull
     <T> CompletableFuture<T> processResourceOperationAsync(
-        @Nonnull String resourceUri,
-        @Nonnull ResourceType resourceType,
-        @Nonnull OperationType operationType,
+        @NotNull String resourceUri,
+        @NotNull ResourceType resourceType,
+        @NotNull OperationType operationType,
         @Nullable RequestOptions requestOptions,
-        @Nonnull CosmosAsyncContainer container,
+        @NotNull CosmosAsyncContainer container,
         PartitionKey partitionKey,
         InputStream streamPayload,
-        @Nonnull Consumer<BatchRequestMessage> requestEnricher,
-        @Nonnull Function<BatchResponseMessage, T> responseCreator,
+        @NotNull Consumer<BatchRequestMessage> requestEnricher,
+        @NotNull Function<BatchResponseMessage, T> responseCreator,
         CosmosDiagnosticsContext diagnosticsScope);
 
     /**
@@ -67,15 +67,15 @@ interface CosmosAsyncClientContext {
      * <p>
      * This allows the calls to be mocked so logic done in a resource can be unit tested.
      */
-    @Nonnull
+    @NotNull
     CompletableFuture<BatchResponseMessage> processResourceOperationStreamAsync(
-        @Nonnull String resourceUri,
-        @Nonnull ResourceType resourceType,
-        @Nonnull OperationType operationType,
+        @NotNull String resourceUri,
+        @NotNull ResourceType resourceType,
+        @NotNull OperationType operationType,
         @Nullable RequestOptions requestOptions,
         CosmosAsyncContainer container,
         @Nullable PartitionKey partitionKey,
-        @Nonnull InputStream streamPayload,
-        @Nonnull Consumer<BatchRequestMessage> requestEnricher,
+        @NotNull InputStream streamPayload,
+        @NotNull Consumer<BatchRequestMessage> requestEnricher,
         CosmosDiagnosticsContext diagnosticsScope);
 }

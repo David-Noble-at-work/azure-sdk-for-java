@@ -6,7 +6,7 @@ package com.azure.cosmos.batch;
 import com.azure.cosmos.batch.serializer.CosmosSerializerCore;
 import com.azure.cosmos.models.PartitionKey;
 
-import javax.annotation.Nonnull;
+import org.jetbrains.annotations.NotNull;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
@@ -24,8 +24,8 @@ public final class SinglePartitionKeyServerBatchRequest extends ServerBatchReque
      * @param serializerCore Serializer to serialize user provided objects to JSON.
      */
     private SinglePartitionKeyServerBatchRequest(
-        @Nonnull final PartitionKey partitionKey,
-        @Nonnull final CosmosSerializerCore serializerCore) {
+        @NotNull final PartitionKey partitionKey,
+        @NotNull final CosmosSerializerCore serializerCore) {
         super(Integer.MAX_VALUE, Integer.MAX_VALUE, serializerCore);
         this.partitionKey = partitionKey;
     }
@@ -52,9 +52,9 @@ public final class SinglePartitionKeyServerBatchRequest extends ServerBatchReque
      * @return A newly created instance of {@link SinglePartitionKeyServerBatchRequest}.
      */
     public static CompletableFuture<SinglePartitionKeyServerBatchRequest> createAsync(
-        @Nonnull final PartitionKey partitionKey,
-        @Nonnull final List<ItemBatchOperation<?>> operations,
-        @Nonnull final CosmosSerializerCore serializerCore) {
+        @NotNull final PartitionKey partitionKey,
+        @NotNull final List<ItemBatchOperation<?>> operations,
+        @NotNull final CosmosSerializerCore serializerCore) {
 
         checkNotNull(partitionKey, "expected non-null partitionKey");
         checkNotNull(operations, "expected non-null operations");

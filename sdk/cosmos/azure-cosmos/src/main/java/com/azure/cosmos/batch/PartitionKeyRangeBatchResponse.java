@@ -9,7 +9,7 @@ import com.azure.cosmos.batch.unimplemented.CosmosDiagnosticsContext;
 import com.azure.cosmos.models.Resource;
 import io.netty.handler.codec.http.HttpResponseStatus;
 
-import javax.annotation.Nonnull;
+import org.jetbrains.annotations.NotNull;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -44,8 +44,8 @@ public class PartitionKeyRangeBatchResponse extends TransactionalBatchResponse {
      */
     public PartitionKeyRangeBatchResponse(
         final int originalOperationsCount,
-        @Nonnull final TransactionalBatchResponse serverResponse,
-        @Nonnull final CosmosSerializerCore serializer) {
+        @NotNull final TransactionalBatchResponse serverResponse,
+        @NotNull final CosmosSerializerCore serializer) {
 
         super(
             serverResponse.getResponseStatus(),
@@ -110,7 +110,7 @@ public class PartitionKeyRangeBatchResponse extends TransactionalBatchResponse {
     @SuppressWarnings("unchecked")
     @Override
     public <T> TransactionalBatchOperationResult<T> getOperationResultAtIndex(
-        final int index, @Nonnull final Class<T> type) throws IOException {
+        final int index, @NotNull final Class<T> type) throws IOException {
 
         checkArgument(0 <= index && index < this.size(), "expected index in range [0, %s), not %s",
             this.size(),

@@ -3,7 +3,7 @@
 
 package com.azure.cosmos.serialization.hybridrow;
 
-import javax.annotation.Nonnull;
+import org.jetbrains.annotations.NotNull;
 
 import static com.azure.cosmos.implementation.base.Preconditions.throwIllegalArgumentException;
 
@@ -43,7 +43,7 @@ public enum HybridRowVersion {
      *
      * @throws IllegalArgumentException if {@code value} does not map to a a {@link HybridRowVersion HybridRow version}.
      */
-    @Nonnull
+    @NotNull
     public static HybridRowVersion from(final byte value) {
         switch (value) {
             case (byte) 0x00:

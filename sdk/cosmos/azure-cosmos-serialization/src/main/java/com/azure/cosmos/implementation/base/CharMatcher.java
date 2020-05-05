@@ -1096,7 +1096,6 @@ public abstract class CharMatcher implements Predicate<Character> {
     /**
      * Implementation of {@link #whitespace()}.
      */
-    @TestOnly
     static final class Whitespace extends NamedFastMatcher {
 
         /**

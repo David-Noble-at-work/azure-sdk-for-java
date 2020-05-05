@@ -5,7 +5,7 @@ package com.azure.cosmos.batch;
 
 import com.azure.cosmos.batch.serializer.CosmosSerializerCore;
 
-import javax.annotation.Nonnull;
+import org.jetbrains.annotations.NotNull;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
@@ -24,7 +24,7 @@ final class PartitionKeyRangeServerBatchRequest extends ServerBatchRequest {
      * @param serializerCore Serializer to serialize user provided objects to JSON.
      */
     PartitionKeyRangeServerBatchRequest(
-        @Nonnull final String partitionKeyRangeId,
+        @NotNull final String partitionKeyRangeId,
         int maxBodyLength,
         int maxOperationCount,
         CosmosSerializerCore serializerCore) {

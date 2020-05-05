@@ -11,9 +11,9 @@ import com.azure.cosmos.models.CosmosError;
 import com.azure.cosmos.models.Resource;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.netty.handler.codec.http.HttpStatusClass;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -45,13 +45,13 @@ public final class BatchResponseMessage extends Resource implements AutoCloseabl
     private final HttpResponseStatus status;
 
     BatchResponseMessage(
-        @Nonnull final HttpResponseStatus status,
+        @NotNull final HttpResponseStatus status,
         @Nullable final BatchRequestMessage requestMessage,
         @Nullable final String errorMessage,
         @Nullable final CosmosError error,
-        @Nonnull final Headers headers,
-        @Nonnull final InputStream content,
-        @Nonnull final CosmosDiagnosticsContext diagnosticsContext) throws IOException {
+        @NotNull final Headers headers,
+        @NotNull final InputStream content,
+        @NotNull final CosmosDiagnosticsContext diagnosticsContext) throws IOException {
 
         checkNotNull(status, "expected non-null status");
         checkNotNull(headers, "expected non-null headers");
@@ -76,7 +76,7 @@ public final class BatchResponseMessage extends Resource implements AutoCloseabl
      *
      * @return a stream for reading the body part of the current {@link BatchResponseMessage batch response message}.
      */
-    @Nonnull
+    @NotNull
     public InputStream getContent() {
         return new ByteArrayInputStream(this.documentServiceResponse.getResponseBodyAsByteArray());
     }
@@ -88,7 +88,7 @@ public final class BatchResponseMessage extends Resource implements AutoCloseabl
      * @return the {@link CosmosDiagnosticsContext diagnostics context} for the current {@link BatchResponseMessage
      * batch response message}.
      */
-    @Nonnull
+    @NotNull
     public CosmosDiagnosticsContext getDiagnosticsContext() {
         return this.diagnosticsContext;
     }
@@ -112,7 +112,7 @@ public final class BatchResponseMessage extends Resource implements AutoCloseabl
      * @return the {@link BatchResponseMessage.Headers headers} part of the current {@link BatchResponseMessage batch
      * response message}.
      */
-    @Nonnull
+    @NotNull
     public Headers getHeaders() {
         return this.headers;
     }
@@ -134,7 +134,7 @@ public final class BatchResponseMessage extends Resource implements AutoCloseabl
      *
      * @return the {@link HttpResponseStatus status} of the current {@link BatchResponseMessage batch response message}.
      */
-    @Nonnull
+    @NotNull
     public HttpResponseStatus getStatus() {
         return this.status;
     }
@@ -218,13 +218,13 @@ public final class BatchResponseMessage extends Resource implements AutoCloseabl
                 return new Headers(this.headers);
             }
 
-            public Builder activityId(@Nonnull final UUID value) {
+            public Builder activityId(@NotNull final UUID value) {
                 checkNotNull(value, "expected non-null value");
                 this.headers.put(HttpHeaders.ACTIVITY_ID, value.toString());
                 return this;
             }
 
-            public Builder etag(@Nonnull final String value) {
+            public Builder etag(@NotNull final String value) {
                 checkNotNull(value, "expected non-null value");
                 this.headers.put(HttpHeaders.E_TAG, value);
                 return this;
@@ -235,7 +235,7 @@ public final class BatchResponseMessage extends Resource implements AutoCloseabl
                 return this;
             }
 
-            public Builder retryAfter(@Nonnull final Duration value) {
+            public Builder retryAfter(@NotNull final Duration value) {
                 checkNotNull(value, "expected non-null value");
                 this.headers.put(HttpHeaders.RETRY_AFTER_IN_MILLISECONDS, value.toMillis());
                 return this;

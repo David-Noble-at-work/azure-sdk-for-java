@@ -15,7 +15,7 @@ import io.netty.buffer.ByteBufInputStream;
 import io.netty.buffer.ByteBufOutputStream;
 import io.netty.buffer.Unpooled;
 
-import javax.annotation.Nonnull;
+import org.jetbrains.annotations.NotNull;
 import java.io.InputStream;
 import java.util.Collections;
 import java.util.List;
@@ -63,7 +63,7 @@ public abstract class ServerBatchRequest {
      *
      * @return the list of {@link ItemBatchOperation operations} in this {@link ServerBatchRequest batch request}.
      */
-    @Nonnull
+    @NotNull
     public final List<ItemBatchOperation<?>> getOperations() {
         return Collections.unmodifiableList(this.operations);
     }
@@ -78,7 +78,7 @@ public abstract class ServerBatchRequest {
      *
      * @throws IllegalStateException if this method was already called on this {@link ServerBatchRequest request}.
      */
-    @Nonnull
+    @NotNull
     public final InputStream transferBodyStream() {
 
         checkState(this.bodyStream != null, "expected non-null body stream");
@@ -99,7 +99,7 @@ public abstract class ServerBatchRequest {
      * @return Any pending operations that were not included in the request.
      */
     protected final CompletableFuture<List<ItemBatchOperation<?>>> createBodyStreamAsync(
-        @Nonnull final List<ItemBatchOperation<?>> operations) {
+        @NotNull final List<ItemBatchOperation<?>> operations) {
         return createBodyStreamAsync(operations, false);
     }
 
@@ -115,7 +115,7 @@ public abstract class ServerBatchRequest {
      * @return Any pending operations that were not included in the request.
      */
     protected final CompletableFuture<List<ItemBatchOperation<?>>> createBodyStreamAsync(
-        @Nonnull final List<ItemBatchOperation<?>> operations,
+        @NotNull final List<ItemBatchOperation<?>> operations,
         final boolean ensureContinuousOperationIndexes) {
 
         checkNotNull(operations, "expected non-null operations");
@@ -178,7 +178,7 @@ public abstract class ServerBatchRequest {
         });
     }
 
-    @Nonnull
+    @NotNull
     private ResultValue<ByteBuf> writeOperation(final long index) {
 
         checkArgument(0 <= index && index < Integer.MAX_VALUE, "expected 0 <= index && index <= %s, not %s",

@@ -19,8 +19,8 @@ import com.azure.cosmos.serialization.hybridrow.Result;
 import com.azure.cosmos.serialization.hybridrow.io.RowWriter;
 import com.azure.cosmos.serialization.hybridrow.layouts.TypeArgument;
 
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import java.io.InputStream;
 import java.nio.channels.AsynchronousByteChannel;
 import java.util.Map;
@@ -70,7 +70,7 @@ public final class ItemBatchOperation<TResource> implements AutoCloseable {
 
     private ItemBatchOperation(
 
-        @Nonnull final OperationType operationType,
+        @NotNull final OperationType operationType,
         final int operationIndex,
         final PartitionKey partitionKey,
         final String id,
@@ -185,7 +185,7 @@ public final class ItemBatchOperation<TResource> implements AutoCloseable {
      *
      * @return a reference to the {@link ItemBatchOperation current operation}.
      */
-    public ItemBatchOperation<TResource> attachContext(@Nonnull final ItemBatchOperationContext context) {
+    public ItemBatchOperation<TResource> attachContext(@NotNull final ItemBatchOperationContext context) {
         checkNotNull(context, "expected non-null context");
         this.context = context;
         return this;
@@ -262,7 +262,7 @@ public final class ItemBatchOperation<TResource> implements AutoCloseable {
      * @return a {@link CompletableFuture future} that will complete when the resource is materialized or an error
      * occurs.
      */
-    public CompletableFuture<Void> materializeResource(@Nonnull final CosmosSerializerCore serializerCore) {
+    public CompletableFuture<Void> materializeResource(@NotNull final CosmosSerializerCore serializerCore) {
 
         final CompletableFuture<Void> future = new CompletableFuture<>();
 
@@ -298,8 +298,8 @@ public final class ItemBatchOperation<TResource> implements AutoCloseable {
     }
 
     public static Result writeOperation(
-        @Nonnull RowWriter writer,
-        @Nonnull ItemBatchOperation<?> operation,
+        @NotNull RowWriter writer,
+        @NotNull ItemBatchOperation<?> operation,
         @Nullable TypeArgument typeArgument) {
 
         checkNotNull(writer, "expected non-null writer");
@@ -454,7 +454,7 @@ public final class ItemBatchOperation<TResource> implements AutoCloseable {
         private TResource resource;
 
 
-        public Builder(@Nonnull final OperationType type, final int index) {
+        public Builder(@NotNull final OperationType type, final int index) {
 
             checkNotNull(type, "expected non-null type");
             checkArgument(index >= 0, "expected index >= 0, not %s", index);
