@@ -28,11 +28,11 @@ public class AccountSettings {
     public static final String HOST =
         System.getProperty("ACCOUNT_HOST",
             StringUtils.defaultString(StringUtils.trimToNull(
-                System.getenv().get("COSMOS_ACCOUNT_HOST")),
+                System.getenv().get("ACCOUNT_HOST")),
                 "https://localhost:8081/"));
     public static final String MASTER_KEY =
         System.getProperty("ACCOUNT_KEY",
             StringUtils.defaultString(StringUtils.trimToNull(
-                System.getenv().get("COSMOS_ACCOUNT_KEY")),
+                System.getenv().get("ACCOUNT_KEY")),
                 "C2y6yDjf5/R+ob0N8A7Cgv30VRDJIWEHLM+4QDU5DE2nQ9nDuVTqobD4b8mGGyPMbIZnqyMsEcaGQy67XIw/Jw=="));
 }
