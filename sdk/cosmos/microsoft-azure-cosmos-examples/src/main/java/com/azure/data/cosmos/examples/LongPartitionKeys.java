@@ -35,15 +35,17 @@ public class LongPartitionKeys {
     private static final String CONTAINER_NAME = "test-container";
 
     public static void main(String[] args) {
-        new LongPartitionKeys().runDemo();
-    }
 
-    void runDemo() {
-
-        final CosmosClient client = CosmosClient.builder()
+        try (final CosmosClient client = CosmosClient.builder()
             .endpoint(AccountSettings.HOST)
             .key(AccountSettings.MASTER_KEY)
-            .build();
+            .build()) {
+
+            new LongPartitionKeys().runDemo(client);
+        }
+    }
+
+    void runDemo(CosmosClient client) {
 
         final CosmosContainerProperties containerProperties = new CosmosContainerProperties(CONTAINER_NAME, "/pk");
 
