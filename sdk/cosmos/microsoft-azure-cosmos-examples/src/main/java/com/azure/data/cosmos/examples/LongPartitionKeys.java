@@ -81,6 +81,7 @@ public class LongPartitionKeys {
                     final CosmosItemResponse itemResponse = container.createItem(doc).single().block();
                 } catch (Throwable error) {
                     error.printStackTrace();
+                    System.exit(1);
                 }
                 //noinspection UnnecessaryReturnStatement
                 return;
@@ -96,6 +97,7 @@ public class LongPartitionKeys {
                 t.join();
             } catch (InterruptedException interrupted) {
                 interrupted.printStackTrace();
+                System.exit(2);
             }
         }
     }
