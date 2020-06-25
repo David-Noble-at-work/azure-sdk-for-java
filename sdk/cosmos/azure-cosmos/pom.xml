@@ -44,7 +44,7 @@ Licensed under the MIT License.
     <dependency>
       <groupId>com.azure</groupId>
       <artifactId>azure-cosmos-serialization</artifactId>
-      <version>4.0.1-beta.3</version> <!-- {x-version-update;com.azure:azure-cosmos-serialization;current} -->
+      <version>4.1.0-beta.1</version> <!-- {x-version-update;com.azure:azure-cosmos-serialization;current} -->
     </dependency>
 
     <dependency>
@@ -88,12 +88,6 @@ Licensed under the MIT License.
           <artifactId>commons-beanutils</artifactId>
         </exclusion>
       </exclusions>
-    </dependency>
-
-    <dependency>
-      <groupId>org.jetbrains</groupId>
-      <artifactId>annotations</artifactId>
-      <version>19.0.0</version> <!-- {x-version-update;org.jetbrains:annotations;external_dependency} -->
     </dependency>
 
     <dependency>
