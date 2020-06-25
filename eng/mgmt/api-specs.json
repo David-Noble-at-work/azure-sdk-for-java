@@ -38,6 +38,10 @@
     "source": "specification/authorization/resource-manager/readme.md",
     "args": "--multiapi --fluent"
   },
+  "avs/resource-manager": {
+    "source": "specification/vmware/resource-manager/readme.md",
+    "args": "--multiapi --fluent"
+  },  
   "azure-kusto/resource-manager": {
     "source": "specification/azure-kusto/resource-manager/readme.md",
     "args": "--multiapi --fluent"
@@ -60,6 +64,10 @@
   },
   "consumption/resource-manager": {
     "source": "specification/consumption/resource-manager/readme.md",
+    "args": "--multiapi --fluent"
+  },
+  "containerinstance/resource-manager": {
+    "source": "specification/containerinstance/resource-manager/readme.md",
     "args": "--multiapi --fluent"
   },
   "containerservice/resource-manager": {
@@ -102,8 +110,16 @@
     "source": "specification/datamigration/resource-manager/readme.md",
     "args": "--multiapi --fluent"
   },
+  "datashare/resource-manager": {
+    "source": "specification/datashare/resource-manager/readme.md",
+    "args": "--multiapi --fluent"
+  },
   "devtestlabs/resource-manager" : {
     "source": "specification/devtestlabs/resource-manager/readme.md",
+    "args": "--multiapi --fluent"
+  },
+  "digitaltwins/resource-manager" : {
+    "source": "specification/digitaltwins/resource-manager/readme.md",
     "args": "--multiapi --fluent"
   },
   "dns/resource-manager": {
@@ -322,6 +338,10 @@
     "fconfig": {
       "\"moduleName\"": "\"StreamAnalytics\""
     }
+  },
+  "subscription/resource-manager": {
+    "source": "specification/subscription/resource-manager/readme.md",
+    "args": "--multiapi --fluent"
   },
   "support/resource-manager": {
     "source": "specification/support/resource-manager/readme.md",

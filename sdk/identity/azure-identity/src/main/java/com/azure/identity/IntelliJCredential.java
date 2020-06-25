@@ -7,6 +7,7 @@ import com.azure.core.annotation.Immutable;
 import com.azure.core.credential.AccessToken;
 import com.azure.core.credential.TokenCredential;
 import com.azure.core.credential.TokenRequestContext;
+import com.azure.core.util.CoreUtils;
 import com.azure.identity.implementation.IdentityClient;
 import com.azure.identity.implementation.IdentityClientBuilder;
 import com.azure.identity.implementation.IdentityClientOptions;
@@ -24,7 +25,7 @@ import java.util.concurrent.atomic.AtomicReference;
  * this credential can be used in the development code to reuse the cached plugin credentials.</p>
  */
 @Immutable
-class IntelliJCredential implements TokenCredential {
+public class IntelliJCredential implements TokenCredential {
     private static final String AZURE_TOOLS_FOR_INTELLIJ_CLIENT_ID = "61d65f5a-6e3b-468b-af73-a033f5098c5c";
     private final IdentityClient identityClient;
     private final AtomicReference<MsalToken> cachedToken;
@@ -49,9 +50,11 @@ class IntelliJCredential implements TokenCredential {
             authMethodDetails = null;
         }
 
-        String azureEnv = authMethodDetails != null ? authMethodDetails.getAzureEnv() : "";
-        String cloudInstance = accessor.getAzureAuthHost(azureEnv);
-        options.setAuthorityHost(cloudInstance);
+        if (CoreUtils.isNullOrEmpty(options.getAuthorityHost())) {
+            String azureEnv = authMethodDetails != null ? authMethodDetails.getAzureEnv() : "";
+            String cloudInstance = accessor.getAzureAuthHost(azureEnv);
+            options.setAuthorityHost(cloudInstance);
+        }
 
         String tenant = tenantId;
 
@@ -72,7 +75,7 @@ class IntelliJCredential implements TokenCredential {
     public Mono<AccessToken> getToken(TokenRequestContext request) {
         return Mono.defer(() -> {
             if (cachedToken.get() != null) {
-                return identityClient.authenticateWithMsalAccount(request, cachedToken.get().getAccount())
+                return identityClient.authenticateWithPublicClientCache(request, cachedToken.get().getAccount())
                            .onErrorResume(t -> Mono.empty());
             } else {
                 return Mono.empty();

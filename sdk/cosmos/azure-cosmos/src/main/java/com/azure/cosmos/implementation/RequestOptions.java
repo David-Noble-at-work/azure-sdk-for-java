@@ -3,10 +3,10 @@
 
 package com.azure.cosmos.implementation;
 
-import com.azure.cosmos.models.AccessCondition;
 import com.azure.cosmos.ConsistencyLevel;
 import com.azure.cosmos.models.IndexingDirective;
 import com.azure.cosmos.models.PartitionKey;
+import com.azure.cosmos.models.ThroughputProperties;
 
 import java.util.HashMap;
 import java.util.List;
@@ -19,19 +19,20 @@ public class RequestOptions {
     private Map<String, String> customOptions;
     private List<String> preTriggerInclude;
     private List<String> postTriggerInclude;
-    private AccessCondition accessCondition;
     private IndexingDirective indexingDirective;
     private ConsistencyLevel consistencyLevel;
     private String sessionToken;
     private Integer resourceTokenExpirySeconds;
     private String offerType;
+    private String ifMatchETag;
+    private String ifNoneMatchETag;
     private Integer offerThroughput;
-    private PartitionKey partitionKey;
+    private PartitionKey partitionkey;
     private String partitionKeyRangeId;
     private boolean scriptLoggingEnabled;
-    private boolean populateQuotaInfo;
+    private boolean quotaInfoEnabled;
     private Map<String, Object> properties;
-    private boolean effectivePartitionKeyRouting;
+    private ThroughputProperties throughputProperties;
 
     /**
      * Gets the triggers to be invoked before the operation.
@@ -47,9 +48,8 @@ public class RequestOptions {
      *
      * @param preTriggerInclude the triggers to be invoked before the operation.
      */
-    public RequestOptions setPreTriggerInclude(List<String> preTriggerInclude) {
+    public void setPreTriggerInclude(List<String> preTriggerInclude) {
         this.preTriggerInclude = preTriggerInclude;
-        return this;
     }
 
     /**
@@ -66,28 +66,44 @@ public class RequestOptions {
      *
      * @param postTriggerInclude the triggers to be invoked after the operation.
      */
-    public RequestOptions setPostTriggerInclude(List<String> postTriggerInclude) {
+    public void setPostTriggerInclude(List<String> postTriggerInclude) {
         this.postTriggerInclude = postTriggerInclude;
-        return this;
     }
 
     /**
-     * Gets the conditions associated with the request.
+     * Gets the If-Match (ETag) associated with the request in the Azure Cosmos DB service.
      *
-     * @return the access condition.
+     * @return tthe ifMatchETag associated with the request.
      */
-    public AccessCondition getAccessCondition() {
-        return this.accessCondition;
+    public String getIfMatchETag() {
+        return this.ifMatchETag;
     }
 
     /**
-     * Sets the conditions associated with the request.
+     * Sets the If-Match (ETag) associated with the request in the Azure Cosmos DB service.
      *
-     * @param accessCondition the access condition.
+     * @param ifMatchETag the ifMatchETag associated with the request.
      */
-    public RequestOptions setAccessCondition(AccessCondition accessCondition) {
-        this.accessCondition = accessCondition;
-        return this;
+    public void setIfMatchETag(String ifMatchETag) {
+        this.ifMatchETag = ifMatchETag;
+    }
+
+    /**
+     * Gets the If-None-Match (ETag) associated with the request in the Azure Cosmos DB service.
+     *
+     * @return the ifNoneMatchETag associated with the request.
+     */
+    public String getIfNoneMatchETag() {
+        return this.ifNoneMatchETag;
+    }
+
+    /**
+     * Sets the If-None-Match (ETag) associated with the request in the Azure Cosmos DB service.
+     *
+     * @param ifNoneMatchETag the ifNoneMatchETag associated with the request.
+     */
+    public void setIfNoneMatchETag(String ifNoneMatchETag) {
+        this.ifNoneMatchETag = ifNoneMatchETag;
     }
 
     /**
@@ -104,9 +120,8 @@ public class RequestOptions {
      *
      * @param indexingDirective the indexing directive.
      */
-    public RequestOptions setIndexingDirective(IndexingDirective indexingDirective) {
+    public void setIndexingDirective(IndexingDirective indexingDirective) {
         this.indexingDirective = indexingDirective;
-        return this;
     }
 
     /**
@@ -123,9 +138,8 @@ public class RequestOptions {
      *
      * @param consistencyLevel the consistency level.
      */
-    public RequestOptions setConsistencyLevel(ConsistencyLevel consistencyLevel) {
+    public void setConsistencyLevel(ConsistencyLevel consistencyLevel) {
         this.consistencyLevel = consistencyLevel;
-        return this;
     }
 
     /**
@@ -142,9 +156,8 @@ public class RequestOptions {
      *
      * @param sessionToken the session token.
      */
-    public RequestOptions setSessionToken(String sessionToken) {
+    public void setSessionToken(String sessionToken) {
         this.sessionToken = sessionToken;
-        return this;
     }
 
     /**
@@ -161,13 +174,12 @@ public class RequestOptions {
      *
      * @param resourceTokenExpirySeconds the resource token expiry seconds.
      */
-    public RequestOptions setResourceTokenExpirySeconds(Integer resourceTokenExpirySeconds) {
+    public void setResourceTokenExpirySeconds(Integer resourceTokenExpirySeconds) {
         this.resourceTokenExpirySeconds = resourceTokenExpirySeconds;
-        return this;
     }
 
     /**
-     * Gets the offer type when creating a document collection.
+     * Gets the offer type when creating a container.
      *
      * @return the offer type.
      */
@@ -176,17 +188,16 @@ public class RequestOptions {
     }
 
     /**
-     * Sets the offer type when creating a document collection.
+     * Sets the offer type when creating a container.
      *
      * @param offerType the offer type.
      */
-    public RequestOptions setOfferType(String offerType) {
+    public void setOfferType(String offerType) {
         this.offerType = offerType;
-        return this;
     }
 
     /**
-     * Gets the throughput in the form of Request Units per second when creating a document collection.
+     * Gets the throughput in the form of Request Units per second when creating a container.
      *
      * @return the throughput value.
      */
@@ -195,13 +206,20 @@ public class RequestOptions {
     }
 
     /**
-     * Sets the throughput in the form of Request Units per second when creating a document collection.
+     * Sets the throughput in the form of Request Units per second when creating a container.
      *
      * @param offerThroughput the throughput value.
      */
-    public RequestOptions setOfferThroughput(Integer offerThroughput) {
+    public void setOfferThroughput(Integer offerThroughput) {
         this.offerThroughput = offerThroughput;
-        return this;
+    }
+
+    public void setThroughputProperties(ThroughputProperties throughputProperties) {
+        this.throughputProperties = throughputProperties;
+    }
+
+    public ThroughputProperties getThroughputProperties() {
+        return this.throughputProperties;
     }
 
     /**
@@ -210,17 +228,16 @@ public class RequestOptions {
      * @return the partition key value.
      */
     public PartitionKey getPartitionKey() {
-        return this.partitionKey;
+        return this.partitionkey;
     }
 
     /**
      * Sets the partition key used to identify the current request's target partition.
      *
-     * @param partitionKey the partition key value.
+     * @param partitionkey the partition key value.
      */
-    public RequestOptions setPartitionKey(PartitionKey partitionKey) {
-        this.partitionKey = partitionKey;
-        return this;
+    public void setPartitionKey(PartitionKey partitionkey) {
+        this.partitionkey = partitionkey;
     }
 
     /**
@@ -237,9 +254,8 @@ public class RequestOptions {
      *
      * @param partitionKeyRangeId the partition key range id value.
      */
-    protected RequestOptions setPartitionKeyRangeId(String partitionKeyRangeId) {
+    protected void setPartitionKeyRengeId(String partitionKeyRangeId) {
         this.partitionKeyRangeId = partitionKeyRangeId;
-        return this;
     }
 
     /**
@@ -258,32 +274,30 @@ public class RequestOptions {
      *
      * @param scriptLoggingEnabled true if stored procedure Javascript logging is enabled
      */
-    public RequestOptions setScriptLoggingEnabled(boolean scriptLoggingEnabled) {
+    public void setScriptLoggingEnabled(boolean scriptLoggingEnabled) {
         this.scriptLoggingEnabled = scriptLoggingEnabled;
-        return this;
     }
 
     /**
-     * Gets the PopulateQuotaInfo setting for document collection read requests in the Azure Cosmos DB database service.
-     * PopulateQuotaInfo is used to enable/disable getting document collection quota related stats for document
-     * collection read requests.
+     * Gets the quotaInfoEnabled setting for container read requests in the Azure Cosmos DB database service.
+     * quotaInfoEnabled is used to enable/disable getting container quota related stats for item
+     * container read requests.
      *
-     * @return true if PopulateQuotaInfo is enabled
+     * @return true if quotaInfoEnabled is enabled
      */
-    public boolean isPopulateQuotaInfo() {
-        return populateQuotaInfo;
+    public boolean isQuotaInfoEnabled() {
+        return quotaInfoEnabled;
     }
 
     /**
-     * Sets the PopulateQuotaInfo setting for document collection read requests in the Azure Cosmos DB database service.
-     * PopulateQuotaInfo is used to enable/disable getting document collection quota related stats for document
-     * collection read requests.
+     * Sets the quotaInfoEnabled setting for container read requests in the Azure Cosmos DB database service.
+     * quotaInfoEnabled is used to enable/disable getting container quota related stats for item
+     * container read requests.
      *
-     * @param populateQuotaInfo a boolean value indicating whether PopulateQuotaInfo is enabled or not
+     * @param quotaInfoEnabled a boolean value indicating whether quotaInfoEnabled is enabled or not
      */
-    public RequestOptions setPopulateQuotaInfo(boolean populateQuotaInfo) {
-        this.populateQuotaInfo = populateQuotaInfo;
-        return this;
+    public void setQuotaInfoEnabled(boolean quotaInfoEnabled) {
+        this.quotaInfoEnabled = quotaInfoEnabled;
     }
 
     /**
@@ -292,12 +306,11 @@ public class RequestOptions {
      * @param name  a string representing the custom option's name
      * @param value a STRING representing the custom option's value
      */
-    public RequestOptions setHeader(String name, String value) {
+    public void setHeader(String name, String value) {
         if (this.customOptions == null) {
             this.customOptions = new HashMap<>();
         }
         this.customOptions.put(name, value);
-        return this;
     }
 
     /**
@@ -308,7 +321,6 @@ public class RequestOptions {
     public Map<String, String> getHeaders() {
         return this.customOptions;
     }
-
     /**
      * Gets the properties
      *
@@ -323,48 +335,8 @@ public class RequestOptions {
      *
      * @param properties the properties.
      */
-    public RequestOptions setProperties(Map<String, Object> properties) {
+    public void setProperties(Map<String, Object> properties) {
         this.properties = properties;
-        return this;
     }
 
-    /**
-     * Gets a {@code boolean} value indicating whether to use effective partition key routing in the Cosmos DB request.
-     * <p>
-     * This method is provided in addition to {@link #isEffectivePartitionKeyRouting}.
-     *
-     * @return {@code true} if effective partition key routing should be used in the Cosmos DB request.
-     * <p>
-     * See the <a href="http://download.oracle.com/otndocs/jcp/7224-javabeans-1.01-fr-spec-oth-JSpec/">JavaBeans
-     * specification</a> section 8.3.2:
-     */
-    public boolean getEffectivePartitionKeyRouting() {
-        return this.effectivePartitionKeyRouting;
-    }
-
-    /**
-     * Gets a {@code boolean} value indicating whether to use effective partition key routing in the Cosmos DB request.
-     * <p>
-     * This method is provided in addition to {@link #getEffectivePartitionKeyRouting}.
-     *
-     * @return {@code true} if effective partition key routing should be used in the Cosmos DB request.
-     * <p>
-     * See the <a href="http://download.oracle.com/otndocs/jcp/7224-javabeans-1.01-fr-spec-oth-JSpec/">JavaBeans
-     * specification</a> section 8.3.2:
-     */
-    public boolean isEffectivePartitionKeyRouting() {
-        return this.effectivePartitionKeyRouting;
-    }
-
-    /**
-     * Sets a {@code boolean} value indicating whether to use effective partition key routing in the Cosmos DB request.
-     *
-     * @param value {@code true} if effective partition key routing should be used in the Cosmos DB request.
-     *
-     * @return this {@link RequestOptions} instance.
-     */
-    public RequestOptions setEffectivePartitionKeyRouting(boolean value) {
-        this.effectivePartitionKeyRouting = value;
-        return this;
-    }
 }

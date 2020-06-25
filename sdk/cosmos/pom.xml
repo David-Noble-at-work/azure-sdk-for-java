@@ -12,7 +12,7 @@
     <module>azure-cosmos-serialization</module>
     <module>azure-cosmos</module>
     <module>azure-cosmos-benchmark</module>
-    <module>azure-cosmos-examples</module>
+    <module>azure-spring-data-cosmosdb</module>
   </modules>
 
 </project>

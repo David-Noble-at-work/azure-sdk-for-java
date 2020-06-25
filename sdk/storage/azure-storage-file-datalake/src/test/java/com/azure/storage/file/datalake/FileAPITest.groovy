@@ -2724,5 +2724,4 @@ class FileAPITest extends APISpec {
         cleanup:
         file.delete()
     }
-
 }
