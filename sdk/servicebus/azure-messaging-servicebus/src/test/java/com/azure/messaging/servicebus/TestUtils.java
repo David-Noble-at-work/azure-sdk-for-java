@@ -39,7 +39,7 @@ public class TestUtils {
     static final Boolean OTHER_SYSTEM_PROPERTY_VALUE = Boolean.TRUE;
     static final Map<String, Object> APPLICATION_PROPERTIES = new HashMap<>();
     static final int USE_CASE_DEFAULT = 0;
-    static final int USE_CASE_RECEIVE_BY_NUMBER = 1;
+    static final int USE_CASE_RECEIVE_MORE_AND_COMPLETE = 1;
     static final int USE_CASE_RECEIVE_BY_TIME = 2;
     static final int USE_CASE_RECEIVE_NO_MESSAGES = 3;
     static final int USE_CASE_SEND_RECEIVE_WITH_PROPERTIES = 4;
@@ -51,8 +51,10 @@ public class TestUtils {
     static final int USE_CASE_PEEK_RECEIVE_AND_DEFER = 10;
     static final int USE_CASE_PEEK_TRANSACTION_SENDRECEIVE_AND_COMPLETE = 11;
     static final int USE_CASE_SINGLE_SESSION = 12;
-    static final int USE_CASE_SEND_VIA_1 = 13;
-    static final int USE_CASE_SEND_VIA_2 = 14;
+    static final int USE_CASE_SEND_VIA_QUEUE_1 = 13;
+    static final int USE_CASE_SEND_VIA_QUEUE_2 = 14;
+    static final int USE_CASE_SEND_VIA_TOPIC_1 = 15;
+    static final int USE_CASE_SEND_VIA_TOPIC_2 = 16;
 
     // An application property key to identify where in the stream this message was created.
     static final String MESSAGE_POSITION_ID = "message-position";

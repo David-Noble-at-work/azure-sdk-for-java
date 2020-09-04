@@ -5,6 +5,7 @@ import com.azure.storage.blob.BlobClient
 import com.azure.storage.blob.models.*
 import com.azure.storage.blob.options.BlobQueryOptions
 import com.azure.storage.common.implementation.Constants
+import spock.lang.Ignore
 import reactor.core.Exceptions
 import spock.lang.Requires
 import spock.lang.Unroll
@@ -596,6 +597,9 @@ class BlobBaseAPITest extends APISpec {
     @Unroll
     def "Query AC"() {
         setup:
+        def t = new HashMap<String, String>()
+        t.put("foo", "bar")
+        bc.setTags(t)
         match = setupBlobMatchCondition(bc, match)
         leaseID = setupBlobLeaseCondition(bc, leaseID)
         def bac = new BlobRequestConditions()
@@ -604,6 +608,7 @@ class BlobBaseAPITest extends APISpec {
             .setIfNoneMatch(noneMatch)
             .setIfModifiedSince(modified)
             .setIfUnmodifiedSince(unmodified)
+            .setTagsConditions(tags)
         def expression = "SELECT * from BlobStorage"
         BlobQueryOptions optionsIs = new BlobQueryOptions(expression)
             .setRequestConditions(bac)
@@ -625,13 +630,14 @@ class BlobBaseAPITest extends APISpec {
         notThrown(BlobStorageException)
 
         where:
-        modified | unmodified | match        | noneMatch   | leaseID
-        null     | null       | null         | null        | null
-        oldDate  | null       | null         | null        | null
-        null     | newDate    | null         | null        | null
-        null     | null       | receivedEtag | null        | null
-        null     | null       | null         | garbageEtag | null
-        null     | null       | null         | null        | receivedLeaseID
+        modified | unmodified | match        | noneMatch   | leaseID         | tags
+        null     | null       | null         | null        | null            | null
+        oldDate  | null       | null         | null        | null            | null
+        null     | newDate    | null         | null        | null            | null
+        null     | null       | receivedEtag | null        | null            | null
+        null     | null       | null         | garbageEtag | null            | null
+        null     | null       | null         | null        | receivedLeaseID | null
+        null     | null       | null         | null        | null            | "\"foo\" = 'bar'"
     }
 
     @Unroll
@@ -644,6 +650,7 @@ class BlobBaseAPITest extends APISpec {
             .setIfNoneMatch(setupBlobMatchCondition(bc, noneMatch))
             .setIfModifiedSince(modified)
             .setIfUnmodifiedSince(unmodified)
+            .setTagsConditions(tags)
         def expression = "SELECT * from BlobStorage"
         BlobQueryOptions optionsIs = new BlobQueryOptions(expression)
             .setRequestConditions(bac)
@@ -663,12 +670,13 @@ class BlobBaseAPITest extends APISpec {
         thrown(BlobStorageException)
 
         where:
-        modified | unmodified | match       | noneMatch    | leaseID
-        newDate  | null       | null        | null         | null
-        null     | oldDate    | null        | null         | null
-        null     | null       | garbageEtag | null         | null
-        null     | null       | null        | receivedEtag | null
-        null     | null       | null        | null         | garbageLeaseID
+        modified | unmodified | match       | noneMatch    | leaseID        | tags
+        newDate  | null       | null        | null         | null           | null
+        null     | oldDate    | null        | null         | null           | null
+        null     | null       | garbageEtag | null         | null           | null
+        null     | null       | null        | receivedEtag | null           | null
+        null     | null       | null        | null         | garbageLeaseID | null
+        null     | null       | null        | null        | null            | "\"notfoo\" = 'notbar'"
     }
 
     class MockProgressConsumer implements Consumer<BlobQueryProgress> {
@@ -703,11 +711,7 @@ class BlobBaseAPITest extends APISpec {
         }
     }
 
-    class RandomOtherSerialization extends BlobQuerySerialization {
-        @Override
-        public RandomOtherSerialization setRecordSeparator(char recordSeparator) {
-            this.recordSeparator = recordSeparator
-            return this
-        }
+    class RandomOtherSerialization implements BlobQuerySerialization {
+
     }
 }
